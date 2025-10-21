@@ -1,99 +1,147 @@
 import streamlit as st
 import pandas as pd
-import re # Usado para a busca
+import re # Biblioteca de Expressões Regulares, usada para a busca
 
 # --- Configuração da Página ---
-# Define o layout inicial da página
+# Define as configurações iniciais da página, como título da aba e layout
 st.set_page_config(
     page_title="Portfólio de BI",
-    page_icon="✨", # Ícone de "excelência"
+    page_icon="✨", # Ícone atualizado
     layout="wide"
 )
 
-# --- CSS Avançado ---
-# para reestilizar os componentes padrão do Streamlit.
+# --- Injeção de CSS Customizado ---
+# Esta função injeta o bloco de CSS para reestilizar a aplicação.
 def load_custom_css():
-    st.markdown("""
+    st.markdown(f"""
         <style>
-            /* --- Fundo e Layout --- */
-            [data-testid="stAppViewContainer"] {
-                /* Um gradiente sutil é mais profissional que uma cor sólida */
-                background: linear-gradient(170deg, #F0F2F6 0%, #E9EEF5 100%);
-            }
+            /* --- 1. Configurações Globais --- */
+            /* Define o fundo da aplicação para um tom off-white */
+            [data-testid="stAppViewContainer"] {{
+                background-color: #F8F9FA;
+            }}
 
-            /* --- Títulos --- */
-            h1 {
-                color: #0D1F3C; /* Um azul escuro, forte */
+            /* --- 2. Tipografia --- */
+            /* Título principal da página */
+            h1 {{
+                color: #0d2e5b; /* Cor primária (azul escuro) */
                 font-weight: 700;
-            }
-            h3 {
-                color: #0D1F3C; /* Título de "Exibindo..." */
-            }
+            }}
+            /* Título de seção (ex: "Exibindo...") */
+            h3 {{
+                color: #333333; /* Cinza escuro para contraste suave */
+            }}
 
-            /* --- O Card--- */
-            [data-testid="stVerticalBlockBorderWrapper"] > div {
-                background-color: #FFFFFF;
-                border-radius: 12px;
-                border: 1px solid #E0E0E0; /* Borda sutil */
-                box-shadow: 0 4px 6px rgba(0,0,0,0.04); /* Sombra inicial leve */
-                transition: all 0.3s ease-in-out; /* Animação suave para TUDO */
-                min-height: 380px; /* Altura mínima para alinhar os botões */
+            /* --- 3. Card de Portfólio --- */
+            /* Seleciona o container que o Streamlit cria com 'border=True' */
+            [data-testid="stVerticalBlockBorderWrapper"] > div {{
+                background-color: #FFFFFF; /* Cor base (branco) */
+                border: 1px solid #EAEAEA; /* Borda sutil */
+                border-radius: 12px;       /* Cantos mais suaves */
+                /* Sombra em camadas para profundidade */
+                box-shadow: 0 4px 8px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.04);
+                transition: all 0.3s ease-out; /* Transição suave para hover */
+                min-height: 400px;         /* Altura mínima para alinhamento do grid */
                 display: flex;
                 flex-direction: column;
-                padding: 24px 24px 20px 24px;
-            }
+                padding: 24px;
+            }}
+            /* Efeito de hover "premium" */
+            [data-testid="stVerticalBlockBorderWrapper"] > div:hover {{
+                transform: scale(1.015); /* Zoom sutil */
+                border-color: #5b92c8;   /* Cor secundária (azul claro) */
+                box-shadow: 0 8px 16px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.06);
+            }}
 
-            /* --- Animação de Hover (A "Excelência") --- */
-            [data-testid="stVerticalBlockBorderWrapper"] > div:hover {
-                transform: translateY(-5px); /* Levita o card */
-                box-shadow: 0 10px 20px rgba(0,0,0,0.08); /* Sombra mais forte */
-                border-color: #0068C9; /* Borda na cor primária */
-            }
-
-            /* --- Título dentro do Card --- */
-            [data-testid="stVerticalBlockBorderWrapper"] h2 {
-                color: #004a8d; /* Cor primária escura */
+            /* --- 4. Título e Descrição do Card --- */
+            /* O Streamlit usa 'st.subheader' que renderiza como h2 */
+            [data-testid="stVerticalBlockBorderWrapper"] h2 {{
+                color: #0d2e5b;
                 font-weight: 600;
-                margin-bottom: 10px;
-            }
+                margin-bottom: 12px;
+                line-height: 1.3;
+            }}
+            [data-testid="stVerticalBlockBorderWrapper"] p {{
+                color: #333333; /* Cor do texto de descrição */
+                font-size: 15px;
+            }}
 
-            /* --- Tags (Etiquetas) Customizadas --- */
-            .tag-wrapper {
+            /* --- 5. Tags (Etiquetas) Customizadas --- */
+            .tag-wrapper {{
                 display: flex;
-                flex-wrap: wrap; /* Permite que as tags quebrem a linha */
+                flex-wrap: wrap;
                 gap: 8px;
-                margin: 10px 0px;
-            }
-            .tag {
-                background-color: #E6F0F8; /* Fundo azul claro */
-                color: #004a8d; /* Texto azul escuro */
-                padding: 5px 12px;
-                border-radius: 15px;
+                margin: 12px 0px;
+            }}
+            .tag {{
+                background-color: #e7f0f9; /* Tonalidade muito clara de #5b92c8 */
+                color: #0d2e5b; /* Texto na cor primária */
+                padding: 6px 14px;
+                border-radius: 20px;
                 font-size: 13px;
-                font-weight: 600;
+                font-weight: 500;
                 line-height: 1.4;
-            }
+            }}
+            /* Variação de tag para status "Ativo" */
+            .tag.status-ativo {{
+                background-color: #E6F6E8; /* Verde claro */
+                color: #1E6426; /* Verde escuro */
+            }}
+             /* Variação de tag para status "Inativo" ou "Manutenção" */
+            .tag.status-inativo {{
+                background-color: #FDF3F3; /* Vermelho claro */
+                color: #9C2B2B; /* Vermelho escuro */
+            }}
+
+
+            /* --- 6. Layout do Card --- */
+            /* Garante que os botões fiquem alinhados no rodapé */
+            .stButton, .stLinkButton {{
+                margin-top: auto;
+            }}
             
-            /* --- Botões e Popover --- */
-            .stButton, .stLinkButton {
-                margin-top: auto; /* O truque para alinhar no rodapé */
-            }
-            [data-testid="stPopover"] {
+            /* --- 7. Estilização de Componentes Streamlit --- */
+            /* Botão Primário (Acessar) */
+            [data-testid="stButton"] button:not(:disabled), [data-testid="stLinkButton"] a {{
+                background-color: #0d2e5b;
+                color: #FFFFFF;
+                border: 1px solid #0d2e5b;
+                transition: all 0.2s ease;
+            }}
+            /* Hover do Botão Primário */
+            [data-testid="stButton"] button:not(:disabled):hover, [data-testid="stLinkButton"] a:hover {{
+                background-color: #5b92c8;
+                border-color: #5b92c8;
+                color: #FFFFFF;
+            }}
+            /* Botão Desabilitado (Link Indisponível) */
+            [data-testid="stButton"] button:disabled {{
+                background-color: #F0F2F6;
+                border-color: #EAEAEA;
+                color: #AAAAAA;
+            }}
+            
+            /* Popover (Detalhes) */
+            [data-testid="stPopover"] {{
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            }
-            [data-testid="stSidebar"] {
+            }}
+
+            /* Sidebar */
+            [data-testid="stSidebar"] {{
                 background-color: #FFFFFF;
-            }
+                border-right: 1px solid #EAEAEA;
+            }}
         </style>
     """, unsafe_allow_html=True)
 
-# Executa a função para carregar o CSS
+# Executa a injeção do CSS
 load_custom_css()
 
 
 # --- Carregamento de Dados ---
-# (Mesma lógica segura de antes)
+# Busca a URL da planilha dos 'Secrets' do Streamlit
+# Esta é a abordagem segura para evitar expor o link no GitHub.
 try:
     URL_PLANILHA = st.secrets["GOOGLE_SHEET_URL"]
 except KeyError:
@@ -103,6 +151,9 @@ except Exception as e:
     st.error(f"Um erro inesperado ocorreu ao tentar ler os segredos: {e}")
     st.stop()
 
+# Função para carregar e cachear os dados da planilha.
+# O cache (ttl=600) armazena os dados por 10 minutos, melhorando a
+# performance ao evitar requisições repetidas ao Google Sheets.
 @st.cache_data(ttl=600)
 def carregar_dados(url):
     if not url:
@@ -110,32 +161,35 @@ def carregar_dados(url):
         return pd.DataFrame()
     try:
         df = pd.read_csv(url, encoding='utf-8')
-        # Garante que as colunas existam
+        
+        # Define as colunas esperadas para evitar erros
         colunas_essenciais = ['Report', 'Descrição', 'Link', 'Status', 'Responsável', 'Público', 'Mídia', 'Periodicidade', 'Horário', 'Divulgação']
         for col in colunas_essenciais:
             if col not in df.columns:
                 df[col] = pd.NA
         
-        # Converte tudo para string para evitar erros de busca
+        # Converte todas as colunas para string para consistência na busca
         df = df.astype(str)
-        # Substitui 'nan' ou '<NA>' por 'N/A' para uma exibição mais limpa
+        # Substitui valores nulos (nan, <NA>) por 'N/A' para exibição
         df.replace(['nan', '<NA>', 'NaN'], 'N/A', inplace=True)
         return df
     except Exception as e:
         st.error(f"Erro ao carregar dados da planilha: {e}")
         return pd.DataFrame()
 
+# Executa o carregamento dos dados
 df = carregar_dados(URL_PLANILHA)
 
 # --- Título Principal ---
 st.title("💼 Portfólio de Dashboards de BI")
 st.write("Navegue pelo nosso catálogo de dashboards. Use a busca e os filtros para refinar.")
-st.write("") # Espaço
+st.write("") # Adiciona um espaço vertical
 
 # --- Lógica Principal (Busca, Filtros e Grid) ---
 if not df.empty:
     
-    # --- 1. BARRA DE BUSCA (A Nova Interação) ---
+    # --- 1. BARRA DE BUSCA ---
+    # Componente de entrada de texto para a busca em tempo real.
     search_term = st.text_input(
         "Buscar por nome ou descrição:", 
         placeholder="Digite um termo-chave..."
@@ -144,9 +198,13 @@ if not df.empty:
     # --- 2. BARRA LATERAL DE FILTROS ---
     st.sidebar.header("Filtros do Catálogo")
     
+    # Função auxiliar para gerar listas de opções para os filtros
     def criar_lista_filtro(coluna):
-        return ["Todos"] + sorted(list(df[coluna].dropna().unique()))
+        # Remove valores nulos ('N/A') e duplicados, depois ordena
+        opcoes = df[coluna].replace('N/A', pd.NA).dropna().unique()
+        return ["Todos"] + sorted(list(opcoes))
 
+    # Cria os seletores (selectbox) na barra lateral
     try:
         filtro_responsavel = st.sidebar.selectbox("Responsável:", criar_lista_filtro('Responsável'))
         filtro_publico = st.sidebar.selectbox("Público:", criar_lista_filtro('Público'))
@@ -154,22 +212,21 @@ if not df.empty:
         filtro_status = st.sidebar.selectbox("Status:", criar_lista_filtro('Status'))
     except KeyError as e:
         st.sidebar.error(f"Erro: Coluna '{e.args[0]}' não encontrada.")
+        # Define padrões para evitar que o app pare
         filtro_responsavel = filtro_publico = filtro_midia = filtro_status = "Todos"
     
-    # --- 3. LÓGICA DE FILTRAGEM (Busca + Filtros) ---
+    # --- 3. LÓGICA DE FILTRAGEM ---
     df_filtrado = df
 
-    # Aplica a BUSCA primeiro
+    # Aplica a busca (case-insensitive)
     if search_term:
-        # Busca case-insensitive (ignorando maiúsculas/minúsculas)
-        # 're.escape' protege contra caracteres especiais na busca
         search_regex = re.escape(search_term)
         df_filtrado = df_filtrado[
             df_filtrado['Report'].str.contains(search_regex, case=False, na=False) |
             df_filtrado['Descrição'].str.contains(search_regex, case=False, na=False)
         ]
 
-    # Aplica os FILTROS da sidebar no resultado da busca
+    # Aplica os filtros da sidebar
     if filtro_responsavel != "Todos":
         df_filtrado = df_filtrado[df_filtrado['Responsável'] == filtro_responsavel]
     if filtro_publico != "Todos":
@@ -180,46 +237,54 @@ if not df.empty:
         df_filtrado = df_filtrado[df_filtrado['Status'] == filtro_status]
     
     
-    # --- 4. LÓGICA DE EXIBIÇÃO EM GRID (Portfólio) ---
+    # --- 4. LÓGICA DE EXIBIÇÃO EM GRID ---
     st.write(f"### Exibindo {len(df_filtrado)} dashboards:")
     st.divider()
 
-    NUM_COLUNAS = 3 
-    reports_list = df_filtrado.to_dict('records')
+    NUM_COLUNAS = 3 # Define o número de colunas do grid
+    reports_list = df_filtrado.to_dict('records') # Converte o dataframe para iterar
 
     if not reports_list:
         st.info("Nenhum dashboard encontrado com os filtros e busca selecionados.")
 
-    # Itera e cria o grid
+    # Itera pela lista de reports em "fatias" (chunks)
     for i in range(0, len(reports_list), NUM_COLUNAS):
         cols = st.columns(NUM_COLUNAS)
         chunk = reports_list[i : i + NUM_COLUNAS]
 
+        # Preenche cada coluna com um card
         for j, report_data in enumerate(chunk):
             with cols[j]:
-                # 'border=True' é o "gatilho" para o nosso CSS customizado
+                # 'border=True' é o seletor usado pelo nosso CSS customizado
                 with st.container(border=True):
                     
-                    # Título (st.subheader vira <h2>)
-                    st.subheader(report_data.get('Report', 'Sem Título'))
+                    # Título (usando markdown para h2)
+                    st.markdown(f"<h2>{report_data.get('Report', 'Sem Título')}</h2>", unsafe_allow_html=True)
                     
-                    # Descrição (limitada para não quebrar o layout)
-                    descricao = report_data.get('Descrição', 'Sem descrição.')
+                    # Descrição (limitada em caracteres)
+                    descricao = report_data.get('Descrição', 'N/A')
                     st.write(descricao[:120] + ("..." if len(descricao) > 120 else ""))
                     
                     # --- Tags de HTML Customizadas ---
-                    # Esta é a parte visual mais importante
+                    # Define a classe do status
+                    status_val = report_data.get('Status', 'N/A').lower()
+                    if status_val == 'ativo':
+                        status_class = 'status-ativo'
+                    elif status_val == 'inativo' or status_val == 'manutenção':
+                        status_class = 'status-inativo'
+                    else:
+                        status_class = ''
+
                     tags_html = f"""
                     <div class="tag-wrapper">
                         <span class="tag">👤 {report_data.get('Público', 'N/A')}</span>
                         <span class="tag">🔧 {report_data.get('Mídia', 'N/A')}</span>
-                        <span class="tag">🟢 {report_data.get('Status', 'N/A')}</span>
+                        <span class="tag {status_class}"> {report_data.get('Status', 'N/A')}</span>
                     </div>
                     """
                     st.markdown(tags_html, unsafe_allow_html=True)
 
                     # --- Popover (Detalhes) ---
-                    # (Mesma lógica de antes, sem o 'key' problemático)
                     with st.popover("Ver mais detalhes"):
                         st.markdown(f"**Responsável:** {report_data.get('Responsável', 'N/A')}")
                         st.markdown(f"**Periodicidade:** {report_data.get('Periodicidade', 'N/A')}")
@@ -228,23 +293,26 @@ if not df.empty:
 
                     # --- Botão de Ação ---
                     link = report_data.get('Link')
+                    # 'key' é essencial para evitar erros de ID duplicado em loops
+                    key_base = f"{i}_{j}" 
+                    
                     if link and link.lower() != 'n/a':
                         st.link_button(
                             "Acessar Dashboard", 
                             link, 
                             use_container_width=True, 
                             type="primary",
-                            key=f"link_{i}_{j}" # Chave única
+                            key=f"link_{key_base}"
                         )
                     else:
                         st.button(
                             "Link Indisponível", 
                             use_container_width=True, 
                             disabled=True, 
-                            key=f"disabled_{i}_{j}" # Chave única
+                            key=f"disabled_{key_base}"
                         )
 
 else:
-    st.warning("Não foi possível carregar os dados do catálogo. Verifique a planilha ou a configuração do 'Secrets'.")
+    st.warning("Não foi possível carregar os dados do catálogo ou a planilha está vazia.")
 
 st.sidebar.info("Este catálogo é atualizado automaticamente a cada 10 minutos.")
