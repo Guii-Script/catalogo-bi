@@ -567,7 +567,8 @@ if not df.empty:
                         key_base = f"{g}_{i}_{j}"
                         
                         with col_btn1:
-                            with st.popover("📋 Detalhes", key=f"pop_{key_base}"):
+                            # [CORRIGIDO] Remove o 'key' do popover para evitar o TypeError
+                            with st.popover("📋 Detalhes"):
                                 st.write(f"**👤 Responsável:** {row['Responsável']}")
                                 st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
                                 st.write(f"**⏰ Horário:** {row['Horário']}")
