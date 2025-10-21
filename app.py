@@ -431,7 +431,7 @@ if not df.empty:
                     icon = platform_icons.get(row['Midia'], '📊')
                     
                     st.subheader(f"{icon} {row['Nome_Dash']}")
-                    st.write(row['Descrição'])
+                    st.write(row['Descricao'])
 
                     status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
                     st.markdown(
