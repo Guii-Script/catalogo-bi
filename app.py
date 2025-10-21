@@ -349,7 +349,7 @@ st.markdown(
 if not df.empty:
     total_dashboards = len(df)
     ativos = len(df[df['Status'].str.lower() == 'ativo'])
-    plataformas = df[df['Mídia'].str.lower() != 'n/a']['Mídia'].nunique()
+    plataformas = df[df['Midia'].str.lower() != 'n/a']['Midia'].nunique()
     
     st.markdown(f"""
     <div class="stats-container">
