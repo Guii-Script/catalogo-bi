@@ -389,7 +389,6 @@ if not df.empty:
                 <span class="stat-number">{plataformas}</span>
                 <span class="stat-label">Plataformas</span>
             </div>
-            {/* KPI de Públicos Removido */}
         </div>
     """, unsafe_allow_html=True)
 
