@@ -8,7 +8,7 @@ st.set_page_config(
     page_title="Portfólio BI | Dashboard Gallery",
     page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed" # Menu começa fechado
 )
 
 # --- Paleta de Cores Expandida ---
@@ -30,13 +30,13 @@ COLORS = {
     "gradient_end": "#764ba2"
 }
 
-# --- CSS Customizado ---
+# --- CSS Customizado (Com Correção no Título da Seção) ---
 def load_custom_css():
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
         
-        /* === FUNDO COM GRADIENTE ANIMADO === */
+        /* === FUNDO === */
         [data-testid="stAppViewContainer"] {{
             background: linear-gradient(-45deg, {COLORS['background_main']}, {COLORS['primary_dark']}, {COLORS['background_sidebar']}, {COLORS['primary_medium']});
             background-size: 400% 400%;
@@ -48,7 +48,7 @@ def load_custom_css():
         }}
         @keyframes gradientShift {{ 0%{{background-position:0% 50%}} 50%{{background-position:100% 50%}} 100%{{background-position:0% 50%}} }}
 
-        /* === EFEITO DE PARTÍCULAS NO FUNDO === */
+        /* === PARTÍCULAS === */
         [data-testid="stAppViewContainer"]::before {{
             content: ""; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
@@ -169,23 +169,24 @@ def load_custom_css():
              color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;
         }}
 
-        /* === TÍTULOS DAS SEÇÕES (RESTAURADO COM AJUSTES) === */
+        /* === TÍTULOS DAS SEÇÕES (COM ESPAÇAMENTO CORRIGIDO) === */
         h3 {{
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
             font-size: 2.5rem;
             text-align: center;
-            margin-top: 5rem; /* Aumenta espaço ACIMA */
-            margin-bottom: 3rem; /* Aumenta espaço ABAIXO */
+            margin-top: 5rem;      /* Espaço ACIMA do título */
+            margin-bottom: 1rem;   /* Espaço ABAIXO do texto do título */
+            padding-bottom: 25px;  /* Espaço DENTRO da caixa do h3, ABAIXO do texto, para a linha */
             position: relative;
             color: {COLORS['text_primary']};
             z-index: 5;
         }}
-        /* Linha decorativa ABAIXO do título */
+        /* Linha decorativa ABAIXO do título, DENTRO do padding */
         h3::after {{
             content: '';
             position: absolute;
-            bottom: -15px; /* Ajustado para ficar mais abaixo */
+            bottom: 0; /* Posiciona na borda inferior do padding */
             left: 50%;
             transform: translateX(-50%);
             width: 100px; height: 4px;
@@ -271,7 +272,6 @@ def load_custom_css():
 load_custom_css()
 
 # --- Carregamento de Dados ---
-# ... (código de carregamento de dados permanece o mesmo) ...
 try:
     URL_PLANILHA = st.secrets["GOOGLE_SHEET_URL"]
 except KeyError:
