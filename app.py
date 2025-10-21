@@ -395,7 +395,7 @@ if not df.empty:
     df_filtrado = df.copy()
     if search_term:
         df_filtrado = df_filtrado[
-            df_filtrado["Report"].str.contains(search_term, case=False, na=False) |
+            df_filtrado["Nome_Dash"].str.contains(search_term, case=False, na=False) |
             df_filtrado["Descricao"].str.contains(search_term, case=False, na=False) |
             df_filtrado["Midia"].str.contains(search_term, case=False, na=False)
         ]
@@ -430,7 +430,7 @@ if not df.empty:
                     platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
                     icon = platform_icons.get(row['Midia'], '📊')
                     
-                    st.subheader(f"{icon} {row['Report']}")
+                    st.subheader(f"{icon} {row['Nome_Dash']}")
                     st.write(row['Descrição'])
 
                     status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
