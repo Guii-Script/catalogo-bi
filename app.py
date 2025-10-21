@@ -455,7 +455,7 @@ if not df.empty:
                     with col_btn1:
                         # [CORREÇÃO] Remove 'key' do popover
                         with st.popover("📋 Detalhes"):
-                            st.write(f"**👤 Responsável:** {row['Responsável']}")
+                            st.write(f"**👤 Responsável:** {row['Responsavel']}")
                             st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
                             st.write(f"**⏰ Horário:** {row['Horario']}")
                             st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
