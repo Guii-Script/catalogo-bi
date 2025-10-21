@@ -187,8 +187,9 @@ if not df.empty:
                     # Informações secundárias (Público, Responsável)
                     st.caption(f"Público: {report_data.get('Público', 'N/A')} | Responsável: {report_data.get('Responsável', 'N/A')}")
                     
-                    # Popover: um "botão" que abre uma janela com detalhes
-                    with st.popover("Ver mais detalhes", key=f"popover_{i}_{j}"):
+                    # ===== CORREÇÃO AQUI =====
+                    # O 'st.popover' é um container e não aceita o argumento 'key'
+                    with st.popover("Ver mais detalhes"):
                         st.markdown(f"**Periodicidade:** {report_data.get('Periodicidade', 'N/A')}")
                         st.markdown(f"**Mídia:** {report_data.get('Mídia', 'N/A')}")
                         st.markdown(f"**Horário:** {report_data.get('Horário', 'N/A')}")
@@ -206,7 +207,7 @@ if not df.empty:
                             key=f"link_{i}_{j}" # Chave única
                         )
                     else:
-                        # CORREÇÃO DO ERRO: 'key' garante que cada botão desabilitado seja único
+                        # 'key' garante que cada botão desabilitado seja único
                         st.button(
                             "Link Indisponível", 
                             use_container_width=True, 
