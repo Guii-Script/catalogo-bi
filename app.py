@@ -36,7 +36,7 @@ def load_custom_css():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
         
-        /* === FUNDO COM GRADIENTE ANIMADO === */
+        /* === FUNDO === */
         [data-testid="stAppViewContainer"] {{
             background: linear-gradient(-45deg, {COLORS['background_main']}, {COLORS['primary_dark']}, {COLORS['background_sidebar']}, {COLORS['primary_medium']});
             background-size: 400% 400%;
@@ -46,97 +46,59 @@ def load_custom_css():
             position: relative;
             overflow-x: hidden;
         }}
-        
-        @keyframes gradientShift {{
-            0% {{ background-position: 0% 50%; }}
-            50% {{ background-position: 100% 50%; }}
-            100% {{ background-position: 0% 50%; }}
-        }}
+        @keyframes gradientShift {{ 0%{{background-position:0% 50%}} 50%{{background-position:100% 50%}} 100%{{background-position:0% 50%}} }}
 
-        /* === EFEITO DE PARTÍCULAS NO FUNDO === */
+        /* === PARTÍCULAS === */
         [data-testid="stAppViewContainer"]::before {{
-            content: "";
-            position: fixed;
-            top: 0; left: 0;
+            content: ""; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
             background-image: 
                 radial-gradient(2px 2px at 20px 30px, {COLORS['primary_light']}aa, transparent 50%),
                 radial-gradient(2px 2px at 40px 70px, {COLORS['accent_purple']}aa, transparent 50%),
                 radial-gradient(1px 1px at 90px 40px, {COLORS['accent_teal']}aa, transparent 50%),
                 radial-gradient(1px 1px at 130px 80px, {COLORS['accent_orange']}aa, transparent 50%);
-            background-repeat: repeat;
-            background-size: 250px 250px;
-            animation: float 20s linear infinite;
-            z-index: 0;
-            opacity: 0.3;
+            background-repeat: repeat; background-size: 250px 250px;
+            animation: float 20s linear infinite; z-index: 0; opacity: 0.3;
         }}
+        @keyframes float {{ 100% {{ transform: translateY(-250px); }} }}
 
-        @keyframes float {{
-            100% {{ transform: translateY(-250px); }}
-        }}
-
-        /* === HEADER COM EFEITO GLASS MORPHISM === */
+        /* === HEADER === */
         .main-header {{
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(20px);
+            background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2rem 0;
-            margin-bottom: 3rem;
-            position: relative;
-            z-index: 10;
+            padding: 2rem 0; margin-bottom: 3rem;
+            position: relative; z-index: 10;
         }}
 
-        /* === TÍTULO PRINCIPAL COM EFEITO === */
+        /* === TÍTULO PRINCIPAL === */
         h1 {{
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 800;
-            font-size: 4rem;
-            text-align: center;
+            font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 4rem; text-align: center;
             background: linear-gradient(135deg, {COLORS['primary_light']} 0%, {COLORS['accent_purple']} 50%, {COLORS['accent_teal']} 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1rem;
-            position: relative;
-            z-index: 5;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 1rem; position: relative; z-index: 5;
             text-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
             animation: titleGlow 3s ease-in-out infinite alternate;
         }}
-
         @keyframes titleGlow {{
             from {{ text-shadow: 0 4px 20px rgba(139, 92, 246, 0.3); }}
             to {{ text-shadow: 0 4px 30px rgba(6, 214, 160, 0.4), 0 0 40px rgba(91, 146, 200, 0.2); }}
         }}
 
-        /* === SUBTÍTULO (Centralizado) === */
-        .subtitle-container {{
-             text-align: center;
-             position: relative;
-             z-index: 5;
-        }}
+        /* === SUBTÍTULO === */
+        .subtitle-container {{ text-align: center; position: relative; z-index: 5; }}
          .subtitle-container p {{
-            color: {COLORS['text_secondary']} !important;
-            font-size: 1.3rem;
-            max-width: 700px;
-            margin: 0 auto 3rem auto;
-            line-height: 1.6;
-            font-weight: 300;
+            color: {COLORS['text_secondary']} !important; font-size: 1.3rem;
+            max-width: 700px; margin: 0 auto 3rem auto;
+            line-height: 1.6; font-weight: 300;
         }}
 
-        /* === BARRA DE BUSCA ESTILIZADA === */
-        [data-testid="stTextInput"] {{
-            position: relative;
-            z-index: 10;
-        }}
+        /* === BARRA DE BUSCA === */
+        [data-testid="stTextInput"] {{ position: relative; z-index: 10; }}
         [data-testid="stTextInput"] input {{
-            background: rgba(30, 41, 59, 0.8) !important;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(91, 146, 200, 0.3) !important;
-            border-radius: 15px !important;
-            color: {COLORS['text_primary']} !important;
-            padding: 1rem 1.5rem !important;
-            font-size: 1.1rem !important;
-            transition: all 0.3s ease !important;
+            background: rgba(30, 41, 59, 0.8) !important; backdrop-filter: blur(10px);
+            border: 2px solid rgba(91, 146, 200, 0.3) !important; border-radius: 15px !important;
+            color: {COLORS['text_primary']} !important; padding: 1rem 1.5rem !important;
+            font-size: 1.1rem !important; transition: all 0.3s ease !important;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
         }}
         [data-testid="stTextInput"] input:focus {{
@@ -144,67 +106,47 @@ def load_custom_css():
             box-shadow: 0 0 30px rgba(139, 92, 246, 0.4) !important;
             transform: translateY(-2px);
         }}
-        [data-testid="stTextInput"] input::placeholder {{
-            color: {COLORS['text_secondary']} !important;
-        }}
+        [data-testid="stTextInput"] input::placeholder {{ color: {COLORS['text_secondary']} !important; }}
 
-        /* === SIDEBAR MODERNA === */
+        /* === SIDEBAR === */
         [data-testid="stSidebar"] {{
-            background: rgba(15, 23, 42, 0.95) !important;
-            backdrop-filter: blur(20px);
+            background: rgba(15, 23, 42, 0.95) !important; backdrop-filter: blur(20px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }}
         [data-testid="stSidebar"] h2 {{ /* Título "Filtros Avançados" */
-            color: {COLORS['text_primary']} !important;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 1.8rem;
+            color: {COLORS['text_primary']} !important; font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; font-size: 1.8rem;
             background: linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['accent_purple']});
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             margin-bottom: 2rem;
         }}
         
-        /* === BOTÃO DE RECOLHER/EXPANDIR SIDEBAR (DESTAQUE) === */
+        /* === BOTÃO DE RECOLHER/EXPANDIR SIDEBAR === */
         [data-testid="stSidebarNavCollapseButton"] {{
             background-color: rgba(91, 146, 200, 0.2);
-            border: 1px solid rgba(91, 146, 200, 0.4);
-            border-radius: 50%;
-            transition: all 0.3s ease;
-            transform: scale(1.1);
+            border: 1px solid rgba(91, 146, 200, 0.4); border-radius: 50%;
+            transition: all 0.3s ease; transform: scale(1.1);
         }}
         [data-testid="stSidebarNavCollapseButton"]:hover {{
-            background-color: rgba(139, 92, 246, 0.3);
-            border-color: rgba(139, 92, 246, 0.5);
+            background-color: rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.5);
             transform: scale(1.2);
         }}
-        [data-testid="stSidebarNavCollapseButton"] svg {{
-             fill: {COLORS['text_primary']};
-        }}
+        [data-testid="stSidebarNavCollapseButton"] svg {{ fill: {COLORS['text_primary']}; }}
 
-        /* === CARDS COM EFEITO 3D E GLASS MORPHISM === */
+        /* === CARDS === */
         .portfolio-card {{
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 2rem;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
+            backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; padding: 2rem; min-height: 400px;
+            display: flex; flex-direction: column; position: relative; overflow: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            animation: cardEntrance 0.8s ease-out forwards;
-            opacity: 0;
-            transform: translateY(50px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: cardEntrance 0.8s ease-out forwards; opacity: 0; transform: translateY(50px);
+            z-index: 2; /* Garante que o card fique acima do fundo */
         }}
         @keyframes cardEntrance {{ to {{ opacity: 1; transform: translateY(0); }} }}
 
-        .portfolio-card::before {{
+        .portfolio-card::before {{ /* Efeito de brilho */
             content: ''; position: absolute; top: 0; left: -100%;
             width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
@@ -214,51 +156,34 @@ def load_custom_css():
 
         .portfolio-card:hover {{
             transform: translateY(-15px) scale(1.02);
-            box-shadow: 
-                0 20px 40px rgba(0, 0, 0, 0.4),
-                0 0 80px rgba(139, 92, 246, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 80px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             border-color: rgba(139, 92, 246, 0.3);
         }}
         
-        .portfolio-card h2 {{
-            color: {COLORS['text_accent']};
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 1.5rem;
-            line-height: 1.3;
-            margin-bottom: 0.5rem;
+        .portfolio-card h2 {{ /* Título do card */
+            color: {COLORS['text_accent']}; font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; font-size: 1.5rem; line-height: 1.3; margin-bottom: 0.5rem;
         }}
         
-        .portfolio-card p {{
-             color: {COLORS['text_secondary']};
-             font-size: 0.95rem;
-             line-height: 1.5;
-             margin-bottom: 1rem;
+        .portfolio-card p {{ /* Descrição do card */
+             color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;
         }}
 
-        /* === TÍTULOS DAS SEÇÕES (RESTAURADO) === */
+        /* === TÍTULOS DAS SEÇÕES (SIMPLIFICADO) === */
         h3 {{
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
             font-size: 2.5rem;
             text-align: center;
-            margin: 4rem 0 2rem 0;
+            margin-top: 4rem; /* Mais espaço acima */
+            margin-bottom: 2.5rem; /* Mais espaço abaixo */
             position: relative;
             color: {COLORS['text_primary']};
-            z-index: 5;
+            z-index: 5; /* Garante que fique acima das partículas */
         }}
-        h3::after {{
-            content: '';
-            position: absolute;
-            bottom: -10px; left: 50%;
-            transform: translateX(-50%);
-            width: 100px; height: 4px;
-            background: linear-gradient(90deg, {COLORS['accent_purple']}, {COLORS['accent_teal']});
-            border-radius: 2px;
-        }}
-
-        /* === TAGS MODERNAS === */
+        /* Removido ::after para simplificar e evitar overlap */
+        
+        /* === TAGS === */
         .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1.5rem 0; margin-top: auto; }}
         .tag {{
             background: rgba(139, 92, 246, 0.2); color: {COLORS['text_primary']}; padding: 8px 16px;
@@ -270,7 +195,7 @@ def load_custom_css():
         .tag.status-ativo {{ background: rgba(6, 214, 160, 0.2); border-color: rgba(6, 214, 160, 0.3); }}
         .tag.status-inativo {{ background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.3); }}
 
-        /* === BOTÕES COM EFEITO NEON === */
+        /* === BOTÕES === */
         [data-testid="stButton"] button, [data-testid="stLinkButton"] a {{
             background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
             color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
@@ -292,8 +217,7 @@ def load_custom_css():
             box-shadow: none !important; transform: none !important; opacity: 0.7;
         }}
 
-
-        /* === POPOVER ESTILIZADO === */
+        /* === POPOVER === */
         [data-testid="stPopover"] {{
             background: rgba(30, 41, 59, 0.95) !important; backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;
@@ -306,7 +230,6 @@ def load_custom_css():
              border: 1px solid rgba(255, 255, 255, 0.1) !important; width: 100%;
         }}
         [data-testid="stPopover"] button:hover {{ background: rgba(75, 85, 99, 0.7) !important; border-color: {COLORS['accent_purple']} !important; }}
-
 
         /* === ESTATÍSTICAS NO HEADER === */
         .stats-container {{ display: flex; justify-content: center; gap: 3rem; margin: 2rem 0; flex-wrap: wrap; }}
@@ -348,7 +271,6 @@ except KeyError:
 def carregar_dados(url):
     try:
         df = pd.read_csv(url, encoding='utf-8')
-        # [ALTERADO] Use os nomes corretos das colunas da sua planilha
         colunas_esperadas = ['Nome_Dash','Descricao','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
         for c in colunas_esperadas:
             if c not in df.columns: df[c] = pd.NA
@@ -401,14 +323,11 @@ st.sidebar.header("Filtros Avançados")
 
 if not df.empty:
     def lista(col):
-        # [ALTERADO] Usa replace('N/A', pd.NA).dropna() para segurança
         return ["Todos"] + sorted(df[col].replace('N/A', pd.NA).dropna().unique().tolist())
 
-    # Filtros Verticais
-    # [ALTERADO] Use os nomes corretos das colunas como aparecem na sua planilha
-    filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsavel")) # Note: "Responsavel" sem acento?
-    filtro_publico = st.sidebar.selectbox("🎯 Público", lista("Publico")) # Note: "Publico" sem acento?
-    filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Midia")) # Note: "Midia" sem acento?
+    filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsavel"))
+    filtro_publico = st.sidebar.selectbox("🎯 Público", lista("Publico"))
+    filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Midia"))
     filtro_status = st.sidebar.selectbox("📈 Status", lista("Status"))
     
     st.sidebar.markdown("---") # Divisor
@@ -421,13 +340,11 @@ if not df.empty:
     df_filtrado = df.copy()
     if search_term:
         df_filtrado = df_filtrado[
-            # [ALTERADO] Use os nomes corretos das colunas
             df_filtrado["Nome_Dash"].str.contains(search_term, case=False, na=False) |
             df_filtrado["Descricao"].str.contains(search_term, case=False, na=False) |
             df_filtrado["Midia"].str.contains(search_term, case=False, na=False)
         ]
     
-    # [ALTERADO] Use os nomes corretos das colunas no mapeamento
     filter_mapping = {
         "Responsavel": (filtro_responsavel, "Todos"),
         "Publico": (filtro_publico, "Todos"), 
@@ -444,16 +361,15 @@ if not df.empty:
         st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
         st.info("💡 Tente ajustar os filtros ou termos de busca.")
     else:
-        # [RESTAURADO] Determina os grupos de público para iterar
+        # Define os grupos de público para iterar
         grupos = [filtro_publico] if filtro_publico != "Todos" else sorted(df_filtrado["Publico"].replace('N/A', pd.NA).dropna().unique())
         
         for g in grupos:
-            # [RESTAURADO] Adiciona o título da seção
-            st.markdown(f"### 🎯 {g}")
-            # [RESTAURADO] Filtra o dataframe para o grupo atual
+            # Adiciona o título da seção
+            st.markdown(f"### {g}") # Removido o emoji para um look mais clean
+            # Filtra o dataframe para o grupo atual
             subset = df_filtrado[df_filtrado["Publico"] == g]
             
-            # [ALTERADO] Opera sobre o 'subset'
             reports_list = subset.to_dict('records')
             NUM_COLUNAS = 3
                 
@@ -466,10 +382,8 @@ if not df.empty:
                         st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                         
                         platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
-                        # [ALTERADO] Usa o nome correto da coluna 'Midia'
                         icon = platform_icons.get(row['Midia'], '📊')
                         
-                        # [ALTERADO] Usa o nome correto da coluna 'Nome_Dash' e 'Descricao'
                         st.subheader(f"{icon} {row['Nome_Dash']}")
                         st.write(row['Descricao'])
 
@@ -485,16 +399,15 @@ if not df.empty:
                             unsafe_allow_html=True
                         )
 
-                        # [RESTAURADO] Chave única inclui o grupo 'g'
+                        # Chave única inclui o grupo 'g'
                         key_base = f"{g}_{i}_{j}" 
                         
                         st.markdown('<div style="margin-top: auto;">', unsafe_allow_html=True) 
                         col_btn1, col_btn2 = st.columns([1, 1])
                         
                         with col_btn1:
-                            # [RESTAURADO] Remove 'key' do popover
+                            # [CORREÇÃO] Remove 'key' do popover
                             with st.popover("📋 Detalhes"):
-                                # [ALTERADO] Use os nomes corretos das colunas
                                 st.write(f"**👤 Responsável:** {row['Responsavel']}")
                                 st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
                                 st.write(f"**⏰ Horário:** {row['Horario']}")
@@ -503,13 +416,14 @@ if not df.empty:
                         
                         with col_btn2:
                             if row["Link"] and row["Link"].lower() != "n/a":
-                                st.link_button("Acessar", row["Link"], use_container_width=True, key=f"link_{key_base}")
+                                st.link_button("🚀 Acessar", row["Link"], use_container_width=True, key=f"link_{key_base}")
                             else:
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
                         
                         st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
                         st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
                 
+                # [ALTERADO] Usar st.write("") ou st.markdown("<br>") para espaçamento consistente
                 st.markdown("<br>", unsafe_allow_html=True) # Espaço entre as linhas do grid
             
             st.markdown("<br>", unsafe_allow_html=True) # Espaço extra entre as seções
@@ -522,7 +436,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown(
     f"""
     <div style='color: {COLORS['text_secondary']}; font-size: 0.8rem; text-align: center;'>
-        <p>Portfólio BI v2.0</p>
+        <p>✨ Portfólio BI v2.0</p>
         <p>Dados atualizados a cada 10 minutos</p>
     </div>
     """, 
