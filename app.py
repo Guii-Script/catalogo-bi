@@ -6,7 +6,6 @@ import random # Embora importado, random não está sendo usado. Pode ser removi
 # --- Configuração da Página ---
 st.set_page_config(
     page_title="Portfólio BI | Dashboard Gallery",
-    page_icon="🚀",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -373,7 +372,7 @@ st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
 # --- Barra Lateral com Logo e Filtros ---
 st.sidebar.image("fundo.png", use_container_width=True) # Adiciona Logo
 st.sidebar.markdown("---")
-st.sidebar.header("🎛️ Filtros Avançados")
+st.sidebar.header("Filtros Avançados")
 
 if not df.empty:
     def lista(col):
@@ -480,7 +479,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown(
     f"""
     <div style='color: {COLORS['text_secondary']}; font-size: 0.8rem; text-align: center;'>
-        <p>✨ Portfólio BI v2.0</p>
+        <p>Portfólio BI v2.0</p>
         <p>Dados atualizados a cada 10 minutos</p>
     </div>
     """, 
