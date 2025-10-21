@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import re
-import random
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -30,16 +29,7 @@ COLORS = {
     "gradient_end": "#764ba2"
 }
 
-# SVG para efeitos wave
-def create_wave_svg(color, height=120):
-    return f"""
-    data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E
-        %3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' opacity='.25' fill='{color}'%3E%3C/path%3E
-        %3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' opacity='.5' fill='{color}'%3E%3C/path%3E
-        %3Cpath d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z' fill='{color}'%3E%3C/path%3E
-    %3C/svg%3E
-    """
-
+# --- CSS Customizado (Limp e Corrigido) ---
 def load_custom_css():
     st.markdown(f"""
         <style>
@@ -66,10 +56,8 @@ def load_custom_css():
         [data-testid="stAppViewContainer"]::before {{
             content: "";
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background-image: 
                 radial-gradient(2px 2px at 20px 30px, {COLORS['primary_light']}aa, transparent 50%),
                 radial-gradient(2px 2px at 40px 70px, {COLORS['accent_purple']}aa, transparent 50%),
@@ -120,7 +108,7 @@ def load_custom_css():
         }}
 
         /* === SUBTÍTULO === */
-        [data-testid="stMarkdown"] > p:first-of-type {{
+        [data-testid="stAppViewContainer"] > .main .block-container > div:first-child > div > div > .main-header + [data-testid="stMarkdown"] p {{
             color: {COLORS['text_secondary']} !important;
             text-align: center;
             font-size: 1.3rem;
@@ -137,7 +125,6 @@ def load_custom_css():
             position: relative;
             z-index: 10;
         }}
-
         [data-testid="stTextInput"] input {{
             background: rgba(30, 41, 59, 0.8) !important;
             backdrop-filter: blur(10px);
@@ -149,13 +136,11 @@ def load_custom_css():
             transition: all 0.3s ease !important;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
         }}
-
         [data-testid="stTextInput"] input:focus {{
             border-color: {COLORS['accent_purple']} !important;
             box-shadow: 0 0 30px rgba(139, 92, 246, 0.4) !important;
             transform: translateY(-2px);
         }}
-
         [data-testid="stTextInput"] input::placeholder {{
             color: {COLORS['text_secondary']} !important;
         }}
@@ -166,7 +151,6 @@ def load_custom_css():
             backdrop-filter: blur(20px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }}
-
         [data-testid="stSidebar"] h2 {{
             color: {COLORS['text_primary']} !important;
             font-family: 'Space Grotesk', sans-serif;
@@ -185,7 +169,7 @@ def load_custom_css():
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             padding: 2rem;
-            min-height: 380px;
+            min-height: 400px; /* Aumentado para mais espaço */
             display: flex;
             flex-direction: column;
             position: relative;
@@ -206,20 +190,16 @@ def load_custom_css():
             }}
         }}
 
+        /* Efeito de brilho ao passar o mouse */
         .portfolio-card::before {{
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
             transition: left 0.6s;
         }}
-
-        .portfolio-card:hover::before {{
-            left: 100%;
-        }}
+        .portfolio-card:hover::before {{ left: 100%; }}
 
         .portfolio-card:hover {{
             transform: translateY(-15px) scale(1.02);
@@ -229,8 +209,27 @@ def load_custom_css():
                 inset 0 1px 0 rgba(255, 255, 255, 0.1);
             border-color: rgba(139, 92, 246, 0.3);
         }}
+        
+        /* [NOVO] Estilo para o título do card (st.subheader) */
+        .portfolio-card h2 {{
+            color: {COLORS['text_accent']};
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem; /* Ajustado */
+            line-height: 1.3;
+            margin-bottom: 0.5rem;
+        }}
+        
+        /* [NOVO] Estilo para a descrição do card */
+        .portfolio-card p {{
+             color: {COLORS['text_secondary']};
+             font-size: 0.95rem;
+             line-height: 1.5;
+             margin-bottom: 1rem;
+        }}
 
         /* === TÍTULOS DAS SEÇÕES === */
+        /* Esta é a definição correta (a outra foi removida) */
         h3 {{
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
@@ -239,16 +238,14 @@ def load_custom_css():
             margin: 4rem 0 2rem 0;
             position: relative;
             color: {COLORS['text_primary']};
+            z-index: 5;
         }}
-
         h3::after {{
             content: '';
             position: absolute;
-            bottom: -10px;
-            left: 50%;
+            bottom: -10px; left: 50%;
             transform: translateX(-50%);
-            width: 100px;
-            height: 4px;
+            width: 100px; height: 4px;
             background: linear-gradient(90deg, {COLORS['accent_purple']}, {COLORS['accent_teal']});
             border-radius: 2px;
         }}
@@ -259,8 +256,8 @@ def load_custom_css():
             flex-wrap: wrap;
             gap: 8px;
             margin: 1.5rem 0;
+            margin-top: auto; /* Empurra as tags para baixo */
         }}
-
         .tag {{
             background: rgba(139, 92, 246, 0.2);
             color: {COLORS['text_primary']};
@@ -272,18 +269,15 @@ def load_custom_css():
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }}
-
         .tag:hover {{
             transform: translateY(-2px);
             background: rgba(139, 92, 246, 0.3);
             box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2);
         }}
-
         .tag.status-ativo {{
             background: rgba(6, 214, 160, 0.2);
             border-color: rgba(6, 214, 160, 0.3);
         }}
-
         .tag.status-inativo {{
             background: rgba(239, 68, 68, 0.2);
             border-color: rgba(239, 68, 68, 0.3);
@@ -301,27 +295,32 @@ def load_custom_css():
             position: relative;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important;
+            width: 100%; /* Garante que os botões tenham a mesma largura */
         }}
-
+        /* Efeito de brilho no botão */
         [data-testid="stButton"] button::before, [data-testid="stLinkButton"] a::before {{
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: left 0.5s;
         }}
-
-        [data-testid="stButton"] button:hover::before, [data-testid="stLinkButton"] a:hover::before {{
-            left: 100%;
-        }}
+        [data-testid="stButton"] button:hover::before, [data-testid="stLinkButton"] a:hover::before {{ left: 100%; }}
 
         [data-testid="stButton"] button:hover, [data-testid="stLinkButton"] a:hover {{
             transform: translateY(-3px) !important;
             box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5) !important;
         }}
+        /* Botão desabilitado */
+        [data-testid="stButton"] button:disabled {{
+            background: rgba(55, 65, 81, 0.5) !important; /* Cinza escuro desabilitado */
+            color: {COLORS['text_secondary']} !important;
+            box-shadow: none !important;
+            transform: none !important;
+            opacity: 0.7;
+        }}
+
 
         /* === POPOVER ESTILIZADO === */
         [data-testid="stPopover"] {{
@@ -331,6 +330,26 @@ def load_custom_css():
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }}
+        /* Texto dentro do popover */
+        [data-testid="stPopover"] p, [data-testid="stPopover"] span, [data-testid="stPopover"] li {{
+            color: {COLORS['text_primary']} !important;
+        }}
+        [data-testid="stPopover"] strong {{
+            color: {COLORS['accent_teal']};
+        }}
+        
+        /* Botão do popover (ex: "📋 Detalhes") */
+        [data-testid="stPopover"] button {{
+             background: rgba(55, 65, 81, 0.5) !important; /* Cinza escuro */
+             color: {COLORS['text_primary']} !important;
+             border: 1px solid rgba(255, 255, 255, 0.1) !important;
+             width: 100%;
+        }}
+        [data-testid="stPopover"] button:hover {{
+            background: rgba(75, 85, 99, 0.7) !important;
+            border-color: {COLORS['accent_purple']} !important;
+        }}
+
 
         /* === ESTATÍSTICAS NO HEADER === */
         .stats-container {{
@@ -340,7 +359,6 @@ def load_custom_css():
             margin: 2rem 0;
             flex-wrap: wrap;
         }}
-
         .stat-item {{
             text-align: center;
             background: rgba(30, 41, 59, 0.6);
@@ -350,13 +368,11 @@ def load_custom_css():
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }}
-
         .stat-item:hover {{
             transform: translateY(-5px);
             border-color: {COLORS['accent_purple']};
             box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2);
         }}
-
         .stat-number {{
             font-size: 2.5rem;
             font-weight: 800;
@@ -365,7 +381,6 @@ def load_custom_css():
             -webkit-text-fill-color: transparent;
             display: block;
         }}
-
         .stat-label {{
             color: {COLORS['text_secondary']};
             font-size: 0.9rem;
@@ -382,25 +397,19 @@ def load_custom_css():
         }}
 
         /* === SCROLLBAR PERSONALIZADA === */
-        ::-webkit-scrollbar {{
-            width: 8px;
-        }}
-
-        ::-webkit-scrollbar-track {{
-            background: {COLORS['background_main']};
-        }}
-
+        ::-webkit-scrollbar {{ width: 8px; }}
+        ::-webkit-scrollbar-track {{ background: {COLORS['background_main']}; }}
         ::-webkit-scrollbar-thumb {{
             background: linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['accent_purple']});
             border-radius: 4px;
         }}
-
         ::-webkit-scrollbar-thumb:hover {{
             background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['accent_teal']});
         }}
         </style>
     """, unsafe_allow_html=True)
 
+# Executa o CSS
 load_custom_css()
 
 # --- Carregamento de Dados ---
@@ -436,7 +445,8 @@ st.markdown(
 if not df.empty:
     total_dashboards = len(df)
     ativos = len(df[df['Status'].str.lower() == 'ativo'])
-    plataformas = df['Mídia'].nunique()
+    # Contagem de plataformas únicas, tratando 'N/A'
+    plataformas = df[df['Mídia'].str.lower() != 'n/a']['Mídia'].nunique()
     
     st.markdown(f"""
         <div class="stats-container">
@@ -453,20 +463,18 @@ if not df.empty:
                 <span class="stat-label">Plataformas</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">{df['Público'].nunique()}</span>
+                <span class="stat-number">{df[df['Público'].str.lower() != 'n/a']['Público'].nunique()}</span>
                 <span class="stat-label">Públicos</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
 
 # --- Busca e Filtros ---
 if not df.empty:
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        search_term = st.text_input("🔍 **Buscar dashboards:**", placeholder="Digite o nome do dashboard, tecnologia ou palavra-chave...")
+    # [CORRIGIDO] Barra de busca agora está limpa, sem st.columns
+    search_term = st.text_input("🔍 **Buscar dashboards:**", placeholder="Digite o nome do dashboard, tecnologia ou palavra-chave...")
 
     st.sidebar.markdown("---")
     st.sidebar.header("🎛️ Filtros Avançados")
@@ -474,16 +482,13 @@ if not df.empty:
     def lista(col):
         return ["Todos"] + sorted(df[col].replace('N/A', pd.NA).dropna().unique().tolist())
 
-    col1, col2, col3 = st.sidebar.columns(3)
-    
-    with col1:
-        filtro_responsavel = st.selectbox("👤 Responsável", lista("Responsável"))
-    with col2:
-        filtro_publico = st.selectbox("🎯 Público", lista("Público"))
-    with col3:
-        filtro_status = st.selectbox("📈 Status", lista("Status"))
-    
+    # [CORRIGIDO] Filtros agora estão verticais para melhor organização
+    filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsável"))
+    filtro_publico = st.sidebar.selectbox("🎯 Público", lista("Público"))
     filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Mídia"))
+    filtro_status = st.sidebar.selectbox("📈 Status", lista("Status"))
+    
+    st.sidebar.markdown("---") # Divisor
 
     # Aplicar filtros
     df_filtrado = df.copy()
@@ -519,7 +524,6 @@ if not df.empty:
             reports_list = subset.to_dict('records')
             NUM_COLUNAS = 3
             
-            # Animação de entrada escalonada
             for i in range(0, len(reports_list), NUM_COLUNAS):
                 cols = st.columns(NUM_COLUNAS)
                 chunk = reports_list[i : i + NUM_COLUNAS]
@@ -527,17 +531,20 @@ if not df.empty:
                 for j, row in enumerate(chunk):
                     with cols[j]:
                         # Card container customizado
-                        st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+                        st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                         
                         # Ícone dinâmico baseado na plataforma
                         platform_icons = {
                             'Power BI': '📊', 'Tableau': '📈', 'Qlik': '🔍', 
                             'Google Data Studio': '🌐', 'Excel': '📋', 'Metabase': '🛠️'
                         }
+                        # [CORRIGIDO] Adiciona 'N/A' como fallback
                         icon = platform_icons.get(row['Mídia'], '📊')
                         
-                        st.markdown(f"<h4>{icon} {row['Report']}</h4>", unsafe_allow_html=True)
-                        st.markdown(f"<p style='color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5;'>{row['Descrição']}</p>", unsafe_allow_html=True)
+                        # [CORRIGIDO] Usa st.subheader para o título, que será pego pelo CSS
+                        st.subheader(f"{icon} {row['Report']}")
+                        # [CORRIGIDO] Usa st.write para a descrição
+                        st.write(row['Descrição'])
 
                         # Tags
                         status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
@@ -555,8 +562,11 @@ if not df.empty:
                         # Detalhes e ações
                         col_btn1, col_btn2 = st.columns([1, 1])
                         
+                        # [CORRIGIDO] Adiciona KEY única
+                        key_base = f"{g}_{i}_{j}"
+                        
                         with col_btn1:
-                            with st.popover("📋 Detalhes"):
+                            with st.popover("📋 Detalhes", key=f"pop_{key_base}"):
                                 st.write(f"**👤 Responsável:** {row['Responsável']}")
                                 st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
                                 st.write(f"**⏰ Horário:** {row['Horário']}")
@@ -565,9 +575,11 @@ if not df.empty:
                         
                         with col_btn2:
                             if row["Link"] and row["Link"].lower() != "n/a":
-                                st.link_button("🚀 Acessar", row["Link"], use_container_width=True)
+                                # [CORRIGIDO] Adiciona KEY única
+                                st.link_button("🚀 Acessar", row["Link"], use_container_width=True, key=f"link_{key_base}")
                             else:
-                                st.button("⏳ Em breve", use_container_width=True, disabled=True)
+                                # [CORRIGIDO] Adiciona KEY única
+                                st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
                         
                         st.markdown('</div>', unsafe_allow_html=True)
             
