@@ -325,7 +325,7 @@ except KeyError:
 def carregar_dados(url):
     try:
         df = pd.read_csv(url, encoding='utf-8')
-        colunas = ['Report','Descrição','Link','Status','Responsável','Público','Mídia','Periodicidade','Horário','Divulgação']
+        colunas = ['Nome_Dash','Descricao','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
         for c in colunas:
             if c not in df.columns: df[c] = pd.NA
         df.fillna("N/A", inplace=True)
