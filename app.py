@@ -428,7 +428,7 @@ if not df.empty:
                     st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                     
                     platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
-                    icon = platform_icons.get(row['Mídia'], '📊')
+                    icon = platform_icons.get(row['Midia'], '📊')
                     
                     st.subheader(f"{icon} {row['Report']}")
                     st.write(row['Descrição'])
@@ -437,7 +437,7 @@ if not df.empty:
                     st.markdown(
                         f"""
                         <div class="tag-wrapper">
-                            <span class="tag">🖥️ {row['Mídia']}</span>
+                            <span class="tag">🖥️ {row['Midia']}</span>
                             <span class="tag {status_class}">● {row['Status']}</span>
                             <span class="tag">🕐 {row['Periodicidade']}</span>
                         </div>
