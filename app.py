@@ -380,9 +380,9 @@ if not df.empty:
         return ["Todos"] + sorted(df[col].replace('N/A', pd.NA).dropna().unique().tolist())
 
     # Filtros Verticais
-    filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsável"))
-    filtro_publico = st.sidebar.selectbox("🎯 Público", lista("Público"))
-    filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Mídia"))
+    filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsavel"))
+    filtro_publico = st.sidebar.selectbox("🎯 Público", lista("Publico"))
+    filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Midia"))
     filtro_status = st.sidebar.selectbox("📈 Status", lista("Status"))
     
     st.sidebar.markdown("---") # Divisor
@@ -396,8 +396,8 @@ if not df.empty:
     if search_term:
         df_filtrado = df_filtrado[
             df_filtrado["Report"].str.contains(search_term, case=False, na=False) |
-            df_filtrado["Descrição"].str.contains(search_term, case=False, na=False) |
-            df_filtrado["Mídia"].str.contains(search_term, case=False, na=False)
+            df_filtrado["Descricao"].str.contains(search_term, case=False, na=False) |
+            df_filtrado["Midia"].str.contains(search_term, case=False, na=False)
         ]
     
     filter_mapping = {
@@ -457,9 +457,9 @@ if not df.empty:
                         with st.popover("📋 Detalhes"):
                             st.write(f"**👤 Responsável:** {row['Responsável']}")
                             st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
-                            st.write(f"**⏰ Horário:** {row['Horário']}")
-                            st.write(f"**📢 Divulgação:** {row['Divulgação']}")
-                            st.write(f"**🎯 Público:** {row['Público']}")
+                            st.write(f"**⏰ Horário:** {row['Horario']}")
+                            st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
+                            st.write(f"**🎯 Público:** {row['Publico']}")
                     
                     with col_btn2:
                         if row["Link"] and row["Link"].lower() != "n/a":
