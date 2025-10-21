@@ -1,14 +1,14 @@
 import streamlit as st
 import pandas as pd
 import re
-import random # Embora importado, random não está sendo usado. Pode ser removido se desejar.
+import random # Embora importado, random não está sendo usado. Pode ser removido.
 
 # --- Configuração da Página ---
 st.set_page_config(
     page_title="Portfólio BI | Dashboard Gallery",
     page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed" # Menu começa fechado
 )
 
 # --- Paleta de Cores Expandida ---
@@ -30,13 +30,13 @@ COLORS = {
     "gradient_end": "#764ba2"
 }
 
-# --- CSS Customizado ---
+# --- CSS Customizado (Com Destaque no Botão do Menu) ---
 def load_custom_css():
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
         
-        /* === FUNDO COM GRADIENTE ANIMADO === */
+        /* === FUNDO === */
         [data-testid="stAppViewContainer"] {{
             background: linear-gradient(-45deg, {COLORS['background_main']}, {COLORS['primary_dark']}, {COLORS['background_sidebar']}, {COLORS['primary_medium']});
             background-size: 400% 400%;
@@ -46,95 +46,66 @@ def load_custom_css():
             position: relative;
             overflow-x: hidden;
         }}
-        
-        @keyframes gradientShift {{
-            0% {{ background-position: 0% 50%; }}
-            50% {{ background-position: 100% 50%; }}
-            100% {{ background-position: 0% 50%; }}
-        }}
+        @keyframes gradientShift {{ 0%{{background-position:0% 50%}} 50%{{background-position:100% 50%}} 100%{{background-position:0% 50%}} }}
 
-        /* === EFEITO DE PARTÍCULAS NO FUNDO === */
+        /* === PARTÍCULAS === */
         [data-testid="stAppViewContainer"]::before {{
-            content: "";
-            position: fixed;
-            top: 0; left: 0;
+            content: ""; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
             background-image: 
                 radial-gradient(2px 2px at 20px 30px, {COLORS['primary_light']}aa, transparent 50%),
                 radial-gradient(2px 2px at 40px 70px, {COLORS['accent_purple']}aa, transparent 50%),
                 radial-gradient(1px 1px at 90px 40px, {COLORS['accent_teal']}aa, transparent 50%),
                 radial-gradient(1px 1px at 130px 80px, {COLORS['accent_orange']}aa, transparent 50%);
-            background-repeat: repeat;
-            background-size: 250px 250px;
-            animation: float 20s linear infinite;
-            z-index: 0;
-            opacity: 0.3;
+            background-repeat: repeat; background-size: 250px 250px;
+            animation: float 20s linear infinite; z-index: 0; opacity: 0.3;
         }}
+        @keyframes float {{ 100% {{ transform: translateY(-250px); }} }}
 
-        @keyframes float {{
-            100% {{ transform: translateY(-250px); }}
-        }}
-
-        /* === HEADER COM EFEITO GLASS MORPHISM === */
+        /* === HEADER === */
         .main-header {{
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(20px);
+            background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2rem 0;
-            margin-bottom: 3rem;
-            position: relative;
-            z-index: 10;
+            padding: 2rem 0; margin-bottom: 3rem;
+            position: relative; z-index: 10;
         }}
 
-        /* === TÍTULO PRINCIPAL COM EFEITO === */
+        /* === TÍTULO PRINCIPAL === */
         h1 {{
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 800;
-            font-size: 4rem;
-            text-align: center;
+            font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 4rem; text-align: center;
             background: linear-gradient(135deg, {COLORS['primary_light']} 0%, {COLORS['accent_purple']} 50%, {COLORS['accent_teal']} 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1rem;
-            position: relative;
-            z-index: 5;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 1rem; position: relative; z-index: 5;
             text-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
             animation: titleGlow 3s ease-in-out infinite alternate;
         }}
-
         @keyframes titleGlow {{
             from {{ text-shadow: 0 4px 20px rgba(139, 92, 246, 0.3); }}
             to {{ text-shadow: 0 4px 30px rgba(6, 214, 160, 0.4), 0 0 40px rgba(91, 146, 200, 0.2); }}
         }}
 
-        /* === SUBTÍTULO === */
-        [data-testid="stAppViewContainer"] > .main .block-container > div:first-child > div > div > .main-header + [data-testid="stMarkdown"] p {{
-            color: {COLORS['text_secondary']} !important;
+        /* === SUBTÍTULO (Garantindo Centralização) === */
+        .subtitle-container {{ /* Div que envolve o st.markdown do subtítulo */
             text-align: center;
+            position: relative;
+            z-index: 5;
+        }}
+         .subtitle-container p {{
+            color: {COLORS['text_secondary']} !important;
             font-size: 1.3rem;
             max-width: 700px;
             margin: 0 auto 3rem auto;
             line-height: 1.6;
-            position: relative;
-            z-index: 5;
             font-weight: 300;
         }}
 
-        /* === BARRA DE BUSCA ESTILIZADA === */
-        [data-testid="stTextInput"] {{
-            position: relative;
-            z-index: 10;
-        }}
+        /* === BARRA DE BUSCA === */
+        [data-testid="stTextInput"] {{ position: relative; z-index: 10; }}
         [data-testid="stTextInput"] input {{
-            background: rgba(30, 41, 59, 0.8) !important;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(91, 146, 200, 0.3) !important;
-            border-radius: 15px !important;
-            color: {COLORS['text_primary']} !important;
-            padding: 1rem 1.5rem !important;
-            font-size: 1.1rem !important;
-            transition: all 0.3s ease !important;
+            background: rgba(30, 41, 59, 0.8) !important; backdrop-filter: blur(10px);
+            border: 2px solid rgba(91, 146, 200, 0.3) !important; border-radius: 15px !important;
+            color: {COLORS['text_primary']} !important; padding: 1rem 1.5rem !important;
+            font-size: 1.1rem !important; transition: all 0.3s ease !important;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
         }}
         [data-testid="stTextInput"] input:focus {{
@@ -142,244 +113,145 @@ def load_custom_css():
             box-shadow: 0 0 30px rgba(139, 92, 246, 0.4) !important;
             transform: translateY(-2px);
         }}
-        [data-testid="stTextInput"] input::placeholder {{
-            color: {COLORS['text_secondary']} !important;
-        }}
+        [data-testid="stTextInput"] input::placeholder {{ color: {COLORS['text_secondary']} !important; }}
 
-        /* === SIDEBAR MODERNA === */
+        /* === SIDEBAR === */
         [data-testid="stSidebar"] {{
-            background: rgba(15, 23, 42, 0.95) !important;
-            backdrop-filter: blur(20px);
+            background: rgba(15, 23, 42, 0.95) !important; backdrop-filter: blur(20px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }}
         [data-testid="stSidebar"] h2 {{ /* Título "Filtros Avançados" */
-            color: {COLORS['text_primary']} !important;
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 1.8rem;
+            color: {COLORS['text_primary']} !important; font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; font-size: 1.8rem;
             background: linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['accent_purple']});
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             margin-bottom: 2rem;
         }}
+        
+        /* === BOTÃO DE RECOLHER/EXPANDIR SIDEBAR (DESTAQUE) === */
+        [data-testid="stSidebarNavCollapseButton"] {{
+            background-color: rgba(91, 146, 200, 0.2); /* Fundo azul claro sutil */
+            border: 1px solid rgba(91, 146, 200, 0.4);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            transform: scale(1.1); /* Um pouco maior */
+        }}
+        [data-testid="stSidebarNavCollapseButton"]:hover {{
+            background-color: rgba(139, 92, 246, 0.3); /* Roxo no hover */
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: scale(1.2);
+        }}
+        [data-testid="stSidebarNavCollapseButton"] svg {{ /* Cor da seta */
+             fill: {COLORS['text_primary']};
+        }}
 
-        /* === CARDS COM EFEITO 3D E GLASS MORPHISM === */
+
+        /* === CARDS === */
         .portfolio-card {{
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 2rem;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
+            backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; padding: 2rem; min-height: 400px;
+            display: flex; flex-direction: column; position: relative; overflow: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            animation: cardEntrance 0.8s ease-out forwards;
-            opacity: 0;
-            transform: translateY(50px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: cardEntrance 0.8s ease-out forwards; opacity: 0; transform: translateY(50px);
         }}
-
-        @keyframes cardEntrance {{
-            to {{
-                opacity: 1;
-                transform: translateY(0);
-            }}
-        }}
-
-        .portfolio-card::before {{
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
+        @keyframes cardEntrance {{ to {{ opacity: 1; transform: translateY(0); }} }}
+        .portfolio-card::before {{ /* Efeito de brilho */
+            content: ''; position: absolute; top: 0; left: -100%;
             width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
             transition: left 0.6s;
         }}
         .portfolio-card:hover::before {{ left: 100%; }}
-
         .portfolio-card:hover {{
             transform: translateY(-15px) scale(1.02);
-            box-shadow: 
-                0 20px 40px rgba(0, 0, 0, 0.4),
-                0 0 80px rgba(139, 92, 246, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 80px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             border-color: rgba(139, 92, 246, 0.3);
         }}
-        
-        .portfolio-card h2 {{
-            color: {COLORS['text_accent']};
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 1.5rem;
-            line-height: 1.3;
-            margin-bottom: 0.5rem;
+        .portfolio-card h2 {{ /* Título do card */
+            color: {COLORS['text_accent']}; font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; font-size: 1.5rem; line-height: 1.3; margin-bottom: 0.5rem;
         }}
-        
-        .portfolio-card p {{
-             color: {COLORS['text_secondary']};
-             font-size: 0.95rem;
-             line-height: 1.5;
-             margin-bottom: 1rem;
+        .portfolio-card p {{ /* Descrição do card */
+             color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;
         }}
 
-        /* === TÍTULOS DAS SEÇÕES (REMOVIDO - Não mais necessário) === */
+        /* === TÍTULOS DAS SEÇÕES (REMOVIDO - Não mais usado) === */
         /* h3 {...} (Regra removida) */
         /* h3::after {...} (Regra removida) */
 
-        /* === TAGS MODERNAS === */
-        .tag-wrapper {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin: 1.5rem 0;
-            margin-top: auto; /* Empurra tags e botões para baixo */
-        }}
+        /* === TAGS === */
+        .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1.5rem 0; margin-top: auto; }}
         .tag {{
-            background: rgba(139, 92, 246, 0.2);
-            color: {COLORS['text_primary']};
-            padding: 8px 16px;
-            border-radius: 25px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            backdrop-filter: blur(10px);
+            background: rgba(139, 92, 246, 0.2); color: {COLORS['text_primary']}; padding: 8px 16px;
+            border-radius: 25px; font-weight: 600; font-size: 0.85rem;
+            border: 1px solid rgba(139, 92, 246, 0.3); backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }}
-        .tag:hover {{
-            transform: translateY(-2px);
-            background: rgba(139, 92, 246, 0.3);
-            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2);
-        }}
-        .tag.status-ativo {{
-            background: rgba(6, 214, 160, 0.2);
-            border-color: rgba(6, 214, 160, 0.3);
-        }}
-        .tag.status-inativo {{
-            background: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.3);
-        }}
+        .tag:hover {{ transform: translateY(-2px); background: rgba(139, 92, 246, 0.3); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2); }}
+        .tag.status-ativo {{ background: rgba(6, 214, 160, 0.2); border-color: rgba(6, 214, 160, 0.3); }}
+        .tag.status-inativo {{ background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.3); }}
 
-        /* === BOTÕES COM EFEITO NEON === */
+        /* === BOTÕES === */
         [data-testid="stButton"] button, [data-testid="stLinkButton"] a {{
             background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
-            color: {COLORS['white']} !important;
-            border: none !important;
-            border-radius: 12px !important;
-            font-weight: 600 !important;
-            padding: 12px 24px !important;
-            transition: all 0.3s ease !important;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important;
-            width: 100%;
+            color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
+            font-weight: 600 !important; padding: 12px 24px !important; transition: all 0.3s ease !important;
+            position: relative; overflow: hidden;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important; width: 100%;
         }}
-        [data-testid="stButton"] button::before, [data-testid="stLinkButton"] a::before {{
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
+        [data-testid="stButton"] button::before, [data-testid="stLinkButton"] a::before {{ /* Efeito de brilho */
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: left 0.5s;
         }}
         [data-testid="stButton"] button:hover::before, [data-testid="stLinkButton"] a:hover::before {{ left: 100%; }}
         [data-testid="stButton"] button:hover, [data-testid="stLinkButton"] a:hover {{
-            transform: translateY(-3px) !important;
-            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5) !important;
+            transform: translateY(-3px) !important; box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5) !important;
         }}
-        [data-testid="stButton"] button:disabled {{
-            background: rgba(55, 65, 81, 0.5) !important;
-            color: {COLORS['text_secondary']} !important;
-            box-shadow: none !important;
-            transform: none !important;
-            opacity: 0.7;
+        [data-testid="stButton"] button:disabled {{ /* Botão desabilitado */
+            background: rgba(55, 65, 81, 0.5) !important; color: {COLORS['text_secondary']} !important;
+            box-shadow: none !important; transform: none !important; opacity: 0.7;
         }}
 
-
-        /* === POPOVER ESTILIZADO === */
+        /* === POPOVER === */
         [data-testid="stPopover"] {{
-            background: rgba(30, 41, 59, 0.95) !important;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
+            background: rgba(30, 41, 59, 0.95) !important; backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }}
-        [data-testid="stPopover"] p, [data-testid="stPopover"] span, [data-testid="stPopover"] li {{
-            color: {COLORS['text_primary']} !important;
+        [data-testid="stPopover"] p, [data-testid="stPopover"] span, [data-testid="stPopover"] li {{ color: {COLORS['text_primary']} !important; }}
+        [data-testid="stPopover"] strong {{ color: {COLORS['accent_teal']}; }}
+        [data-testid="stPopover"] button {{ /* Botão "Detalhes" */
+             background: rgba(55, 65, 81, 0.5) !important; color: {COLORS['text_primary']} !important;
+             border: 1px solid rgba(255, 255, 255, 0.1) !important; width: 100%;
         }}
-        [data-testid="stPopover"] strong {{
-            color: {COLORS['accent_teal']};
-        }}
-        [data-testid="stPopover"] button {{
-             background: rgba(55, 65, 81, 0.5) !important;
-             color: {COLORS['text_primary']} !important;
-             border: 1px solid rgba(255, 255, 255, 0.1) !important;
-             width: 100%;
-        }}
-        [data-testid="stPopover"] button:hover {{
-            background: rgba(75, 85, 99, 0.7) !important;
-            border-color: {COLORS['accent_purple']} !important;
-        }}
-
+        [data-testid="stPopover"] button:hover {{ background: rgba(75, 85, 99, 0.7) !important; border-color: {COLORS['accent_purple']} !important; }}
 
         /* === ESTATÍSTICAS NO HEADER === */
-        .stats-container {{
-            display: flex;
-            justify-content: center;
-            gap: 3rem;
-            margin: 2rem 0;
-            flex-wrap: wrap;
-        }}
+        .stats-container {{ display: flex; justify-content: center; gap: 3rem; margin: 2rem 0; flex-wrap: wrap; }}
         .stat-item {{
-            text-align: center;
-            background: rgba(30, 41, 59, 0.6);
-            padding: 1.5rem 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
+            text-align: center; background: rgba(30, 41, 59, 0.6); padding: 1.5rem 2rem;
+            border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px); transition: all 0.3s ease;
         }}
-        .stat-item:hover {{
-            transform: translateY(-5px);
-            border-color: {COLORS['accent_purple']};
-            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2);
-        }}
+        .stat-item:hover {{ transform: translateY(-5px); border-color: {COLORS['accent_purple']}; box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2); }}
         .stat-number {{
-            font-size: 2.5rem;
-            font-weight: 800;
+            font-size: 2.5rem; font-weight: 800; display: block;
             background: linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['accent_teal']});
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: block;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }}
-        .stat-label {{
-            color: {COLORS['text_secondary']};
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }}
+        .stat-label {{ color: {COLORS['text_secondary']}; font-size: 0.9rem; margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 1px; }}
 
         /* === RESPONSIVIDADE === */
-        @media (max-width: 768px) {{
-            h1 {{ font-size: 2.5rem; }}
-            .stats-container {{ gap: 1rem; }}
-            .stat-item {{ padding: 1rem; }}
-        }}
+        @media (max-width: 768px) {{ h1 {{ font-size: 2.5rem; }} .stats-container {{ gap: 1rem; }} .stat-item {{ padding: 1rem; }} }}
 
-        /* === SCROLLBAR PERSONALIZADA === */
+        /* === SCROLLBAR === */
         ::-webkit-scrollbar {{ width: 8px; }}
         ::-webkit-scrollbar-track {{ background: {COLORS['background_main']}; }}
-        ::-webkit-scrollbar-thumb {{
-            background: linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['accent_purple']});
-            border-radius: 4px;
-        }}
-        ::-webkit-scrollbar-thumb:hover {{
-            background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['accent_teal']});
-        }}
+        ::-webkit-scrollbar-thumb {{ background: linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['accent_purple']}); border-radius: 4px; }}
+        ::-webkit-scrollbar-thumb:hover {{ background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['accent_teal']}); }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -411,16 +283,20 @@ df = carregar_dados(URL_PLANILHA)
 # --- Header com Estatísticas ---
 st.markdown('<div class="main-header">', unsafe_allow_html=True)
 st.title("🚀 Portfólio de Business Intelligence")
+
+# [MUDANÇA AQUI] Envolvendo o markdown em uma div para garantir centralização
 st.markdown(
-    "<p>Descubra insights poderosos através da nossa coleção de dashboards estratégicos</p>",
+    "<div class='subtitle-container'><p>Descubra insights poderosos através da nossa coleção de dashboards estratégicos</p></div>",
     unsafe_allow_html=True,
 )
+
 
 if not df.empty:
     total_dashboards = len(df)
     ativos = len(df[df['Status'].str.lower() == 'ativo'])
     plataformas = df[df['Mídia'].str.lower() != 'n/a']['Mídia'].nunique()
     
+    # [MUDANÇA AQUI] Removido o KPI de Públicos
     st.markdown(f"""
         <div class="stats-container">
             <div class="stat-item">
@@ -435,31 +311,33 @@ if not df.empty:
                 <span class="stat-number">{plataformas}</span>
                 <span class="stat-label">Plataformas</span>
             </div>
-            <div class="stat-item">
-                <span class="stat-number">{df[df['Público'].str.lower() != 'n/a']['Público'].nunique()}</span>
-                <span class="stat-label">Públicos</span>
-            </div>
         </div>
     """, unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
 
-# --- Busca e Filtros ---
-if not df.empty:
-    search_term = st.text_input("🔍 **Buscar dashboards:**", placeholder="Digite o nome do dashboard, tecnologia ou palavra-chave...")
+# --- Barra Lateral com Logo e Filtros ---
+# [MUDANÇA AQUI] Adiciona a imagem no topo
+st.sidebar.image("fundo.png", use_column_width=True) # Certifique-se que fundo.png está na pasta
+st.sidebar.markdown("---")
+st.sidebar.header("🎛️ Filtros Avançados")
 
-    st.sidebar.markdown("---")
-    st.sidebar.header("🎛️ Filtros Avançados")
-    
+if not df.empty:
     def lista(col):
         return ["Todos"] + sorted(df[col].replace('N/A', pd.NA).dropna().unique().tolist())
 
+    # Filtros agora verticais
     filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsável"))
     filtro_publico = st.sidebar.selectbox("🎯 Público", lista("Público"))
     filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Mídia"))
     filtro_status = st.sidebar.selectbox("📈 Status", lista("Status"))
     
     st.sidebar.markdown("---") # Divisor
+
+    # --- Lógica de Busca e Filtro ---
+    # Barra de busca principal
+    search_term = st.text_input("🔍 **Buscar dashboards:**", placeholder="Digite o nome do dashboard, tecnologia ou palavra-chave...")
+    st.markdown("<br>", unsafe_allow_html=True) # Espaçamento
 
     # Aplicar filtros
     df_filtrado = df.copy()
@@ -481,18 +359,11 @@ if not df.empty:
         if filtro != padrao:
             df_filtrado = df_filtrado[df_filtrado[col] == filtro]
 
-    # Exibir resultados
+    # --- Exibição dos Cards em Grid ---
     if len(df_filtrado) == 0:
         st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
         st.info("💡 Tente ajustar os filtros ou termos de busca.")
     else:
-        # [REMOVIDO] Agrupamento por público
-        # grupos = [...]
-        # for g in grupos:
-        # st.markdown(f"### 🎯 {g}")
-        # subset = df_filtrado[...]
-        
-        # [ALTERADO] Operar diretamente no df_filtrado
         reports_list = df_filtrado.to_dict('records')
         NUM_COLUNAS = 3
             
@@ -502,13 +373,9 @@ if not df.empty:
 
             for j, row in enumerate(chunk):
                 with cols[j]:
-                    # Card container customizado
                     st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                     
-                    platform_icons = {
-                        'Power BI': '📊', 'Tableau': '📈', 'Qlik': '🔍', 
-                        'Google Data Studio': '🌐', 'Excel': '📋', 'Metabase': '🛠️'
-                    }
+                    platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
                     icon = platform_icons.get(row['Mídia'], '📊')
                     
                     st.subheader(f"{icon} {row['Report']}")
@@ -526,11 +393,12 @@ if not df.empty:
                         unsafe_allow_html=True
                     )
 
-                    # Detalhes e ações
-                    col_btn1, col_btn2 = st.columns([1, 1])
+                    # [CORRIGIDO] Chave única agora usa apenas índices i e j
+                    key_base = f"{i}_{j}"
                     
-                    # [ALTERADO] Chave única agora usa apenas índices i e j
-                    key_base = f"{i}_{j}" 
+                    # Container para alinhar botões no rodapé
+                    st.markdown('<div style="margin-top: auto;">', unsafe_allow_html=True) 
+                    col_btn1, col_btn2 = st.columns([1, 1])
                     
                     with col_btn1:
                         # [CORRIGIDO] Remove 'key' do popover
@@ -547,7 +415,8 @@ if not df.empty:
                         else:
                             st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
                     
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
+                    st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
             
             st.markdown("<br>", unsafe_allow_html=True) # Espaço entre as linhas do grid
 
