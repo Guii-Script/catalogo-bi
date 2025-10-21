@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import re
-import random
+import random # Embora importado, random não está sendo usado. Pode ser removido se desejar.
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -30,7 +30,7 @@ COLORS = {
     "gradient_end": "#764ba2"
 }
 
-# --- CSS Customizado (Limp e Corrigido) ---
+# --- CSS Customizado ---
 def load_custom_css():
     st.markdown(f"""
         <style>
@@ -109,7 +109,6 @@ def load_custom_css():
         }}
 
         /* === SUBTÍTULO === */
-        /* Seletor mais específico para o subtítulo */
         [data-testid="stAppViewContainer"] > .main .block-container > div:first-child > div > div > .main-header + [data-testid="stMarkdown"] p {{
             color: {COLORS['text_secondary']} !important;
             text-align: center;
@@ -171,7 +170,7 @@ def load_custom_css():
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             padding: 2rem;
-            min-height: 400px; /* Aumentado para mais espaço */
+            min-height: 400px;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -192,7 +191,6 @@ def load_custom_css():
             }}
         }}
 
-        /* Efeito de brilho ao passar o mouse */
         .portfolio-card::before {{
             content: '';
             position: absolute;
@@ -212,17 +210,15 @@ def load_custom_css():
             border-color: rgba(139, 92, 246, 0.3);
         }}
         
-        /* [NOVO] Estilo para o título do card (st.subheader) */
         .portfolio-card h2 {{
             color: {COLORS['text_accent']};
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
-            font-size: 1.5rem; /* Ajustado */
+            font-size: 1.5rem;
             line-height: 1.3;
             margin-bottom: 0.5rem;
         }}
         
-        /* [NOVO] Estilo para a descrição do card */
         .portfolio-card p {{
              color: {COLORS['text_secondary']};
              font-size: 0.95rem;
@@ -230,26 +226,9 @@ def load_custom_css():
              margin-bottom: 1rem;
         }}
 
-        /* === TÍTULOS DAS SEÇÕES === */
-        h3 {{
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 2.5rem;
-            text-align: center;
-            margin: 4rem 0 2rem 0;
-            position: relative;
-            color: {COLORS['text_primary']};
-            z-index: 5;
-        }}
-        h3::after {{
-            content: '';
-            position: absolute;
-            bottom: -10px; left: 50%;
-            transform: translateX(-50%);
-            width: 100px; height: 4px;
-            background: linear-gradient(90deg, {COLORS['accent_purple']}, {COLORS['accent_teal']});
-            border-radius: 2px;
-        }}
+        /* === TÍTULOS DAS SEÇÕES (REMOVIDO - Não mais necessário) === */
+        /* h3 {...} (Regra removida) */
+        /* h3::after {...} (Regra removida) */
 
         /* === TAGS MODERNAS === */
         .tag-wrapper {{
@@ -257,7 +236,7 @@ def load_custom_css():
             flex-wrap: wrap;
             gap: 8px;
             margin: 1.5rem 0;
-            margin-top: auto; /* Empurra as tags para baixo */
+            margin-top: auto; /* Empurra tags e botões para baixo */
         }}
         .tag {{
             background: rgba(139, 92, 246, 0.2);
@@ -296,9 +275,8 @@ def load_custom_css():
             position: relative;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important;
-            width: 100%; /* Garante que os botões tenham a mesma largura */
+            width: 100%;
         }}
-        /* Efeito de brilho no botão */
         [data-testid="stButton"] button::before, [data-testid="stLinkButton"] a::before {{
             content: '';
             position: absolute;
@@ -308,14 +286,12 @@ def load_custom_css():
             transition: left 0.5s;
         }}
         [data-testid="stButton"] button:hover::before, [data-testid="stLinkButton"] a:hover::before {{ left: 100%; }}
-
         [data-testid="stButton"] button:hover, [data-testid="stLinkButton"] a:hover {{
             transform: translateY(-3px) !important;
             box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5) !important;
         }}
-        /* Botão desabilitado */
         [data-testid="stButton"] button:disabled {{
-            background: rgba(55, 65, 81, 0.5) !important; /* Cinza escuro desabilitado */
+            background: rgba(55, 65, 81, 0.5) !important;
             color: {COLORS['text_secondary']} !important;
             box-shadow: none !important;
             transform: none !important;
@@ -331,17 +307,14 @@ def load_custom_css():
             border-radius: 15px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }}
-        /* Texto dentro do popover */
         [data-testid="stPopover"] p, [data-testid="stPopover"] span, [data-testid="stPopover"] li {{
             color: {COLORS['text_primary']} !important;
         }}
         [data-testid="stPopover"] strong {{
             color: {COLORS['accent_teal']};
         }}
-        
-        /* Botão do popover (ex: "📋 Detalhes") */
         [data-testid="stPopover"] button {{
-             background: rgba(55, 65, 81, 0.5) !important; /* Cinza escuro */
+             background: rgba(55, 65, 81, 0.5) !important;
              color: {COLORS['text_primary']} !important;
              border: 1px solid rgba(255, 255, 255, 0.1) !important;
              width: 100%;
@@ -446,7 +419,6 @@ st.markdown(
 if not df.empty:
     total_dashboards = len(df)
     ativos = len(df[df['Status'].str.lower() == 'ativo'])
-    # Contagem de plataformas únicas, tratando 'N/A'
     plataformas = df[df['Mídia'].str.lower() != 'n/a']['Mídia'].nunique()
     
     st.markdown(f"""
@@ -474,7 +446,6 @@ st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
 
 # --- Busca e Filtros ---
 if not df.empty:
-    # [CORRIGIDO] Barra de busca agora está limpa, sem st.columns
     search_term = st.text_input("🔍 **Buscar dashboards:**", placeholder="Digite o nome do dashboard, tecnologia ou palavra-chave...")
 
     st.sidebar.markdown("---")
@@ -483,7 +454,6 @@ if not df.empty:
     def lista(col):
         return ["Todos"] + sorted(df[col].replace('N/A', pd.NA).dropna().unique().tolist())
 
-    # [CORRIGIDO] Filtros agora estão verticais para melhor organização
     filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsável"))
     filtro_publico = st.sidebar.selectbox("🎯 Público", lista("Público"))
     filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Mídia"))
@@ -516,76 +486,70 @@ if not df.empty:
         st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
         st.info("💡 Tente ajustar os filtros ou termos de busca.")
     else:
-        grupos = [filtro_publico] if filtro_publico != "Todos" else sorted(df_filtrado["Público"].replace('N/A', pd.NA).dropna().unique())
+        # [REMOVIDO] Agrupamento por público
+        # grupos = [...]
+        # for g in grupos:
+        # st.markdown(f"### 🎯 {g}")
+        # subset = df_filtrado[...]
         
-        for g in grupos:
-            st.markdown(f"### 🎯 {g}")
-            subset = df_filtrado[df_filtrado["Público"] == g]
+        # [ALTERADO] Operar diretamente no df_filtrado
+        reports_list = df_filtrado.to_dict('records')
+        NUM_COLUNAS = 3
             
-            reports_list = subset.to_dict('records')
-            NUM_COLUNAS = 3
+        for i in range(0, len(reports_list), NUM_COLUNAS):
+            cols = st.columns(NUM_COLUNAS)
+            chunk = reports_list[i : i + NUM_COLUNAS]
+
+            for j, row in enumerate(chunk):
+                with cols[j]:
+                    # Card container customizado
+                    st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
+                    
+                    platform_icons = {
+                        'Power BI': '📊', 'Tableau': '📈', 'Qlik': '🔍', 
+                        'Google Data Studio': '🌐', 'Excel': '📋', 'Metabase': '🛠️'
+                    }
+                    icon = platform_icons.get(row['Mídia'], '📊')
+                    
+                    st.subheader(f"{icon} {row['Report']}")
+                    st.write(row['Descrição'])
+
+                    status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
+                    st.markdown(
+                        f"""
+                        <div class="tag-wrapper">
+                            <span class="tag">🖥️ {row['Mídia']}</span>
+                            <span class="tag {status_class}">● {row['Status']}</span>
+                            <span class="tag">🕐 {row['Periodicidade']}</span>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                    # Detalhes e ações
+                    col_btn1, col_btn2 = st.columns([1, 1])
+                    
+                    # [ALTERADO] Chave única agora usa apenas índices i e j
+                    key_base = f"{i}_{j}" 
+                    
+                    with col_btn1:
+                        # [CORRIGIDO] Remove 'key' do popover
+                        with st.popover("📋 Detalhes"):
+                            st.write(f"**👤 Responsável:** {row['Responsável']}")
+                            st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
+                            st.write(f"**⏰ Horário:** {row['Horário']}")
+                            st.write(f"**📢 Divulgação:** {row['Divulgação']}")
+                            st.write(f"**🎯 Público:** {row['Público']}")
+                    
+                    with col_btn2:
+                        if row["Link"] and row["Link"].lower() != "n/a":
+                            st.link_button("🚀 Acessar", row["Link"], use_container_width=True, key=f"link_{key_base}")
+                        else:
+                            st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
             
-            for i in range(0, len(reports_list), NUM_COLUNAS):
-                cols = st.columns(NUM_COLUNAS)
-                chunk = reports_list[i : i + NUM_COLUNAS]
-
-                for j, row in enumerate(chunk):
-                    with cols[j]:
-                        # Card container customizado
-                        st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
-                        
-                        # Ícone dinâmico baseado na plataforma
-                        platform_icons = {
-                            'Power BI': '📊', 'Tableau': '📈', 'Qlik': '🔍', 
-                            'Google Data Studio': '🌐', 'Excel': '📋', 'Metabase': '🛠️'
-                        }
-                        # [CORRIGIDO] Adiciona 'N/A' como fallback
-                        icon = platform_icons.get(row['Mídia'], '📊')
-                        
-                        # [CORRIGIDO] Usa st.subheader para o título, que será pego pelo CSS
-                        st.subheader(f"{icon} {row['Report']}")
-                        # [CORRIGIDO] Usa st.write para a descrição
-                        st.write(row['Descrição'])
-
-                        # Tags
-                        status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
-                        st.markdown(
-                            f"""
-                            <div class="tag-wrapper">
-                                <span class="tag">🖥️ {row['Mídia']}</span>
-                                <span class="tag {status_class}">● {row['Status']}</span>
-                                <span class="tag">🕐 {row['Periodicidade']}</span>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-
-                        # Detalhes e ações
-                        col_btn1, col_btn2 = st.columns([1, 1])
-                        
-                        # [CORRIGIDO] Adiciona KEY única
-                        key_base = f"{g}_{i}_{j}"
-                        
-                        with col_btn1:
-                            # [CORRIGIDO] Remove o 'key' do popover para evitar o TypeError
-                            with st.popover("📋 Detalhes"):
-                                st.write(f"**👤 Responsável:** {row['Responsável']}")
-                                st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
-                                st.write(f"**⏰ Horário:** {row['Horário']}")
-                                st.write(f"**📢 Divulgação:** {row['Divulgação']}")
-                                st.write(f"**🎯 Público:** {row['Público']}")
-                        
-                        with col_btn2:
-                            if row["Link"] and row["Link"].lower() != "n/a":
-                                # [CORRIGIDO] Adiciona KEY única
-                                st.link_button("🚀 Acessar", row["Link"], use_container_width=True, key=f"link_{key_base}")
-                            else:
-                                # [CORRIGIDO] Adiciona KEY única
-                                st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
-                        
-                        st.markdown('</div>', unsafe_allow_html=True)
-            
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True) # Espaço entre as linhas do grid
 
 else:
     st.warning("📊 Aguardando dados... Verifique a conexão com a planilha.")
