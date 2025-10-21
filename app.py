@@ -36,7 +36,7 @@ def load_custom_css():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
         
-        /* === FUNDO === */
+        /* === FUNDO COM GRADIENTE ANIMADO === */
         [data-testid="stAppViewContainer"] {{
             background: linear-gradient(-45deg, {COLORS['background_main']}, {COLORS['primary_dark']}, {COLORS['background_sidebar']}, {COLORS['primary_medium']});
             background-size: 400% 400%;
@@ -48,7 +48,7 @@ def load_custom_css():
         }}
         @keyframes gradientShift {{ 0%{{background-position:0% 50%}} 50%{{background-position:100% 50%}} 100%{{background-position:0% 50%}} }}
 
-        /* === PARTÍCULAS === */
+        /* === EFEITO DE PARTÍCULAS NO FUNDO === */
         [data-testid="stAppViewContainer"]::before {{
             content: ""; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
@@ -142,7 +142,7 @@ def load_custom_css():
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             animation: cardEntrance 0.8s ease-out forwards; opacity: 0; transform: translateY(50px);
-            z-index: 2; /* Garante que o card fique acima do fundo */
+            z-index: 2;
         }}
         @keyframes cardEntrance {{ to {{ opacity: 1; transform: translateY(0); }} }}
 
@@ -169,20 +169,30 @@ def load_custom_css():
              color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;
         }}
 
-        /* === TÍTULOS DAS SEÇÕES (SIMPLIFICADO) === */
+        /* === TÍTULOS DAS SEÇÕES (RESTAURADO COM AJUSTES) === */
         h3 {{
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
             font-size: 2.5rem;
             text-align: center;
-            margin-top: 4rem; /* Mais espaço acima */
-            margin-bottom: 2.5rem; /* Mais espaço abaixo */
+            margin-top: 5rem; /* Aumenta espaço ACIMA */
+            margin-bottom: 3rem; /* Aumenta espaço ABAIXO */
             position: relative;
             color: {COLORS['text_primary']};
-            z-index: 5; /* Garante que fique acima das partículas */
+            z-index: 5;
         }}
-        /* Removido ::after para simplificar e evitar overlap */
-        
+        /* Linha decorativa ABAIXO do título */
+        h3::after {{
+            content: '';
+            position: absolute;
+            bottom: -15px; /* Ajustado para ficar mais abaixo */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px; height: 4px;
+            background: linear-gradient(90deg, {COLORS['accent_purple']}, {COLORS['accent_teal']});
+            border-radius: 2px;
+        }}
+
         /* === TAGS === */
         .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1.5rem 0; margin-top: auto; }}
         .tag {{
@@ -261,6 +271,7 @@ def load_custom_css():
 load_custom_css()
 
 # --- Carregamento de Dados ---
+# ... (código de carregamento de dados permanece o mesmo) ...
 try:
     URL_PLANILHA = st.secrets["GOOGLE_SHEET_URL"]
 except KeyError:
@@ -366,7 +377,7 @@ if not df.empty:
         
         for g in grupos:
             # Adiciona o título da seção
-            st.markdown(f"### {g}") # Removido o emoji para um look mais clean
+            st.markdown(f"### {g}") # Removido o emoji
             # Filtra o dataframe para o grupo atual
             subset = df_filtrado[df_filtrado["Publico"] == g]
             
@@ -406,7 +417,7 @@ if not df.empty:
                         col_btn1, col_btn2 = st.columns([1, 1])
                         
                         with col_btn1:
-                            # [CORREÇÃO] Remove 'key' do popover
+                            # Popover SEM key
                             with st.popover("📋 Detalhes"):
                                 st.write(f"**👤 Responsável:** {row['Responsavel']}")
                                 st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
@@ -423,10 +434,11 @@ if not df.empty:
                         st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
                         st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
                 
-                # [ALTERADO] Usar st.write("") ou st.markdown("<br>") para espaçamento consistente
-                st.markdown("<br>", unsafe_allow_html=True) # Espaço entre as linhas do grid
+                # Espaço entre as linhas do grid
+                st.markdown("<br>", unsafe_allow_html=True) 
             
-            st.markdown("<br>", unsafe_allow_html=True) # Espaço extra entre as seções
+            # Espaço extra entre as seções
+            st.markdown("<br>", unsafe_allow_html=True) 
 
 else:
     st.warning("📊 Aguardando dados... Verifique a conexão com a planilha.")
