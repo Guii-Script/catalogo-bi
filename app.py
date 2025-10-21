@@ -1,55 +1,89 @@
 import streamlit as st
 import pandas as pd
+import re # Usado para a busca
 
-# Define as configurações da página (título da aba, ícone e layout)
-# 'layout="wide"' usa o espaço total da tela.
+# --- Configuração da Página ---
+# Define o layout inicial da página
 st.set_page_config(
     page_title="Portfólio de BI",
-    page_icon="💼",
+    page_icon="✨", # Ícone de "excelência"
     layout="wide"
 )
 
-# --- Injeção de CSS ---
-# Esta função injeta nosso CSS customizado para os cards
+# --- CSS Avançado ---
+# para reestilizar os componentes padrão do Streamlit.
 def load_custom_css():
     st.markdown("""
         <style>
-            /* Define um fundo levemente cinza para a aplicação */
+            /* --- Fundo e Layout --- */
             [data-testid="stAppViewContainer"] {
-                background-color: #F0F2F6;
+                /* Um gradiente sutil é mais profissional que uma cor sólida */
+                background: linear-gradient(170deg, #F0F2F6 0%, #E9EEF5 100%);
             }
 
-            /* Este é o "card" 
-            Alvo: O container que o Streamlit cria com 'border=True' 
-            */
+            /* --- Títulos --- */
+            h1 {
+                color: #0D1F3C; /* Um azul escuro, forte */
+                font-weight: 700;
+            }
+            h3 {
+                color: #0D1F3C; /* Título de "Exibindo..." */
+            }
+
+            /* --- O Card--- */
             [data-testid="stVerticalBlockBorderWrapper"] > div {
-                background-color: #FFFFFF;         /* Fundo branco para o card */
-                border-radius: 10px;               /* Cantos arredondados */
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Sombra profissional */
-                transition: transform 0.2s ease-in-out; /* Animação no hover */
-                min-height: 360px;                 /* Altura mínima para alinhar o grid */
-                display: flex;                     /* Ativa o Flexbox */
-                flex-direction: column;            /* Organiza o conteúdo em coluna */
-                padding: 20px 20px 15px 20px;      /* Espaçamento interno */
+                background-color: #FFFFFF;
+                border-radius: 12px;
+                border: 1px solid #E0E0E0; /* Borda sutil */
+                box-shadow: 0 4px 6px rgba(0,0,0,0.04); /* Sombra inicial leve */
+                transition: all 0.3s ease-in-out; /* Animação suave para TUDO */
+                min-height: 380px; /* Altura mínima para alinhar os botões */
+                display: flex;
+                flex-direction: column;
+                padding: 24px 24px 20px 24px;
             }
 
-            /* Efeito de "zoom" ao passar o mouse */
+            /* --- Animação de Hover (A "Excelência") --- */
             [data-testid="stVerticalBlockBorderWrapper"] > div:hover {
-                transform: scale(1.02);
+                transform: translateY(-5px); /* Levita o card */
+                box-shadow: 0 10px 20px rgba(0,0,0,0.08); /* Sombra mais forte */
+                border-color: #0068C9; /* Borda na cor primária */
+            }
+
+            /* --- Título dentro do Card --- */
+            [data-testid="stVerticalBlockBorderWrapper"] h2 {
+                color: #004a8d; /* Cor primária escura */
+                font-weight: 600;
+                margin-bottom: 10px;
+            }
+
+            /* --- Tags (Etiquetas) Customizadas --- */
+            .tag-wrapper {
+                display: flex;
+                flex-wrap: wrap; /* Permite que as tags quebrem a linha */
+                gap: 8px;
+                margin: 10px 0px;
+            }
+            .tag {
+                background-color: #E6F0F8; /* Fundo azul claro */
+                color: #004a8d; /* Texto azul escuro */
+                padding: 5px 12px;
+                border-radius: 15px;
+                font-size: 13px;
+                font-weight: 600;
+                line-height: 1.4;
             }
             
-            /* Este é o "truque" do layout.
-            Força os botões (stButton, stLinkButton) a irem para o fundo do card.
-            'margin-top: auto' preenche o espaço vazio acima do botão.
-            */
+            /* --- Botões e Popover --- */
             .stButton, .stLinkButton {
-                margin-top: auto;
+                margin-top: auto; /* O truque para alinhar no rodapé */
             }
-            
-            /* Customiza o popover (detalhes) */
             [data-testid="stPopover"] {
-                background-color: #FFFFFF;
                 border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+            [data-testid="stSidebar"] {
+                background-color: #FFFFFF;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -59,146 +93,142 @@ load_custom_css()
 
 
 # --- Carregamento de Dados ---
-
-# Busca a URL da planilha dos 'Secrets' do Streamlit.
-# Isso é vital para a segurança, mantendo o link fora do código público.
+# (Mesma lógica segura de antes)
 try:
     URL_PLANILHA = st.secrets["GOOGLE_SHEET_URL"]
 except KeyError:
     st.error("Erro de Configuração: O 'GOOGLE_SHEET_URL' não foi configurado nos Secrets deste app.")
-    st.info("Por favor, vá em 'Settings' > 'Secrets' no painel do Streamlit e adicione o link da sua planilha.")
     st.stop()
 except Exception as e:
     st.error(f"Um erro inesperado ocorreu ao tentar ler os segredos: {e}")
     st.stop()
 
-
-# Função para carregar e cachear os dados da planilha.
-# O cache (ttl=600) salva os dados por 10 minutos, evitando
-# recarregar do Google Sheets a cada clique e melhorando a performance.
 @st.cache_data(ttl=600)
 def carregar_dados(url):
     if not url:
         st.error("O URL da planilha está vazio. Verifique os Secrets.")
         return pd.DataFrame()
-        
     try:
         df = pd.read_csv(url, encoding='utf-8')
-        
-        # Garante que colunas essenciais existam, mesmo que vazias
-        colunas_essenciais = ['Report', 'Descrição', 'Link', 'Status', 'Responsável', 'Público', 'Mídia']
+        # Garante que as colunas existam
+        colunas_essenciais = ['Report', 'Descrição', 'Link', 'Status', 'Responsável', 'Público', 'Mídia', 'Periodicidade', 'Horário', 'Divulgação']
         for col in colunas_essenciais:
             if col not in df.columns:
-                df[col] = pd.NA # Adiciona a coluna com valor Nulo se não existir
+                df[col] = pd.NA
+        
+        # Converte tudo para string para evitar erros de busca
+        df = df.astype(str)
+        # Substitui 'nan' ou '<NA>' por 'N/A' para uma exibição mais limpa
+        df.replace(['nan', '<NA>', 'NaN'], 'N/A', inplace=True)
         return df
     except Exception as e:
         st.error(f"Erro ao carregar dados da planilha: {e}")
-        st.info(f"Verifique se o link da planilha está correto e se ela está publicada como CSV.")
         return pd.DataFrame()
 
-# Carrega os dados
 df = carregar_dados(URL_PLANILHA)
 
 # --- Título Principal ---
 st.title("💼 Portfólio de Dashboards de BI")
-st.write("Navegue pelo nosso catálogo de dashboards. Use os filtros na barra lateral para refinar sua busca.")
+st.write("Navegue pelo nosso catálogo de dashboards. Use a busca e os filtros para refinar.")
+st.write("") # Espaço
 
-
-# --- Lógica Principal (Filtros e Grid) ---
-
+# --- Lógica Principal (Busca, Filtros e Grid) ---
 if not df.empty:
-    # --- Barra Lateral de Filtros ---
+    
+    # --- 1. BARRA DE BUSCA (A Nova Interação) ---
+    search_term = st.text_input(
+        "Buscar por nome ou descrição:", 
+        placeholder="Digite um termo-chave..."
+    )
+    
+    # --- 2. BARRA LATERAL DE FILTROS ---
     st.sidebar.header("Filtros do Catálogo")
     
-    # Função auxiliar para criar listas de filtro (evita repetição de código)
     def criar_lista_filtro(coluna):
-        # .dropna() remove valores vazios, .unique() pega só um de cada
         return ["Todos"] + sorted(list(df[coluna].dropna().unique()))
 
-    # Filtros dinâmicos baseados nas colunas da planilha
     try:
-        filtro_responsavel = st.sidebar.selectbox("Filtrar por Responsável:", criar_lista_filtro('Responsável'))
-        filtro_publico = st.sidebar.selectbox("Filtrar por Público:", criar_lista_filtro('Público'))
-        filtro_midia = st.sidebar.selectbox("Filtrar por Mídia:", criar_lista_filtro('Mídia'))
-        filtro_status = st.sidebar.selectbox("Filtrar por Status:", criar_lista_filtro('Status'))
+        filtro_responsavel = st.sidebar.selectbox("Responsável:", criar_lista_filtro('Responsável'))
+        filtro_publico = st.sidebar.selectbox("Público:", criar_lista_filtro('Público'))
+        filtro_midia = st.sidebar.selectbox("Mídia:", criar_lista_filtro('Mídia'))
+        filtro_status = st.sidebar.selectbox("Status:", criar_lista_filtro('Status'))
     except KeyError as e:
-        # Erro defensivo caso uma coluna de filtro não seja encontrada
-        st.sidebar.error(f"Erro: Coluna '{e.args[0]}' não encontrada na planilha. Verifique os cabeçalhos.")
-        # Define padrões para o app não quebrar
+        st.sidebar.error(f"Erro: Coluna '{e.args[0]}' não encontrada.")
         filtro_responsavel = filtro_publico = filtro_midia = filtro_status = "Todos"
     
-    # --- Lógica de Filtragem ---
+    # --- 3. LÓGICA DE FILTRAGEM (Busca + Filtros) ---
     df_filtrado = df
 
-    # Aplica os filtros selecionados (se não for "Todos")
+    # Aplica a BUSCA primeiro
+    if search_term:
+        # Busca case-insensitive (ignorando maiúsculas/minúsculas)
+        # 're.escape' protege contra caracteres especiais na busca
+        search_regex = re.escape(search_term)
+        df_filtrado = df_filtrado[
+            df_filtrado['Report'].str.contains(search_regex, case=False, na=False) |
+            df_filtrado['Descrição'].str.contains(search_regex, case=False, na=False)
+        ]
+
+    # Aplica os FILTROS da sidebar no resultado da busca
     if filtro_responsavel != "Todos":
         df_filtrado = df_filtrado[df_filtrado['Responsável'] == filtro_responsavel]
-    
     if filtro_publico != "Todos":
         df_filtrado = df_filtrado[df_filtrado['Público'] == filtro_publico]
-    
     if filtro_midia != "Todos":
         df_filtrado = df_filtrado[df_filtrado['Mídia'] == filtro_midia]
-
     if filtro_status != "Todos":
         df_filtrado = df_filtrado[df_filtrado['Status'] == filtro_status]
     
     
-    # --- Lógica de Exibição em Grid (Portfólio) ---
-    
+    # --- 4. LÓGICA DE EXIBIÇÃO EM GRID (Portfólio) ---
     st.write(f"### Exibindo {len(df_filtrado)} dashboards:")
     st.divider()
 
-    # Define o número de colunas para o grid
     NUM_COLUNAS = 3 
-    
-    # Converte o dataframe filtrado em uma lista de dicionários
     reports_list = df_filtrado.to_dict('records')
 
     if not reports_list:
-        st.info("Nenhum dashboard encontrado com os filtros selecionados.")
+        st.info("Nenhum dashboard encontrado com os filtros e busca selecionados.")
 
-    # Itera pela lista de reports em "fatias" do tamanho do NUM_COLUNAS
+    # Itera e cria o grid
     for i in range(0, len(reports_list), NUM_COLUNAS):
-        
-        # Cria as colunas para esta linha do grid
         cols = st.columns(NUM_COLUNAS)
-        
-        # Pega a "fatia" de reports para esta linha
         chunk = reports_list[i : i + NUM_COLUNAS]
 
-        # Itera sobre a fatia e preenche cada coluna
         for j, report_data in enumerate(chunk):
-            
-            # 'cols[j]' é a coluna atual (coluna 0, 1 ou 2)
             with cols[j]:
-                
-                # 'border=True' é o que nosso CSS usa como "gatilho"
+                # 'border=True' é o "gatilho" para o nosso CSS customizado
                 with st.container(border=True):
                     
-                    # Título do Card
+                    # Título (st.subheader vira <h2>)
                     st.subheader(report_data.get('Report', 'Sem Título'))
                     
-                    # Descrição (limitada a 150 caracteres para não quebrar o layout)
+                    # Descrição (limitada para não quebrar o layout)
                     descricao = report_data.get('Descrição', 'Sem descrição.')
-                    if pd.isna(descricao): descricao = "Sem descrição."
-                    st.write(descricao[:150] + ("..." if len(descricao) > 150 else ""))
-
-                    # Informações secundárias (Público, Responsável)
-                    st.caption(f"Público: {report_data.get('Público', 'N/A')} | Responsável: {report_data.get('Responsável', 'N/A')}")
+                    st.write(descricao[:120] + ("..." if len(descricao) > 120 else ""))
                     
-                    # ===== CORREÇÃO AQUI =====
-                    # O 'st.popover' é um container e não aceita o argumento 'key'
+                    # --- Tags de HTML Customizadas ---
+                    # Esta é a parte visual mais importante
+                    tags_html = f"""
+                    <div class="tag-wrapper">
+                        <span class="tag">👤 {report_data.get('Público', 'N/A')}</span>
+                        <span class="tag">🔧 {report_data.get('Mídia', 'N/A')}</span>
+                        <span class="tag">🟢 {report_data.get('Status', 'N/A')}</span>
+                    </div>
+                    """
+                    st.markdown(tags_html, unsafe_allow_html=True)
+
+                    # --- Popover (Detalhes) ---
+                    # (Mesma lógica de antes, sem o 'key' problemático)
                     with st.popover("Ver mais detalhes"):
+                        st.markdown(f"**Responsável:** {report_data.get('Responsável', 'N/A')}")
                         st.markdown(f"**Periodicidade:** {report_data.get('Periodicidade', 'N/A')}")
-                        st.markdown(f"**Mídia:** {report_data.get('Mídia', 'N/A')}")
                         st.markdown(f"**Horário:** {report_data.get('Horário', 'N/A')}")
                         st.markdown(f"**Divulgação:** {report_data.get('Divulgação', 'N/A')}")
-                        st.markdown(f"**Status:** {report_data.get('Status', 'N/A')}")
-                    
-                    # Botão de Ação (só aparece se o link existir)
+
+                    # --- Botão de Ação ---
                     link = report_data.get('Link')
-                    if link and pd.notna(link):
+                    if link and link.lower() != 'n/a':
                         st.link_button(
                             "Acessar Dashboard", 
                             link, 
@@ -207,7 +237,6 @@ if not df.empty:
                             key=f"link_{i}_{j}" # Chave única
                         )
                     else:
-                        # 'key' garante que cada botão desabilitado seja único
                         st.button(
                             "Link Indisponível", 
                             use_container_width=True, 
@@ -216,7 +245,6 @@ if not df.empty:
                         )
 
 else:
-    # Mensagem caso a planilha esteja vazia ou o carregamento falhe
     st.warning("Não foi possível carregar os dados do catálogo. Verifique a planilha ou a configuração do 'Secrets'.")
 
 st.sidebar.info("Este catálogo é atualizado automaticamente a cada 10 minutos.")
