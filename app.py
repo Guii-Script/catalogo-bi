@@ -177,6 +177,10 @@ def load_custom_css():
              color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;
         }}
 
+        /* === TÍTULOS DAS SEÇÕES (REMOVIDO - Não mais usado) === */
+        /* h3 {...} (Regra removida) */
+        /* h3::after {...} (Regra removida) */
+
         /* === TAGS === */
         .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1.5rem 0; margin-top: auto; }}
         .tag {{
@@ -307,7 +311,7 @@ if not df.empty:
                 <span class="stat-number">{plataformas}</span>
                 <span class="stat-label">Plataformas</span>
             </div>
-            {/* Bloco do KPI de Públicos foi removido daqui */}
+
         </div>
     """, unsafe_allow_html=True)
 
@@ -315,8 +319,7 @@ st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
 
 # --- Barra Lateral com Logo e Filtros ---
 # [MUDANÇA AQUI] Adiciona a imagem no topo
-# [CORREÇÃO] Troca use_column_width por use_container_width
-st.sidebar.image("fundo.png", use_container_width=True) # Garante que fundo.png está na pasta
+st.sidebar.image("fundo.png", use_column_width=True) # Certifique-se que fundo.png está na pasta
 st.sidebar.markdown("---")
 st.sidebar.header("🎛️ Filtros Avançados")
 
@@ -391,7 +394,7 @@ if not df.empty:
                         unsafe_allow_html=True
                     )
 
-                    # [CORREÇÃO] Chave única agora usa apenas índices i e j
+                    # [CORRIGIDO] Chave única agora usa apenas índices i e j
                     key_base = f"{i}_{j}"
                     
                     # Container para alinhar botões no rodapé
@@ -399,7 +402,7 @@ if not df.empty:
                     col_btn1, col_btn2 = st.columns([1, 1])
                     
                     with col_btn1:
-                        # [CORREÇÃO] Remove 'key' do popover
+                        # [CORRIGIDO] Remove 'key' do popover
                         with st.popover("📋 Detalhes"):
                             st.write(f"**👤 Responsável:** {row['Responsável']}")
                             st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
