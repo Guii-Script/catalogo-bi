@@ -10,13 +10,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed" # Menu retrátil
 )
 
-# --- Paleta de Cores (Ajustada para a nova referência) ---
-COLOR_ACCENT_BLUE_DARK = "#0d2e5b"      # Azul escuro principal (texto, botões)
-COLOR_ACCENT_BLUE_LIGHT = "#5b92c8"     # Azul claro de destaque (tags, detalhes)
-COLOR_BACKGROUND_MAIN = "#F8F8F8"       # Fundo principal (branco/muito claro)
-COLOR_BACKGROUND_ALT = "#EFEFEF"        # Fundo secundário (para seções, etc.)
-COLOR_TEXT_MAIN_DARK = "#2C3E50"        # Texto principal escuro (leitura)
-COLOR_TEXT_LIGHT = "#FFFFFF"            # Texto branco (sobre fundos escuros)
+# --- Paleta de Cores (Corrigido) ---
+COLOR_ACCENT_BLUE_DARK = "#0d2e5b"
+COLOR_ACCENT_BLUE_LIGHT = "#5b92c8"
+COLOR_BACKGROUND_MAIN = "#F8F8F8"
+COLOR_BACKGROUND_ALT = "#EFEFEF"
+COLOR_TEXT_MAIN_DARK = "#2C3E50"
+COLOR_TEXT_LIGHT = "#FFFFFF"
+COLOR_WHITE = "#FFFFFF"
 
 # SVG de pincelada azul (inspirado na sua referência) para o topo/rodapé e títulos
 # Usamos o COLOR_ACCENT_BLUE_DARK para a pincelada
