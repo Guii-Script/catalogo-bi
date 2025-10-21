@@ -1,14 +1,15 @@
 import streamlit as st
 import pandas as pd
 
-# --- Configuração da Página ---
+# Define o layout da página, o título no navegador e o ícone
 st.set_page_config(
-    page_title="Cardápio de Dashboards de BI",
-    page_icon="🍽️", # Mudei o ícone para "cardápio"
+    page_title="Portfólio de BI",
+    page_icon="💼", # Ícone de "pasta/portfólio"
     layout="wide"
 )
 
-# --- O LINK MÁGICO (SEGURO) ---
+# Carrega a URL da planilha a partir dos 'Secrets' do Streamlit
+# Isso mantém seu link de dados seguro e fora do repositório público.
 try:
     URL_PLANILHA = st.secrets["GOOGLE_SHEET_URL"]
 except KeyError:
@@ -20,11 +21,9 @@ except Exception as e:
     st.stop()
 
 
-# --- Título ---
-st.title("🍽️ Cardápio de Dashboards de BI")
-st.write("Use os filtros na barra lateral para encontrar o dashboard que você precisa.")
-
-# --- Cache ---
+# Função principal para carregar e cachear os dados da planilha
+# O cache (ttl=600) impede que o app recarregue os dados do Google
+# a cada interação, melhorando a performance. Ele atualiza a cada 10 minutos.
 @st.cache_data(ttl=600)
 def carregar_dados(url):
     if not url:
@@ -32,132 +31,157 @@ def carregar_dados(url):
         return pd.DataFrame()
         
     try:
+        # Tenta ler o CSV. O encoding 'utf-8' é importante para acentuação.
         df = pd.read_csv(url, encoding='utf-8')
-        # Garante que colunas essenciais existam, mesmo que vazias
-        for col in ['Link', 'Status', 'Responsável', 'Público']:
+        
+        # Garante que colunas essenciais para o app existam, mesmo que vazias
+        # Isso evita que o app quebre se uma coluna for renomeada ou excluída
+        colunas_essenciais = ['Report', 'Descrição', 'Link', 'Status', 'Responsável', 'Público', 'Mídia']
+        for col in colunas_essenciais:
             if col not in df.columns:
                 df[col] = pd.NA
         return df
     except Exception as e:
         st.error(f"Erro ao carregar dados da planilha: {e}")
-        st.info(f"Verifique se o link da planilha está correto e se ela está publicada como CSV. URL usado: {url[:50]}...")
+        st.info(f"Verifique se o link da planilha está correto e se ela está publicada como CSV.")
         return pd.DataFrame()
 
-# --- Carregar Dados ---
+# --- Carregamento dos Dados ---
 df = carregar_dados(URL_PLANILHA)
 
-# !!!!! LINHA DE DEPURAÇÃO !!!!!
-# Deixei esta linha para você confirmar se os nomes estão corretos
-st.write("DEBUG: Colunas encontradas na planilha:", df.columns)
+# --- Título Principal ---
+st.title("💼 Portfólio de Dashboards de BI")
+st.write("Navegue pelo nosso catálogo de dashboards. Use os filtros para refinar sua busca.")
 
 
 if not df.empty:
-    # --- Barra Lateral de Filtros (ATUALIZADA) ---
-    st.sidebar.header("Filtros do Cardápio")
+    # --- Barra Lateral de Filtros ---
+    st.sidebar.header("Filtros do Catálogo")
     
+    # Função auxiliar para criar listas de filtro, tratando valores nulos (NA)
+    def criar_lista_filtro(coluna):
+        return ["Todos"] + sorted(list(df[coluna].dropna().unique()))
+
     # Filtro por Responsável
     try:
-        responsaveis = ["Todos"] + sorted(list(df['Responsável'].dropna().unique()))
-        filtro_responsavel = st.sidebar.selectbox("Filtrar por Responsável:", responsaveis)
+        filtro_responsavel = st.sidebar.selectbox(
+            "Filtrar por Responsável:", 
+            criar_lista_filtro('Responsável')
+        )
     except KeyError:
         st.sidebar.error("Coluna 'Responsável' não encontrada.")
         filtro_responsavel = "Todos"
         
-    # Filtro por Público (NOVO)
+    # Filtro por Público
     try:
-        publico_opcoes = ["Todos"] + sorted(list(df['Público'].dropna().unique()))
-        filtro_publico = st.sidebar.selectbox("Filtrar por Público:", publico_opcoes)
+        filtro_publico = st.sidebar.selectbox(
+            "Filtrar por Público:", 
+            criar_lista_filtro('Público')
+        )
     except KeyError:
         st.sidebar.error("Coluna 'Público' não encontrada.")
         filtro_publico = "Todos"
-        
+
+    # Filtro por Mídia (Ex: Looker, Email)
+    try:
+        filtro_midia = st.sidebar.selectbox(
+            "Filtrar por Mídia:", 
+            criar_lista_filtro('Mídia')
+        )
+    except KeyError:
+        st.sidebar.error("Coluna 'Mídia' não encontrada.")
+        filtro_midia = "Todos"
+
     # Filtro por Status
     try:
-        status_opcoes = ["Todos"] + sorted(list(df['Status'].dropna().unique()))
-        filtro_status = st.sidebar.selectbox("Filtrar por Status:", status_opcoes)
+        filtro_status = st.sidebar.selectbox(
+            "Filtrar por Status:", 
+            criar_lista_filtro('Status')
+        )
     except KeyError:
         st.sidebar.error("Coluna 'Status' não encontrada.")
         filtro_status = "Todos"
     
     # --- Lógica de Filtragem ---
+    # Começa com o dataframe completo e vai aplicando os filtros
     df_filtrado = df
 
-    if filtro_responsavel != "Todos" and 'Responsável' in df.columns:
+    if filtro_responsavel != "Todos":
         df_filtrado = df_filtrado[df_filtrado['Responsável'] == filtro_responsavel]
     
-    if filtro_publico != "Todos" and 'Público' in df.columns:
+    if filtro_publico != "Todos":
         df_filtrado = df_filtrado[df_filtrado['Público'] == filtro_publico]
     
-    if filtro_status != "Todos" and 'Status' in df.columns:
+    if filtro_midia != "Todos":
+        df_filtrado = df_filtrado[df_filtrado['Mídia'] == filtro_midia]
+
+    if filtro_status != "Todos":
         df_filtrado = df_filtrado[df_filtrado['Status'] == filtro_status]
     
-    # --- Exibir os Cards ---
+    
+    # --- Lógica de Exibição em Grid (Portfólio) ---
+    
     st.write(f"Exibindo {len(df_filtrado)} dashboards:")
-    st.divider() # Uma linha horizontal para separar
+    st.divider() # Linha horizontal
 
-    if df_filtrado.empty:
+    # Define o número de colunas para o grid
+    NUM_COLUNAS = 3 
+    
+    # Converte o dataframe filtrado em uma lista de dicionários para iterar
+    reports_list = df_filtrado.to_dict('records')
+
+    if not reports_list:
         st.info("Nenhum dashboard encontrado com os filtros selecionados.")
 
-    # Loop para criar os cards
-    for index, row in df_filtrado.iterrows():
-        # Cria um container com borda para cada "card"
-        with st.container(border=True):
-            
-            # --- Título e Status ---
-            col1_header, col2_header = st.columns([0.8, 0.2]) # 80% para o título, 20% para o status
-            with col1_header:
-                st.subheader(row['Report']) # Nome do Dashboard
-            
-            with col2_header:
-                # Usa 'st.badge' (requer Streamlit 1.28+) para um status visual
-                if pd.notna(row['Status']):
-                    if row['Status'].lower() == 'ativo':
-                        st.badge("Ativo", icon="✅")
-                    else:
-                        st.badge(row['Status'], icon="⚠️")
-            
-            # --- Descrição ---
-            if pd.notna(row['Descrição']):
-                st.write(row['Descrição'])
-            
-            # --- Detalhes (em colunas) ---
-            st.markdown("---") # Linha divisória interna
-            col1_details, col2_details, col3_details = st.columns(3)
-            
-            with col1_details:
-                st.caption("RESPONSÁVEL")
-                st.write(row['Responsável'])
-                
-                st.caption("MÍDIA")
-                st.write(row['Mídia'])
-            
-            with col2_details:
-                st.caption("PERIODICIDADE")
-                st.write(row['Periodicidade'])
-                
-                st.caption("HORÁRIO")
-                st.write(row['Horário'])
-
-            with col3_details:
-                st.caption("PÚBLICO")
-                st.write(row['Público'])
-                
-                st.caption("DIVULGAÇÃO")
-                st.write(row['Divulgação'])
-            
-            st.markdown("---") # Linha divisória interna
-            
-            # --- Botão de Ação ---
-            if 'Link' in df.columns and pd.notna(row['Link']):
-                # 'use_container_width=True' faz o botão ficar largo e bonito
-                st.link_button("Acessar Dashboard", row['Link'], use_container_width=True, type="primary")
-            else:
-                st.error("Link de acesso não cadastrado para este report.", icon="⚠️")
+    # Itera pela lista de reports em "chunks" do tamanho do NUM_COLUNAS
+    for i in range(0, len(reports_list), NUM_COLUNAS):
         
-        # Um espaço entre os cards
-        st.write("") 
+        # Cria as colunas para esta linha do grid
+        cols = st.columns(NUM_COLUNAS)
+        
+        # Pega o "pedaço" de reports para esta linha (ex: 3 reports)
+        chunk = reports_list[i : i + NUM_COLUNAS]
+
+        # Itera sobre o chunk e preenche cada coluna
+        for j, report_data in enumerate(chunk):
+            
+            # 'cols[j]' é a coluna atual (coluna 0, 1 ou 2)
+            with cols[j]:
+                
+                # 'height' fixo é o segredo para um grid uniforme.
+                # Ajuste este valor (ex: 350, 400) se o conteúdo não couber.
+                with st.container(border=True, height=350):
+                    
+                    # Título do Card
+                    st.subheader(report_data.get('Report', 'Sem Título'))
+                    
+                    # Descrição (limitada a 150 caracteres para não quebrar o layout)
+                    descricao = report_data.get('Descrição', 'Sem descrição.')
+                    if pd.isna(descricao): descricao = "Sem descrição."
+                    st.write(descricao[:150] + ("..." if len(descricao) > 150 else ""))
+
+                    # Informações secundárias (Público, Responsável)
+                    st.caption(f"Público: {report_data.get('Público', 'N/A')} | Status: {report_data.get('Status', 'N/A')}")
+                    
+                    # Popover: um "botão" que abre uma janela com detalhes
+                    # Isso mantém o card principal limpo.
+                    with st.popover("Ver mais detalhes"):
+                        st.markdown(f"**Responsável:** {report_data.get('Responsável', 'N/A')}")
+                        st.markdown(f"**Periodicidade:** {report_data.get('Periodicidade', 'N/A')}")
+                        st.markdown(f"**Mídia:** {report_data.get('Mídia', 'N/A')}")
+                        st.markdown(f"**Horário:** {report_data.get('Horário', 'N/A')}")
+                        st.markdown(f"**Divulgação:** {report_data.get('Divulgação', 'N/A')}")
+                    
+                    st.write("") # Espaçamento
+                    
+                    # Botão de Ação (só aparece se o link existir)
+                    link = report_data.get('Link')
+                    if link and pd.notna(link):
+                        st.link_button("Acessar Dashboard", link, use_container_width=True, type="primary")
+                    else:
+                        st.button("Link Indisponível", use_container_width=True, disabled=True)
 
 else:
     st.warning("Não foi possível carregar os dados do catálogo. Verifique a planilha ou a configuração do 'Secrets'.")
 
-st.sidebar.info("Este catálogo é atualizado automaticamente a cada 10 minutos a partir da planilha principal.")
+st.sidebar.info("Este catálogo é atualizado automaticamente a cada 10 minutos.")
