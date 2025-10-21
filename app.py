@@ -6,6 +6,7 @@ import random # Embora importado, random não está sendo usado. Pode ser removi
 # --- Configuração da Página ---
 st.set_page_config(
     page_title="Portfólio BI | Dashboard Gallery",
+    page_icon="🚀",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -337,7 +338,7 @@ df = carregar_dados(URL_PLANILHA)
 
 # --- Header com Estatísticas ---
 st.markdown('<div class="main-header">', unsafe_allow_html=True)
-st.title("🚀 Portfólio de Business Intelligence")
+st.title("Portfólio de Business Intelligence")
 
 st.markdown(
     "<div class='subtitle-container'><p>Descubra insights poderosos através da nossa coleção de dashboards estratégicos</p></div>",
@@ -479,7 +480,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown(
     f"""
     <div style='color: {COLORS['text_secondary']}; font-size: 0.8rem; text-align: center;'>
-        <p>Portfólio BI v2.0</p>
+        <p> Portfólio BI v2.0</p>
         <p>Dados atualizados a cada 10 minutos</p>
     </div>
     """, 
