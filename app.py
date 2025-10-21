@@ -11,7 +11,7 @@ st.set_page_config(
 # --- O LINK MÁGICO ---
 # Cole aqui o link CSV que você copiou do Google Sheets
 # (Arquivo > Compartilhar > Publicar na web > .csv)
-URL_PLANILHA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS43tcOACO6MB_fDbMeuv4j3bItCp9FrwCVb5lZK3udIiOV9YQARp7rUR1jXqWl5QV3wmg__esSMcpV/pubhtml?gid=0&single=true"
+URL_PLANILHA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS43tcOACO6MB_fDbMeuv4j3bItCp9FrwCVb5lZK3udIiOV9YQARp7rUR1jXqWl5QV3wmg__esSMcpV/pub?gid=0&single=true&output=csv"
 
 # --- Título ---
 st.title("📊 Catálogo Centralizado de Dashboards de BI")
