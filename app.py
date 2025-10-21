@@ -237,6 +237,27 @@ def load_custom_css():
              margin-bottom: 1rem;
         }}
 
+        /* === TÍTULOS DAS SEÇÕES (RESTAURADO) === */
+        h3 {{
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 2.5rem;
+            text-align: center;
+            margin: 4rem 0 2rem 0;
+            position: relative;
+            color: {COLORS['text_primary']};
+            z-index: 5;
+        }}
+        h3::after {{
+            content: '';
+            position: absolute;
+            bottom: -10px; left: 50%;
+            transform: translateX(-50%);
+            width: 100px; height: 4px;
+            background: linear-gradient(90deg, {COLORS['accent_purple']}, {COLORS['accent_teal']});
+            border-radius: 2px;
+        }}
+
         /* === TAGS MODERNAS === */
         .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1.5rem 0; margin-top: auto; }}
         .tag {{
@@ -271,6 +292,7 @@ def load_custom_css():
             box-shadow: none !important; transform: none !important; opacity: 0.7;
         }}
 
+
         /* === POPOVER ESTILIZADO === */
         [data-testid="stPopover"] {{
             background: rgba(30, 41, 59, 0.95) !important; backdrop-filter: blur(20px);
@@ -284,6 +306,7 @@ def load_custom_css():
              border: 1px solid rgba(255, 255, 255, 0.1) !important; width: 100%;
         }}
         [data-testid="stPopover"] button:hover {{ background: rgba(75, 85, 99, 0.7) !important; border-color: {COLORS['accent_purple']} !important; }}
+
 
         /* === ESTATÍSTICAS NO HEADER === */
         .stats-container {{ display: flex; justify-content: center; gap: 3rem; margin: 2rem 0; flex-wrap: wrap; }}
@@ -325,8 +348,9 @@ except KeyError:
 def carregar_dados(url):
     try:
         df = pd.read_csv(url, encoding='utf-8')
-        colunas = ['Nome_Dash','Descricao','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
-        for c in colunas:
+        # [ALTERADO] Use os nomes corretos das colunas da sua planilha
+        colunas_esperadas = ['Nome_Dash','Descricao','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
+        for c in colunas_esperadas:
             if c not in df.columns: df[c] = pd.NA
         df.fillna("N/A", inplace=True)
         return df.astype(str)
@@ -352,21 +376,22 @@ if not df.empty:
     plataformas = df[df['Midia'].str.lower() != 'n/a']['Midia'].nunique()
     
     st.markdown(f"""
-    <div class="stats-container">
-        <div class="stat-item">
-            <span class="stat-number">{total_dashboards}</span>
-            <span class="stat-label">Dashboards</span>
+        <div class="stats-container">
+            <div class="stat-item">
+                <span class="stat-number">{total_dashboards}</span>
+                <span class="stat-label">Dashboards</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{ativos}</span>
+                <span class="stat-label">Ativos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{plataformas}</span>
+                <span class="stat-label">Plataformas</span>
+            </div>
+            {/* KPI de Públicos Removido */}
         </div>
-        <div class="stat-item">
-            <span class="stat-number">{ativos}</span>
-            <span class="stat-label">Ativos</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-number">{plataformas}</span>
-            <span class="stat-label">Plataformas</span>
-        </div>
-    </div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
 
@@ -377,12 +402,14 @@ st.sidebar.header("Filtros Avançados")
 
 if not df.empty:
     def lista(col):
+        # [ALTERADO] Usa replace('N/A', pd.NA).dropna() para segurança
         return ["Todos"] + sorted(df[col].replace('N/A', pd.NA).dropna().unique().tolist())
 
     # Filtros Verticais
-    filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsavel"))
-    filtro_publico = st.sidebar.selectbox("🎯 Público", lista("Publico"))
-    filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Midia"))
+    # [ALTERADO] Use os nomes corretos das colunas como aparecem na sua planilha
+    filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsavel")) # Note: "Responsavel" sem acento?
+    filtro_publico = st.sidebar.selectbox("🎯 Público", lista("Publico")) # Note: "Publico" sem acento?
+    filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Midia")) # Note: "Midia" sem acento?
     filtro_status = st.sidebar.selectbox("📈 Status", lista("Status"))
     
     st.sidebar.markdown("---") # Divisor
@@ -395,15 +422,17 @@ if not df.empty:
     df_filtrado = df.copy()
     if search_term:
         df_filtrado = df_filtrado[
+            # [ALTERADO] Use os nomes corretos das colunas
             df_filtrado["Nome_Dash"].str.contains(search_term, case=False, na=False) |
             df_filtrado["Descricao"].str.contains(search_term, case=False, na=False) |
             df_filtrado["Midia"].str.contains(search_term, case=False, na=False)
         ]
     
+    # [ALTERADO] Use os nomes corretos das colunas no mapeamento
     filter_mapping = {
-        "Responsável": (filtro_responsavel, "Todos"),
-        "Público": (filtro_publico, "Todos"), 
-        "Mídia": (filtro_midia, "Todos"),
+        "Responsavel": (filtro_responsavel, "Todos"),
+        "Publico": (filtro_publico, "Todos"), 
+        "Midia": (filtro_midia, "Todos"),
         "Status": (filtro_status, "Todos")
     }
     
@@ -411,66 +440,80 @@ if not df.empty:
         if filtro != padrao:
             df_filtrado = df_filtrado[df_filtrado[col] == filtro]
 
-    # --- Exibição dos Cards em Grid (Sem Agrupamento) ---
+    # --- Exibição dos Cards em Grid (Com Agrupamento por Público) ---
     if len(df_filtrado) == 0:
         st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
         st.info("💡 Tente ajustar os filtros ou termos de busca.")
     else:
-        reports_list = df_filtrado.to_dict('records')
-        NUM_COLUNAS = 3
+        # [RESTAURADO] Determina os grupos de público para iterar
+        grupos = [filtro_publico] if filtro_publico != "Todos" else sorted(df_filtrado["Publico"].replace('N/A', pd.NA).dropna().unique())
+        
+        for g in grupos:
+            # [RESTAURADO] Adiciona o título da seção
+            st.markdown(f"### 🎯 {g}")
+            # [RESTAURADO] Filtra o dataframe para o grupo atual
+            subset = df_filtrado[df_filtrado["Publico"] == g]
             
-        for i in range(0, len(reports_list), NUM_COLUNAS):
-            cols = st.columns(NUM_COLUNAS)
-            chunk = reports_list[i : i + NUM_COLUNAS]
+            # [ALTERADO] Opera sobre o 'subset'
+            reports_list = subset.to_dict('records')
+            NUM_COLUNAS = 3
+                
+            for i in range(0, len(reports_list), NUM_COLUNAS):
+                cols = st.columns(NUM_COLUNAS)
+                chunk = reports_list[i : i + NUM_COLUNAS]
 
-            for j, row in enumerate(chunk):
-                with cols[j]:
-                    st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
-                    
-                    platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
-                    icon = platform_icons.get(row['Midia'], '📊')
-                    
-                    st.subheader(f"{icon} {row['Nome_Dash']}")
-                    st.write(row['Descricao'])
+                for j, row in enumerate(chunk):
+                    with cols[j]:
+                        st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
+                        
+                        platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
+                        # [ALTERADO] Usa o nome correto da coluna 'Midia'
+                        icon = platform_icons.get(row['Midia'], '📊')
+                        
+                        # [ALTERADO] Usa o nome correto da coluna 'Nome_Dash' e 'Descricao'
+                        st.subheader(f"{icon} {row['Nome_Dash']}")
+                        st.write(row['Descricao'])
 
-                    status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
-                    st.markdown(
-                        f"""
-                        <div class="tag-wrapper">
-                            <span class="tag">🖥️ {row['Midia']}</span>
-                            <span class="tag {status_class}">● {row['Status']}</span>
-                            <span class="tag">🕐 {row['Periodicidade']}</span>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                        status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
+                        st.markdown(
+                            f"""
+                            <div class="tag-wrapper">
+                                <span class="tag">🖥️ {row['Midia']}</span>
+                                <span class="tag {status_class}">● {row['Status']}</span>
+                                <span class="tag">🕐 {row['Periodicidade']}</span>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
 
-                    # Chave única para botões e popover
-                    key_base = f"{i}_{j}" 
-                    
-                    # Container para alinhar botões no rodapé
-                    st.markdown('<div style="margin-top: auto;">', unsafe_allow_html=True) 
-                    col_btn1, col_btn2 = st.columns([1, 1])
-                    
-                    with col_btn1:
-                        # [CORREÇÃO] Remove 'key' do popover
-                        with st.popover("📋 Detalhes"):
-                            st.write(f"**👤 Responsável:** {row['Responsavel']}")
-                            st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
-                            st.write(f"**⏰ Horário:** {row['Horario']}")
-                            st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
-                            st.write(f"**🎯 Público:** {row['Publico']}")
-                    
-                    with col_btn2:
-                        if row["Link"] and row["Link"].lower() != "n/a":
-                            st.link_button("🚀 Acessar", row["Link"], use_container_width=True, key=f"link_{key_base}")
-                        else:
-                            st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
-                    
-                    st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
-                    st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
+                        # [RESTAURADO] Chave única inclui o grupo 'g'
+                        key_base = f"{g}_{i}_{j}" 
+                        
+                        st.markdown('<div style="margin-top: auto;">', unsafe_allow_html=True) 
+                        col_btn1, col_btn2 = st.columns([1, 1])
+                        
+                        with col_btn1:
+                            # [RESTAURADO] Remove 'key' do popover
+                            with st.popover("📋 Detalhes"):
+                                # [ALTERADO] Use os nomes corretos das colunas
+                                st.write(f"**👤 Responsável:** {row['Responsavel']}")
+                                st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
+                                st.write(f"**⏰ Horário:** {row['Horario']}")
+                                st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
+                                st.write(f"**🎯 Público:** {row['Publico']}")
+                        
+                        with col_btn2:
+                            if row["Link"] and row["Link"].lower() != "n/a":
+                                st.link_button("Acessar", row["Link"], use_container_width=True, key=f"link_{key_base}")
+                            else:
+                                st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
+                        
+                        st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
+                        st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
+                
+                st.markdown("<br>", unsafe_allow_html=True) # Espaço entre as linhas do grid
             
-            st.markdown("<br>", unsafe_allow_html=True) # Espaço entre as linhas do grid
+            st.markdown("<br>", unsafe_allow_html=True) # Espaço extra entre as seções
 
 else:
     st.warning("📊 Aguardando dados... Verifique a conexão com a planilha.")
@@ -480,7 +523,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown(
     f"""
     <div style='color: {COLORS['text_secondary']}; font-size: 0.8rem; text-align: center;'>
-        <p> Portfólio BI v2.0</p>
+        <p>Portfólio BI v2.0</p>
         <p>Dados atualizados a cada 10 minutos</p>
     </div>
     """, 
