@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import re
+import random
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -108,6 +109,7 @@ def load_custom_css():
         }}
 
         /* === SUBTÍTULO === */
+        /* Seletor mais específico para o subtítulo */
         [data-testid="stAppViewContainer"] > .main .block-container > div:first-child > div > div > .main-header + [data-testid="stMarkdown"] p {{
             color: {COLORS['text_secondary']} !important;
             text-align: center;
@@ -151,7 +153,7 @@ def load_custom_css():
             backdrop-filter: blur(20px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }}
-        [data-testid="stSidebar"] h2 {{
+        [data-testid="stSidebar"] h2 {{ /* Título "Filtros Avançados" */
             color: {COLORS['text_primary']} !important;
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
@@ -229,7 +231,6 @@ def load_custom_css():
         }}
 
         /* === TÍTULOS DAS SEÇÕES === */
-        /* Esta é a definição correta (a outra foi removida) */
         h3 {{
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
