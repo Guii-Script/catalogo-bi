@@ -1,128 +1,72 @@
 import streamlit as st
 import pandas as pd
-import re
+import re # Biblioteca de Expressões Regulares, usada para a busca
 
 # --- Configuração da Página ---
+# Define as configurações iniciais da página, como título da aba e layout
 st.set_page_config(
     page_title="Portfólio de BI",
-    page_icon="✨",
+    page_icon="✨", # Ícone atualizado
     layout="wide"
 )
 
-# --- Cores da Paleta ---
-COLOR_PRIMARY = "#0d2e5b"      # Azul Escuro (Títulos, Botões)
-COLOR_SECONDARY = "#5b92c8"     # Azul Claro (Hover, Tags)
-COLOR_BACKGROUND_DARK = "#0d2e5b" # Fundo (Início do Degradê)
-COLOR_BACKGROUND_LIGHT = "#1d4a7c" # Fundo (Fim do Degradê)
-COLOR_CARD = "#FFFFFF"         # Card (Branco)
-COLOR_TEXT_DARK = "#0d2e5b"     # Texto no Card (Azul Escuro)
-COLOR_TEXT_NORMAL = "#333333"   # Texto de Descrição
-COLOR_TEXT_LIGHT = "#FFFFFF"    # Texto no Fundo Escuro (Títulos)
-
-# --- CSS Customizado (A transformação do design) ---
+# --- Injeção de CSS Customizado ---
+# Esta função injeta o bloco de CSS para reestilizar a aplicação.
 def load_custom_css():
-    # SVG do padrão Zig-Zag da sua referência, codificado para CSS
-    zigzag_svg = (
-        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
-        "width='100' height='20' viewBox='0 0 100 20'%3E%3Cpath "
-        f"d='M0 10 L10 0 L20 10 L30 0 L40 10 L50 0 L60 10 L70 0 L80 10 L90 0 L100 10' "
-        f"fill='none' stroke='{COLOR_SECONDARY}' stroke-width='2' opacity='0.2'/%3E%3C/svg%3E"
-    )
-
     st.markdown(f"""
         <style>
-            /* --- 1. Fundo e Layout Principal --- */
+            /* --- 1. Configurações Globais --- */
+            /* Define o fundo da aplicação para um tom off-white */
             [data-testid="stAppViewContainer"] {{
-                background: linear-gradient(170deg, {COLOR_BACKGROUND_DARK} 0%, {COLOR_BACKGROUND_LIGHT} 100%);
+                background-color: #F8F9FA;
             }}
-            
-            /* --- 2. Tipografia Principal --- */
-            h1, h2 {{
-                color: {COLOR_TEXT_LIGHT};
+
+            /* --- 2. Tipografia --- */
+            /* Título principal da página */
+            h1 {{
+                color: #0d2e5b; /* Cor primária (azul escuro) */
                 font-weight: 700;
             }}
-            /* Título da Seção (ex: "Diretoria") */
+            /* Título de seção (ex: "Exibindo...") */
             h3 {{
-                color: {COLOR_TEXT_LIGHT};
-                font-weight: 600;
-                border-bottom: 2px solid {COLOR_SECONDARY};
-                padding-bottom: 10px;
-                margin-top: 40px;
+                color: #333333; /* Cinza escuro para contraste suave */
             }}
 
-            /* --- 3. Barra Lateral (Com Padrão Zig-Zag) --- */
-            [data-testid="stSidebar"] {{
-                background-color: {COLOR_PRIMARY};
-                background-image: url("{zigzag_svg}");
-                background-repeat: repeat-x;
-                background-position: top;
-                padding-top: 50px; /* Espaço para o padrão aparecer */
-            }}
-            /* Texto e labels na sidebar */
-            [data-testid="stSidebar"] h2, [data-testid="stSidebar"] .st-bd {{
-                color: {COLOR_TEXT_LIGHT};
-            }}
-
-            /* --- 4. O Layout de Scroll Horizontal --- */
-            .horizontal-scroll-container {{
-                display: flex;
-                overflow-x: auto; /* A mágica do scroll */
-                padding: 20px 5px;
-                gap: 25px; /* Espaço entre os cards */
-                /* Remove a barra de scroll feia */
-                scrollbar-width: thin;
-                scrollbar-color: {COLOR_SECONDARY} {COLOR_PRIMARY};
-            }}
-            .horizontal-scroll-container::-webkit-scrollbar {{
-                height: 8px;
-            }}
-            .horizontal-scroll-container::-webkit-scrollbar-track {{
-                background: {COLOR_PRIMARY};
-                border-radius: 4px;
-            }}
-            .horizontal-scroll-container::-webkit-scrollbar-thumb {{
-                background-color: {COLOR_SECONDARY};
-                border-radius: 4px;
-            }}
-
-            /* --- 5. O Card (Design "Premium" Branco) --- */
-            /* O seletor [data-testid="stVerticalBlockBorderWrapper"] é o container do card */
-            .horizontal-scroll-container [data-testid="stVerticalBlockBorderWrapper"] > div {{
-                background-color: {COLOR_CARD};
-                border: 1px solid #E0E0E0;
-                border-radius: 12px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-                transition: all 0.3s ease-out;
-                
-                /* Define o tamanho do card no scroll */
-                flex: 0 0 360px; /* Não cresce, não encolhe, base de 360px */
-                min-height: 380px; 
-                
+            /* --- 3. Card de Portfólio --- */
+            /* Seleciona o container que o Streamlit cria com 'border=True' */
+            [data-testid="stVerticalBlockBorderWrapper"] > div {{
+                background-color: #FFFFFF; /* Cor base (branco) */
+                border: 1px solid #EAEAEA; /* Borda sutil */
+                border-radius: 12px;       /* Cantos mais suaves */
+                /* Sombra em camadas para profundidade */
+                box-shadow: 0 4px 8px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.04);
+                transition: all 0.3s ease-out; /* Transição suave para hover */
+                min-height: 400px;         /* Altura mínima para alinhamento do grid */
                 display: flex;
                 flex-direction: column;
                 padding: 24px;
             }}
-            .horizontal-scroll-container [data-testid="stVerticalBlockBorderWrapper"] > div:hover {{
-                transform: translateY(-5px);
-                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-                border-color: {COLOR_SECONDARY};
+            /* Efeito de hover "premium" */
+            [data-testid="stVerticalBlockBorderWrapper"] > div:hover {{
+                transform: scale(1.015); /* Zoom sutil */
+                border-color: #5b92c8;   /* Cor secundária (azul claro) */
+                box-shadow: 0 8px 16px rgba(0,0,0,0.06), 0 12px 24px rgba(0,0,0,0.06);
             }}
 
-            /* --- 6. Conteúdo do Card (Títulos, Tags, Botões) --- */
-            /* Título do Card */
-            .horizontal-scroll-container h2 {{
-                color: {COLOR_TEXT_DARK};
-                font-weight: 700;
-                font-size: 1.75rem;
-                margin-bottom: 10px;
+            /* --- 4. Título e Descrição do Card --- */
+            /* O Streamlit usa 'st.subheader' que renderiza como h2 */
+            [data-testid="stVerticalBlockBorderWrapper"] h2 {{
+                color: #0d2e5b;
+                font-weight: 600;
+                margin-bottom: 12px;
+                line-height: 1.3;
             }}
-            /* Descrição do Card */
-            .horizontal-scroll-container p {{
-                color: {COLOR_TEXT_NORMAL};
+            [data-testid="stVerticalBlockBorderWrapper"] p {{
+                color: #333333; /* Cor do texto de descrição */
                 font-size: 15px;
             }}
-            
-            /* Tags (Etiquetas) */
+
+            /* --- 5. Tags (Etiquetas) Customizadas --- */
             .tag-wrapper {{
                 display: flex;
                 flex-wrap: wrap;
@@ -130,43 +74,51 @@ def load_custom_css():
                 margin: 12px 0px;
             }}
             .tag {{
-                background-color: {COLOR_SECONDARY};
-                color: {COLOR_TEXT_LIGHT};
-                padding: 5px 14px;
+                background-color: #e7f0f9; /* Tonalidade muito clara de #5b92c8 */
+                color: #0d2e5b; /* Texto na cor primária */
+                padding: 6px 14px;
                 border-radius: 20px;
                 font-size: 13px;
-                font-weight: 600;
+                font-weight: 500;
+                line-height: 1.4;
             }}
+            /* Variação de tag para status "Ativo" */
             .tag.status-ativo {{
-                background-color: #28a745; /* Verde para "Ativo" */
-                color: {COLOR_TEXT_LIGHT};
+                background-color: #E6F6E8; /* Verde claro */
+                color: #1E6426; /* Verde escuro */
             }}
+             /* Variação de tag para status "Inativo" ou "Manutenção" */
             .tag.status-inativo {{
-                background-color: #dc3545; /* Vermelho para "Inativo" */
-                color: {COLOR_TEXT_LIGHT};
+                background-color: #FDF3F3; /* Vermelho claro */
+                color: #9C2B2B; /* Vermelho escuro */
+            }}
+
+
+            /* --- 6. Layout do Card --- */
+            /* Garante que os botões fiquem alinhados no rodapé */
+            .stButton, .stLinkButton {{
+                margin-top: auto;
             }}
             
-            /* Botões */
-            .stButton, .stLinkButton {{
-                margin-top: auto; /* Alinha no rodapé */
-            }}
+            /* --- 7. Estilização de Componentes Streamlit --- */
             /* Botão Primário (Acessar) */
             [data-testid="stButton"] button:not(:disabled), [data-testid="stLinkButton"] a {{
-                background-color: {COLOR_PRIMARY};
-                color: {COLOR_TEXT_LIGHT};
-                font-weight: 600;
-                border: none;
+                background-color: #0d2e5b;
+                color: #FFFFFF;
+                border: 1px solid #0d2e5b;
                 transition: all 0.2s ease;
             }}
+            /* Hover do Botão Primário */
             [data-testid="stButton"] button:not(:disabled):hover, [data-testid="stLinkButton"] a:hover {{
-                background-color: {COLOR_SECONDARY};
-                color: {COLOR_PRIMARY};
+                background-color: #5b92c8;
+                border-color: #5b92c8;
+                color: #FFFFFF;
             }}
-            /* Botão Desabilitado */
+            /* Botão Desabilitado (Link Indisponível) */
             [data-testid="stButton"] button:disabled {{
-                background-color: #EAEAEA;
+                background-color: #F0F2F6;
+                border-color: #EAEAEA;
                 color: #AAAAAA;
-                border: none;
             }}
             
             /* Popover (Detalhes) */
@@ -174,25 +126,34 @@ def load_custom_css():
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             }}
-            /* Texto dentro do Popover */
-            [data-testid="stPopover"] .stMarkdown, [data-testid="stPopover"] p {{
-                color: {COLOR_PRIMARY};
-            }}
 
+            /* Sidebar */
+            [data-testid="stSidebar"] {{
+                background-color: #FFFFFF;
+                border-right: 1px solid #EAEAEA;
+            }}
         </style>
     """, unsafe_allow_html=True)
 
 # Executa a injeção do CSS
 load_custom_css()
 
+
 # --- Carregamento de Dados ---
-# (Mesma lógica segura de antes)
+# Busca a URL da planilha dos 'Secrets' do Streamlit
+# Esta é a abordagem segura para evitar expor o link no GitHub.
 try:
     URL_PLANILHA = st.secrets["GOOGLE_SHEET_URL"]
 except KeyError:
     st.error("Erro de Configuração: O 'GOOGLE_SHEET_URL' não foi configurado nos Secrets deste app.")
     st.stop()
+except Exception as e:
+    st.error(f"Um erro inesperado ocorreu ao tentar ler os segredos: {e}")
+    st.stop()
 
+# Função para carregar e cachear os dados da planilha.
+# O cache (ttl=600) armazena os dados por 10 minutos, melhorando a
+# performance ao evitar requisições repetidas ao Google Sheets.
 @st.cache_data(ttl=600)
 def carregar_dados(url):
     if not url:
@@ -200,52 +161,64 @@ def carregar_dados(url):
         return pd.DataFrame()
     try:
         df = pd.read_csv(url, encoding='utf-8')
+        
+        # Define as colunas esperadas para evitar erros
         colunas_essenciais = ['Report', 'Descrição', 'Link', 'Status', 'Responsável', 'Público', 'Mídia', 'Periodicidade', 'Horário', 'Divulgação']
         for col in colunas_essenciais:
             if col not in df.columns:
                 df[col] = pd.NA
+        
+        # Converte todas as colunas para string para consistência na busca
         df = df.astype(str)
+        # Substitui valores nulos (nan, <NA>) por 'N/A' para exibição
         df.replace(['nan', '<NA>', 'NaN'], 'N/A', inplace=True)
         return df
     except Exception as e:
         st.error(f"Erro ao carregar dados da planilha: {e}")
         return pd.DataFrame()
 
+# Executa o carregamento dos dados
 df = carregar_dados(URL_PLANILHA)
 
 # --- Título Principal ---
-st.title("✨ Portfólio de Dashboards de BI")
-st.write("Explore nossa coleção de dashboards estratégicos. Utilize a busca e os filtros laterais para encontrar insights relevantes.")
-st.write("")
+st.title("💼 Portfólio de Dashboards de BI")
+st.write("Navegue pelo nosso catálogo de dashboards. Use a busca e os filtros para refinar.")
+st.write("") # Adiciona um espaço vertical
 
 # --- Lógica Principal (Busca, Filtros e Grid) ---
 if not df.empty:
     
     # --- 1. BARRA DE BUSCA ---
+    # Componente de entrada de texto para a busca em tempo real.
     search_term = st.text_input(
         "Buscar por nome ou descrição:", 
-        placeholder="Digite termos-chave (ex: Vendas, Marketing, Logística)..."
+        placeholder="Digite um termo-chave..."
     )
     
     # --- 2. BARRA LATERAL DE FILTROS ---
-    st.sidebar.header("Filtros de Portfólio")
+    st.sidebar.header("Filtros do Catálogo")
     
+    # Função auxiliar para gerar listas de opções para os filtros
     def criar_lista_filtro(coluna):
+        # Remove valores nulos ('N/A') e duplicados, depois ordena
         opcoes = df[coluna].replace('N/A', pd.NA).dropna().unique()
         return ["Todos"] + sorted(list(opcoes))
 
+    # Cria os seletores (selectbox) na barra lateral
     try:
         filtro_responsavel = st.sidebar.selectbox("Responsável:", criar_lista_filtro('Responsável'))
-        filtro_publico = st.sidebar.selectbox("Público-alvo:", criar_lista_filtro('Público'))
-        filtro_midia = st.sidebar.selectbox("Plataforma BI:", criar_lista_filtro('Mídia'))
+        filtro_publico = st.sidebar.selectbox("Público:", criar_lista_filtro('Público'))
+        filtro_midia = st.sidebar.selectbox("Mídia:", criar_lista_filtro('Mídia'))
         filtro_status = st.sidebar.selectbox("Status:", criar_lista_filtro('Status'))
     except KeyError as e:
         st.sidebar.error(f"Erro: Coluna '{e.args[0]}' não encontrada.")
+        # Define padrões para evitar que o app pare
         filtro_responsavel = filtro_publico = filtro_midia = filtro_status = "Todos"
     
     # --- 3. LÓGICA DE FILTRAGEM ---
     df_filtrado = df
 
+    # Aplica a busca (case-insensitive)
     if search_term:
         search_regex = re.escape(search_term)
         df_filtrado = df_filtrado[
@@ -253,6 +226,7 @@ if not df.empty:
             df_filtrado['Descrição'].str.contains(search_regex, case=False, na=False)
         ]
 
+    # Aplica os filtros da sidebar
     if filtro_responsavel != "Todos":
         df_filtrado = df_filtrado[df_filtrado['Responsável'] == filtro_responsavel]
     if filtro_publico != "Todos":
@@ -263,87 +237,82 @@ if not df.empty:
         df_filtrado = df_filtrado[df_filtrado['Status'] == filtro_status]
     
     
-    # --- 4. LÓGICA DE EXIBIÇÃO SECCIONADA ---
-    # Pega os grupos únicos do filtro (ou da busca)
-    # Se 'Público' foi filtrado, usa só ele. Senão, usa todos.
-    if filtro_publico != "Todos":
-        grupos_publico = [filtro_publico]
-    else:
-        grupos_publico = df_filtrado['Público'].replace('N/A', pd.NA).dropna().unique()
-        grupos_publico = sorted(list(grupos_publico))
+    # --- 4. LÓGICA DE EXIBIÇÃO EM GRID ---
+    st.write(f"### Exibindo {len(df_filtrado)} dashboards:")
+    st.divider()
 
-    if len(df_filtrado) == 0:
-        st.info("Nenhum dashboard corresponde aos critérios de busca ou filtros aplicados.")
+    NUM_COLUNAS = 3 # Define o número de colunas do grid
+    reports_list = df_filtrado.to_dict('records') # Converte o dataframe para iterar
 
-    # Itera sobre cada grupo de "Público"
-    for publico in grupos_publico:
-        st.markdown(f"### {publico}") # Título da Seção
-        reports_do_grupo = df_filtrado[df_filtrado['Público'] == publico]
-        
-        # Abre o container de scroll horizontal
-        st.markdown('<div class="horizontal-scroll-container">', unsafe_allow_html=True)
-        
-        # Itera sobre os dashboards DESSE GRUPO
-        for index, report_data in reports_do_grupo.iterrows():
-            # 'border=True' é o seletor para o nosso CSS
-            with st.container(border=True):
-                
-                # Título do Card (st.subheader -> h2)
-                st.subheader(report_data.get('Report', 'Sem Título'))
-                
-                # Descrição
-                descricao = report_data.get('Descrição', 'N/A')
-                st.write(descricao[:110] + ("..." if len(descricao) > 110 else ""))
-                
-                # --- Tags de HTML Customizadas ---
-                status_val = report_data.get('Status', 'N/A').lower()
-                status_class = ''
-                if status_val == 'ativo':
-                    status_class = 'status-ativo'
-                elif status_val == 'inativo' or status_val == 'manutenção':
-                    status_class = 'status-inativo'
-                
-                # Usamos Mídia e Status como tags principais
-                tags_html = f"""
-                <div class="tag-wrapper">
-                    <span class="tag">🔧 {report_data.get('Mídia', 'N/A')}</span>
-                    <span class="tag {status_class}"> {report_data.get('Status', 'N/A')}</span>
-                </div>
-                """
-                st.markdown(tags_html, unsafe_allow_html=True)
+    if not reports_list:
+        st.info("Nenhum dashboard encontrado com os filtros e busca selecionados.")
 
-                # --- Popover (Detalhes Adicionais) ---
-                with st.popover("Ver mais detalhes"):
-                    st.markdown(f"**Responsável:** {report_data.get('Responsável', 'N/A')}")
-                    st.markdown(f"**Periodicidade:** {report_data.get('Periodicidade', 'N/A')}")
-                    st.markdown(f"**Horário:** {report_data.get('Horário', 'N/A')}")
-                    st.markdown(f"**Divulgação:** {report_data.get('Divulgação', 'N/A')}")
+    # Itera pela lista de reports em "fatias" (chunks)
+    for i in range(0, len(reports_list), NUM_COLUNAS):
+        cols = st.columns(NUM_COLUNAS)
+        chunk = reports_list[i : i + NUM_COLUNAS]
 
-                # --- Botão de Ação ---
-                key_base = f"{publico}_{index}" # Chave única para este card
-                link = report_data.get('Link')
-                
-                if link and link.lower() != 'n/a':
-                    st.link_button(
-                        "Acessar Dashboard", 
-                        link, 
-                        use_container_width=True, 
-                        type="primary",
-                        key=f"link_{key_base}"
-                    )
-                else:
-                    st.button(
-                        "Link Indisponível", 
-                        use_container_width=True, 
-                        disabled=True, 
-                        key=f"disabled_{key_base}"
-                    )
-        
-        # Fecha o container de scroll horizontal
-        st.markdown('</div>', unsafe_allow_html=True)
-        # st.divider() # Opcional: linha entre as seções
+        # Preenche cada coluna com um card
+        for j, report_data in enumerate(chunk):
+            with cols[j]:
+                # 'border=True' é o seletor usado pelo nosso CSS customizado
+                with st.container(border=True):
+                    
+                    # Título (usando markdown para h2)
+                    st.markdown(f"<h2>{report_data.get('Report', 'Sem Título')}</h2>", unsafe_allow_html=True)
+                    
+                    # Descrição (limitada em caracteres)
+                    descricao = report_data.get('Descrição', 'N/A')
+                    st.write(descricao[:120] + ("..." if len(descricao) > 120 else ""))
+                    
+                    # --- Tags de HTML Customizadas ---
+                    # Define a classe do status
+                    status_val = report_data.get('Status', 'N/A').lower()
+                    if status_val == 'ativo':
+                        status_class = 'status-ativo'
+                    elif status_val == 'inativo' or status_val == 'manutenção':
+                        status_class = 'status-inativo'
+                    else:
+                        status_class = ''
+
+                    tags_html = f"""
+                    <div class="tag-wrapper">
+                        <span class="tag">👤 {report_data.get('Público', 'N/A')}</span>
+                        <span class="tag">🔧 {report_data.get('Mídia', 'N/A')}</span>
+                        <span class="tag {status_class}"> {report_data.get('Status', 'N/A')}</span>
+                    </div>
+                    """
+                    st.markdown(tags_html, unsafe_allow_html=True)
+
+                    # --- Popover (Detalhes) ---
+                    with st.popover("Ver mais detalhes"):
+                        st.markdown(f"**Responsável:** {report_data.get('Responsável', 'N/A')}")
+                        st.markdown(f"**Periodicidade:** {report_data.get('Periodicidade', 'N/A')}")
+                        st.markdown(f"**Horário:** {report_data.get('Horário', 'N/A')}")
+                        st.markdown(f"**Divulgação:** {report_data.get('Divulgação', 'N/A')}")
+
+                    # --- Botão de Ação ---
+                    link = report_data.get('Link')
+                    # 'key' é essencial para evitar erros de ID duplicado em loops
+                    key_base = f"{i}_{j}" 
+                    
+                    if link and link.lower() != 'n/a':
+                        st.link_button(
+                            "Acessar Dashboard", 
+                            link, 
+                            use_container_width=True, 
+                            type="primary",
+                            key=f"link_{key_base}"
+                        )
+                    else:
+                        st.button(
+                            "Link Indisponível", 
+                            use_container_width=True, 
+                            disabled=True, 
+                            key=f"disabled_{key_base}"
+                        )
 
 else:
-    st.warning("Não foi possível carregar os dados do catálogo. Verifique a planilha ou a configuração do 'Secrets'.")
+    st.warning("Não foi possível carregar os dados do catálogo ou a planilha está vazia.")
 
 st.sidebar.info("Este catálogo é atualizado automaticamente a cada 10 minutos.")
