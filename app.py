@@ -30,7 +30,7 @@ COLORS = {
     "gradient_end": "#764ba2"
 }
 
-# --- CSS Customizado ---
+# --- CSS Customizado (Com Botão Fallback) ---
 def load_custom_css():
     st.markdown(f"""
         <style>
@@ -201,6 +201,7 @@ def load_custom_css():
             font-weight: 600 !important; padding: 12px 24px !important; transition: all 0.3s ease !important;
             position: relative; overflow: hidden;
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important; width: 100%;
+            text-decoration: none; display: inline-block; text-align: center; line-height: normal; cursor: pointer; /* Estilos base */
         }}
         [data-testid="stButton"] button::before, [data-testid="stLinkButton"] a::before {{ /* Efeito de brilho */
             content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
@@ -213,8 +214,38 @@ def load_custom_css():
         }}
         [data-testid="stButton"] button:disabled {{ /* Botão desabilitado */
             background: rgba(55, 65, 81, 0.5) !important; color: {COLORS['text_secondary']} !important;
-            box-shadow: none !important; transform: none !important; opacity: 0.7;
+            box-shadow: none !important; transform: none !important; opacity: 0.7; cursor: not-allowed;
         }}
+
+        /* === [NOVO] ESTILO PARA O BOTÃO DE FALLBACK === */
+        .fallback-link-button {{
+            /* Copia os estilos base do botão normal */
+            background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
+            color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
+            font-weight: 600 !important; padding: 12px 24px !important; transition: all 0.3s ease !important;
+            position: relative; overflow: hidden;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important; width: 100%;
+            text-decoration: none !important; /* Remove sublinhado */
+            display: inline-block; /* Importante para aplicar padding e width */
+            text-align: center;
+            line-height: normal;
+            cursor: pointer;
+            box-sizing: border-box; /* Garante que padding não aumente o tamanho total */
+        }}
+        /* Efeito de hover igual ao botão normal */
+         .fallback-link-button:hover {{
+            transform: translateY(-3px) !important;
+            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5) !important;
+            color: {COLORS['white']} !important; /* Mantém a cor do texto no hover */
+        }}
+         /* Efeito de brilho igual ao botão normal */
+        .fallback-link-button::before {{
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }}
+        .fallback-link-button:hover::before {{ left: 100%; }}
+
 
         /* === POPOVER === */
         [data-testid="stPopover"] {{
@@ -414,33 +445,33 @@ if not df.empty:
                                 st.write(f"**🎯 Público:** {row['Publico']}")
                         
                         with col_btn2:
-                            # Pega o link da linha, ou uma string vazia se não existir
+                            # [CORREÇÃO AQUI]
                             link_value_raw = row.get("Link", "") 
-                            # Remove espaços em branco do início/fim se for uma string
                             link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
 
-                            # Verifica se o link limpo é válido e não é "N/A"
                             if link_value and link_value.lower() != "n/a":
                                 try: 
-                                    # Tenta criar o botão de link normal
                                     st.link_button(
                                         "🚀 Acessar",
                                         link_value, # Usa o valor limpo
                                         use_container_width=True,
                                         key=f"link_{key_base}" 
                                     )
-                                # [MUDANÇA AQUI] Se o st.link_button falhar internamente:
                                 except (TypeError, Exception) as e: 
-                                     # Mostra um aviso mais discreto
-                                     st.warning(f"Não foi possível criar o botão para este link.", icon="⚠️")
-                                     # Oferece o link como texto clicável (Markdown)
-                                     st.markdown(f"Link direto: [{link_value[:30]}...]({link_value})") 
-                                     # Mantém um botão desabilitado como fallback visual
-                                     st.button("Botão Indisponível", use_container_width=True, disabled=True, key=f"btn_{key_base}_err")
+                                     # Usa o botão HTML como fallback
+                                     fallback_button_html = f"""
+                                     <a href="{link_value}" target="_blank" class="fallback-link-button" 
+                                        style="text-decoration: none;" 
+                                        title="Abrir link para {row.get('Nome_Dash', 'N/A')}">
+                                         🔗 Link Alternativo 
+                                     </a>
+                                     """
+                                     st.markdown(fallback_button_html, unsafe_allow_html=True)
+                                     # print(f"Fallback usado para {row.get('Nome_Dash', 'N/A')}: {e}") # Opcional: Logar erro
                             else:
-                                # Botão padrão para links vazios, "N/A", ou não-strings
+                                # Botão padrão para links vazios, "N/A", etc.
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
-                        
+
                         st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
                         st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
                 
