@@ -30,7 +30,7 @@ COLORS = {
     "gradient_end": "#764ba2"
 }
 
-# --- CSS Customizado (Com Correção no Título da Seção) ---
+# --- CSS Customizado ---
 def load_custom_css():
     st.markdown(f"""
         <style>
@@ -169,27 +169,15 @@ def load_custom_css():
              color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;
         }}
 
-        /* === TÍTULOS DAS SEÇÕES (COM ESPAÇAMENTO CORRIGIDO) === */
+        /* === TÍTULOS DAS SEÇÕES === */
         h3 {{
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700;
-            font-size: 2.5rem;
-            text-align: center;
-            margin-top: 5rem;      /* Espaço ACIMA do título */
-            margin-bottom: 1rem;   /* Espaço ABAIXO do texto do título */
-            padding-bottom: 25px;  /* Espaço DENTRO da caixa do h3, ABAIXO do texto, para a linha */
-            position: relative;
-            color: {COLORS['text_primary']};
-            z-index: 5;
+            font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 2.5rem; text-align: center;
+            margin-top: 5rem; margin-bottom: 1rem; padding-bottom: 25px;
+            position: relative; color: {COLORS['text_primary']}; z-index: 5;
         }}
-        /* Linha decorativa ABAIXO do título, DENTRO do padding */
-        h3::after {{
-            content: '';
-            position: absolute;
-            bottom: 0; /* Posiciona na borda inferior do padding */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px; height: 4px;
+        h3::after {{ /* Linha decorativa */
+            content: ''; position: absolute; bottom: 0; left: 50%;
+            transform: translateX(-50%); width: 100px; height: 4px;
             background: linear-gradient(90deg, {COLORS['accent_purple']}, {COLORS['accent_teal']});
             border-radius: 2px;
         }}
@@ -417,7 +405,7 @@ if not df.empty:
                         col_btn1, col_btn2 = st.columns([1, 1])
                         
                         with col_btn1:
-                            # [CORRIGIDO] Popover SEM key
+                            # Popover SEM key
                             with st.popover("📋 Detalhes"):
                                 st.write(f"**👤 Responsável:** {row['Responsavel']}")
                                 st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
@@ -427,13 +415,12 @@ if not df.empty:
                         
                         with col_btn2:
                             if row["Link"] and row["Link"].lower() != "n/a":
-                                # [CORRIGIDO] Adiciona str() e type='primary'
+                                # [CORREÇÃO] st.link_button SEM 'type'
                                 st.link_button(
                                     "🚀 Acessar", 
                                     str(row["Link"]), # Garante que é string
                                     use_container_width=True, 
-                                    key=f"link_{key_base}",
-                                    type="primary" # Adiciona tipo para consistência CSS
+                                    key=f"link_{key_base}"
                                     )
                             else:
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
