@@ -415,10 +415,10 @@ if not df.empty:
                         
                         with col_btn2:
                             if row["Link"] and row["Link"].lower() != "n/a":
-                                # [CORREÇÃO] st.link_button SEM 'type'
+                                # [CORREÇÃO] Remove type="primary", usa row["Link"] diretamente
                                 st.link_button(
                                     "🚀 Acessar", 
-                                    str(row["Link"]), # Garante que é string
+                                    row["Link"], # Usa o valor diretamente
                                     use_container_width=True, 
                                     key=f"link_{key_base}"
                                     )
