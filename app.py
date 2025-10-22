@@ -414,32 +414,22 @@ if not df.empty:
                                 st.write(f"**🎯 Público:** {row['Publico']}")
                         
                         with col_btn2:
-                            link_value = row.get("Link", "N/A") # Use .get for safety
+                            # Pega o link da linha, ou uma string vazia se não existir
+                            link_value_raw = row.get("Link", "") 
+                            # Remove espaços em branco do início/fim se for uma string
+                            link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
 
-                            # [MUDANÇA AQUI] Verificação mais estrita
-                            is_valid_link = (
-                                link_value and                            # Não é None ou vazio
-                                isinstance(link_value, str) and           # É uma string
-                                link_value.strip().lower() != "n/a" and   # Não é "N/A" (ignorando espaços e caso)
-                                link_value.strip() != ""                  # Não é apenas espaços em branco
-                            )
-
-                            if is_valid_link:
-                                
-                                try:
-                                    st.link_button(
-                                        "🚀 Acessar",
-                                        link_value, # Usa o valor diretamente
-                                        use_container_width=True,
-                                        key=f"link_{key_base}"
-                                    )
-                                except Exception as e:
-                                    # Se ainda der erro, mostra qual link causou
-                                    st.error(f"Erro no link: '{link_value}'")
-                                    # Fallback para botão desabilitado
-                                    st.button("Link Inválido", use_container_width=True, disabled=True, key=f"btn_{key_base}_error")
-
+                            # Verifica se o link limpo é válido e não é "N/A"
+                            if link_value and link_value.lower() != "n/a":
+                                # Chama o link_button diretamente, sem try...except
+                                st.link_button(
+                                    "🚀 Acessar",          # Texto que aparece no botão
+                                    link_value,           # URL limpa para onde o botão aponta
+                                    use_container_width=True,
+                                    key=f"link_{key_base}" # Chave única
+                                )
                             else:
+                                # Botão padrão para links vazios, "N/A", ou não-strings
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
                         
                         st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
