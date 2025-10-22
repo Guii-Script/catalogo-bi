@@ -417,7 +417,7 @@ if not df.empty:
                         col_btn1, col_btn2 = st.columns([1, 1])
                         
                         with col_btn1:
-                            # Popover SEM key
+                            # [CORRIGIDO] Popover SEM key
                             with st.popover("📋 Detalhes"):
                                 st.write(f"**👤 Responsável:** {row['Responsavel']}")
                                 st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
@@ -427,7 +427,14 @@ if not df.empty:
                         
                         with col_btn2:
                             if row["Link"] and row["Link"].lower() != "n/a":
-                                st.link_button("🚀 Acessar", row["Link"], use_container_width=True, key=f"link_{key_base}")
+                                # [CORRIGIDO] Adiciona str() e type='primary'
+                                st.link_button(
+                                    "🚀 Acessar", 
+                                    str(row["Link"]), # Garante que é string
+                                    use_container_width=True, 
+                                    key=f"link_{key_base}",
+                                    type="primary" # Adiciona tipo para consistência CSS
+                                    )
                             else:
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
                         
