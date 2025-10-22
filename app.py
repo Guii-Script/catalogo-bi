@@ -414,14 +414,31 @@ if not df.empty:
                                 st.write(f"**🎯 Público:** {row['Publico']}")
                         
                         with col_btn2:
-                            if row["Link"] and row["Link"].lower() != "n/a":
-                                # [CORREÇÃO] Remove type="primary", usa row["Link"] diretamente
-                                st.link_button(
-                                    "🚀 Acessar", 
-                                    row["Link"], # Usa o valor diretamente
-                                    use_container_width=True, 
-                                    key=f"link_{key_base}"
+                            link_value = row.get("Link", "N/A") # Use .get for safety
+
+                            # [MUDANÇA AQUI] Verificação mais estrita
+                            is_valid_link = (
+                                link_value and                            # Não é None ou vazio
+                                isinstance(link_value, str) and           # É uma string
+                                link_value.strip().lower() != "n/a" and   # Não é "N/A" (ignorando espaços e caso)
+                                link_value.strip() != ""                  # Não é apenas espaços em branco
+                            )
+
+                            if is_valid_link:
+                                
+                                try:
+                                    st.link_button(
+                                        "🚀 Acessar",
+                                        link_value, # Usa o valor diretamente
+                                        use_container_width=True,
+                                        key=f"link_{key_base}"
                                     )
+                                except Exception as e:
+                                    # Se ainda der erro, mostra qual link causou
+                                    st.error(f"Erro no link: '{link_value}'")
+                                    # Fallback para botão desabilitado
+                                    st.button("Link Inválido", use_container_width=True, disabled=True, key=f"btn_{key_base}_error")
+
                             else:
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
                         
