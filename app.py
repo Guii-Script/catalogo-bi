@@ -138,7 +138,7 @@ def load_custom_css():
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
             backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px; padding: 2rem; 
-            min-height: 450px; /* Aumentado para imagem */
+            min-height: 450px; /* Altura ajustada para imagem */
             display: flex; flex-direction: column; position: relative; overflow: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -161,14 +161,7 @@ def load_custom_css():
             border-color: rgba(139, 92, 246, 0.3);
         }}
         
-         /* Estilo para a imagem dentro do card */
-        .portfolio-card img {{
-             border-radius: 10px; /* Cantos arredondados */
-             margin-bottom: 1.5rem; /* Espaço abaixo */
-             max-height: 200px; /* Limita altura */
-             object-fit: cover; /* Cobre a área */
-             width: 100%; /* Garante largura total */
-        }}
+        /* [REMOVIDO] Estilo .portfolio-card img removido */
         
         .portfolio-card h2 {{ /* Título do card */
             color: {COLORS['text_accent']}; font-family: 'Space Grotesk', sans-serif;
@@ -227,7 +220,7 @@ def load_custom_css():
             box-shadow: none !important; transform: none !important; opacity: 0.7; cursor: not-allowed;
         }}
 
-        /* === [NOVO] ESTILO PARA O BOTÃO DE FALLBACK === */
+        /* === BOTÃO FALLBACK === */
         .fallback-link-button {{
             background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
             color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
@@ -303,6 +296,7 @@ except KeyError:
 def carregar_dados(url):
     try:
         df = pd.read_csv(url, encoding='utf-8')
+        # [MUDANÇA AQUI] Adicionada 'Imagem_Path'
         colunas_esperadas = ['Nome_Dash','Descricao', 'Imagem_Path','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
         for c in colunas_esperadas:
             if c not in df.columns: df[c] = pd.NA
@@ -413,13 +407,16 @@ if not df.empty:
                     with cols[j]:
                         st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                         
+                        # [MUDANÇA AQUI] Inserção da Imagem via HTML
                         image_path = row.get("Imagem_Path", "")
                         if image_path and image_path.lower() != 'n/a':
                             try:
-                                # [CORREÇÃO AQUI] Troca use_column_width por use_container_width
-                                st.image(image_path, use_container_width=True) 
-                            except Exception as img_err:
+                                image_html = f'<img src="{image_path}" alt="Preview do Dashboard" style="width:100%; border-radius: 10px; margin-bottom: 1.5rem; max-height: 200px; object-fit: cover;">'
+                                st.markdown(image_html, unsafe_allow_html=True)
+                            except FileNotFoundError: 
                                 st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
+                            except Exception as img_err: 
+                                st.warning(f"⚠️ Erro ao carregar imagem: {image_path}", icon="🖼️")
                         
                         platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
                         icon = platform_icons.get(row['Midia'], '📊')
@@ -460,7 +457,6 @@ if not df.empty:
 
                             if link_value and link_value.lower() != "n/a":
                                 try: 
-                                    # [CORREÇÃO AQUI] Remove 'type' de link_button
                                     st.link_button(
                                         "🚀 Acessar",
                                         link_value, # Usa o valor limpo
@@ -470,7 +466,6 @@ if not df.empty:
                                 except (TypeError, Exception) as e: 
                                      fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🔗 Link Alternativo</a>"""
                                      st.markdown(fallback_button_html, unsafe_allow_html=True)
-                                     # print(f"Fallback usado para {row.get('Nome_Dash', 'N/A')}: {e}") # Opcional: Logar erro
                             else:
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
                         
