@@ -249,7 +249,6 @@ def load_custom_css():
         }}
         .fallback-link-button:hover::before {{ left: 100%; }}
 
-
         /* === POPOVER === */
         [data-testid="stPopover"] {{
             background: rgba(30, 41, 59, 0.95) !important; backdrop-filter: blur(20px);
@@ -304,7 +303,6 @@ except KeyError:
 def carregar_dados(url):
     try:
         df = pd.read_csv(url, encoding='utf-8')
-        # [MUDANÇA AQUI] Adicionada 'Imagem_Path'
         colunas_esperadas = ['Nome_Dash','Descricao', 'Imagem_Path','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
         for c in colunas_esperadas:
             if c not in df.columns: df[c] = pd.NA
@@ -415,11 +413,11 @@ if not df.empty:
                     with cols[j]:
                         st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                         
-                        # [MUDANÇA AQUI] Usa Imagem_Path
                         image_path = row.get("Imagem_Path", "")
                         if image_path and image_path.lower() != 'n/a':
                             try:
-                                st.image(image_path, use_column_width="always")
+                                # [CORREÇÃO AQUI] Troca use_column_width por use_container_width
+                                st.image(image_path, use_container_width=True) 
                             except Exception as img_err:
                                 st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
                         
@@ -457,15 +455,22 @@ if not df.empty:
                                 st.write(f"**🎯 Público:** {row['Publico']}")
                         
                         with col_btn2:
-                            # Lógica do botão de link/fallback
                             link_value_raw = row.get("Link", "") 
                             link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
+
                             if link_value and link_value.lower() != "n/a":
                                 try: 
-                                    st.link_button( "🚀 Acessar", link_value, use_container_width=True, key=f"link_{key_base}" )
+                                    # [CORREÇÃO AQUI] Remove 'type' de link_button
+                                    st.link_button(
+                                        "🚀 Acessar",
+                                        link_value, # Usa o valor limpo
+                                        use_container_width=True,
+                                        key=f"link_{key_base}" 
+                                    )
                                 except (TypeError, Exception) as e: 
                                      fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🔗 Link Alternativo</a>"""
                                      st.markdown(fallback_button_html, unsafe_allow_html=True)
+                                     # print(f"Fallback usado para {row.get('Nome_Dash', 'N/A')}: {e}") # Opcional: Logar erro
                             else:
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
                         
