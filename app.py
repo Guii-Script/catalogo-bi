@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import re
 import random # Embora importado, random não está sendo usado. Pode ser removido.
+import html   # <-- Importado para escapar caracteres HTML
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -160,16 +161,16 @@ def load_custom_css():
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 80px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             border-color: rgba(139, 92, 246, 0.3);
         }}
-        
-        /* [REMOVIDO] Estilo .portfolio-card img removido */
-        
+                
         .portfolio-card h2 {{ /* Título do card */
             color: {COLORS['text_accent']}; font-family: 'Space Grotesk', sans-serif;
             font-weight: 700; font-size: 1.5rem; line-height: 1.3; margin-bottom: 0.5rem;
+            word-wrap: break-word; /* Quebra palavras longas se necessário */
         }}
         
         .portfolio-card p {{ /* Descrição do card */
              color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;
+             word-wrap: break-word; /* Quebra palavras longas se necessário */
         }}
 
         /* === TÍTULOS DAS SEÇÕES === */
@@ -186,7 +187,7 @@ def load_custom_css():
         }}
 
         /* === TAGS === */
-        .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1.5rem 0; margin-top: auto; }}
+        .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1.5rem 0; }} /* Removido margin-top: auto */
         .tag {{
             background: rgba(139, 92, 246, 0.2); color: {COLORS['text_primary']}; padding: 8px 16px;
             border-radius: 25px; font-weight: 600; font-size: 0.85rem;
@@ -197,65 +198,37 @@ def load_custom_css():
         .tag.status-ativo {{ background: rgba(6, 214, 160, 0.2); border-color: rgba(6, 214, 160, 0.3); }}
         .tag.status-inativo {{ background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.3); }}
 
-        /* === BOTÕES === */
-        [data-testid="stButton"] button, [data-testid="stLinkButton"] a {{
+        /* === BOTÕES E DETALHES NO RODAPÉ DO CARD === */
+        .card-footer {{ margin-top: auto; padding-top: 1.5rem; }} /* Wrapper para botões e detalhes */
+        .details-text {{ font-size: 0.85rem; color: {COLORS['text_secondary']}; margin-bottom: 1rem; }}
+
+        .card-button {{
             background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
             color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
             font-weight: 600 !important; padding: 12px 24px !important; transition: all 0.3s ease !important;
             position: relative; overflow: hidden;
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important; width: 100%;
-            text-decoration: none; display: inline-block; text-align: center; line-height: normal; cursor: pointer; /* Estilos base */
+            text-decoration: none; display: inline-block; text-align: center; line-height: normal; cursor: pointer;
+            box-sizing: border-box;
         }}
-        [data-testid="stButton"] button::before, [data-testid="stLinkButton"] a::before {{ /* Efeito de brilho */
+        .card-button::before {{ /* Efeito de brilho */
             content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: left 0.5s;
         }}
-        [data-testid="stButton"] button:hover::before, [data-testid="stLinkButton"] a:hover::before {{ left: 100%; }}
-        [data-testid="stButton"] button:hover, [data-testid="stLinkButton"] a:hover {{
+        .card-button:hover::before {{ left: 100%; }}
+        .card-button:hover {{
             transform: translateY(-3px) !important; box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5) !important;
+            color: {COLORS['white']} !important; /* Mantém cor no hover */
         }}
-        [data-testid="stButton"] button:disabled {{ /* Botão desabilitado */
+        .card-button:disabled {{ /* Botão desabilitado */
             background: rgba(55, 65, 81, 0.5) !important; color: {COLORS['text_secondary']} !important;
             box-shadow: none !important; transform: none !important; opacity: 0.7; cursor: not-allowed;
         }}
 
-        /* === BOTÃO FALLBACK === */
-        .fallback-link-button {{
-            background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
-            color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
-            font-weight: 600 !important; padding: 12px 24px !important; transition: all 0.3s ease !important;
-            position: relative; overflow: hidden;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important; width: 100%;
-            text-decoration: none !important; display: inline-block; text-align: center;
-            line-height: normal; cursor: pointer; box-sizing: border-box;
-        }}
-         .fallback-link-button:hover {{
-            transform: translateY(-3px) !important;
-            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5) !important;
-            color: {COLORS['white']} !important;
-        }}
-        .fallback-link-button::before {{
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }}
-        .fallback-link-button:hover::before {{ left: 100%; }}
-
         /* === POPOVER === */
-        [data-testid="stPopover"] {{
-            background: rgba(30, 41, 59, 0.95) !important; backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }}
-        [data-testid="stPopover"] p, [data-testid="stPopover"] span, [data-testid="stPopover"] li {{ color: {COLORS['text_primary']} !important; }}
-        [data-testid="stPopover"] strong {{ color: {COLORS['accent_teal']}; }}
-        [data-testid="stPopover"] button {{ /* Botão "Detalhes" */
-             background: rgba(55, 65, 81, 0.5) !important; color: {COLORS['text_primary']} !important;
-             border: 1px solid rgba(255, 255, 255, 0.1) !important; width: 100%;
-        }}
-        [data-testid="stPopover"] button:hover {{ background: rgba(75, 85, 99, 0.7) !important; border-color: {COLORS['accent_purple']} !important; }}
-
+        /* Estilos do popover removidos pois não será mais usado diretamente */
+        
         /* === ESTATÍSTICAS NO HEADER === */
         .stats-container {{ display: flex; justify-content: center; gap: 3rem; margin: 2rem 0; flex-wrap: wrap; }}
         .stat-item {{
@@ -296,7 +269,6 @@ except KeyError:
 def carregar_dados(url):
     try:
         df = pd.read_csv(url, encoding='utf-8')
-        # [MUDANÇA AQUI] Adicionada 'Imagem_Path'
         colunas_esperadas = ['Nome_Dash','Descricao', 'Imagem_Path','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
         for c in colunas_esperadas:
             if c not in df.columns: df[c] = pd.NA
@@ -405,73 +377,77 @@ if not df.empty:
 
                 for j, row in enumerate(chunk):
                     with cols[j]:
-                        st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
+                        # --- [MUDANÇA AQUI] Renderização completa via Markdown ---
                         
-                        # [MUDANÇA AQUI] Inserção da Imagem via HTML
+                        key_base = f"{g}_{i}_{j}" # Chave única base
+                        
+                        # Prepara dados para o HTML, escapando caracteres
+                        image_html = ""
                         image_path = row.get("Imagem_Path", "")
                         if image_path and image_path.lower() != 'n/a':
-                            try:
-                                image_html = f'<img src="{image_path}" alt="Preview do Dashboard" style="width:100%; border-radius: 10px; margin-bottom: 1.5rem; max-height: 200px; object-fit: cover;">'
-                                st.markdown(image_html, unsafe_allow_html=True)
-                            except FileNotFoundError: 
-                                st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
-                            except Exception as img_err: 
-                                st.warning(f"⚠️ Erro ao carregar imagem: {image_path}", icon="🖼️")
-                        
+                             # Escapa o alt text e o path para segurança
+                             image_alt_text = html.escape(f"Preview: {row.get('Nome_Dash', '')}", quote=True) 
+                             image_path_escaped = html.escape(image_path, quote=True)
+                             image_html = f'<img src="{image_path_escaped}" alt="{image_alt_text}" style="width:100%; border-radius: 10px; margin-bottom: 1.5rem; max-height: 200px; object-fit: cover;">'
+
                         platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
                         icon = platform_icons.get(row['Midia'], '📊')
                         
-                        st.subheader(f"{icon} {row['Nome_Dash']}")
-                        st.write(row['Descricao'])
+                        title_raw = f"{icon} {row.get('Nome_Dash', 'Sem Título')}"
+                        title = html.escape(title_raw) 
+                        description_raw = row.get('Descricao', 'Sem descrição.')
+                        description = html.escape(description_raw)
 
                         status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
-                        st.markdown(
-                            f"""
+                        midia_escaped = html.escape(row.get('Midia', 'N/A'))
+                        status_escaped = html.escape(row.get('Status', 'N/A'))
+                        periodicidade_escaped = html.escape(row.get('Periodicidade', 'N/A'))
+                        tags_html = f"""
                             <div class="tag-wrapper">
-                                <span class="tag">🖥️ {row['Midia']}</span>
-                                <span class="tag {status_class}">● {row['Status']}</span>
-                                <span class="tag">🕐 {row['Periodicidade']}</span>
+                                <span class="tag">🖥️ {midia_escaped}</span>
+                                <span class="tag {status_class}">● {status_escaped}</span>
+                                <span class="tag">🕐 {periodicidade_escaped}</span>
                             </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                        """
+                        
+                        responsavel_escaped = html.escape(row.get('Responsavel', 'N/A'))
+                        publico_escaped = html.escape(row.get('Publico', 'N/A'))
+                        horario_escaped = html.escape(row.get('Horario', 'N/A'))
+                        # [REMOVIDO] Popover - Detalhes agora são texto simples
+                        details_html = f"""
+                        <div class="details-text">
+                            <span>👤 {responsavel_escaped}</span> | 
+                            <span>🎯 {publico_escaped}</span> | 
+                            <span>⏰ {horario_escaped}</span>
+                         </div>
+                         """
 
-                        # Chave única inclui o grupo 'g'
-                        key_base = f"{g}_{i}_{j}" 
-                        
-                        st.markdown('<div style="margin-top: auto;">', unsafe_allow_html=True) 
-                        col_btn1, col_btn2 = st.columns([1, 1])
-                        
-                        with col_btn1:
-                            # Popover SEM key
-                            with st.popover("📋 Detalhes"):
-                                st.write(f"**👤 Responsável:** {row['Responsavel']}")
-                                st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
-                                st.write(f"**⏰ Horário:** {row['Horario']}")
-                                st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
-                                st.write(f"**🎯 Público:** {row['Publico']}")
-                        
-                        with col_btn2:
-                            link_value_raw = row.get("Link", "") 
-                            link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
+                        button_html = ""
+                        link_value_raw = row.get("Link", "") 
+                        link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
+                        link_title_escaped = html.escape(f"Acessar {row.get('Nome_Dash', '')}", quote=True)
+                        if link_value and link_value.lower() != "n/a":
+                             link_value_escaped = html.escape(link_value, quote=True)
+                             button_html = f"""<a href="{link_value_escaped}" target="_blank" class="card-button" style="text-decoration: none;" title="{link_title_escaped}">🚀 Acessar</a>"""
+                        else:
+                             button_html = f"""<button class="card-button" disabled title="Link indisponível">⏳ Em breve</button>"""
 
-                            if link_value and link_value.lower() != "n/a":
-                                try: 
-                                    st.link_button(
-                                        "🚀 Acessar",
-                                        link_value, # Usa o valor limpo
-                                        use_container_width=True,
-                                        key=f"link_{key_base}" 
-                                    )
-                                except (TypeError, Exception) as e: 
-                                     fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🔗 Link Alternativo</a>"""
-                                     st.markdown(fallback_button_html, unsafe_allow_html=True)
-                            else:
-                                st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
-                        
-                        st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
-                        st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
-                
+                        # Monta o HTML completo do card
+                        card_html = f"""
+                        <div class="portfolio-card" style="animation-delay: {j*0.1}s">
+                            {image_html}
+                            <h2>{title}</h2>
+                            <p>{description}</p>
+                            {tags_html}
+                            <div class="card-footer"> {}
+                                {details_html}
+                                {button_html}
+                            </div>
+                        </div>
+                        """
+                        st.markdown(card_html, unsafe_allow_html=True)
+                        # --- Fim da Renderização via Markdown ---
+
                 # Espaço entre as linhas do grid
                 st.markdown("<br>", unsafe_allow_html=True) 
             
