@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import re
 import random # Embora importado, random não está sendo usado. Pode ser removido.
-import html   # <-- Importado para escapar caracteres HTML
+import html   # Importado para escapar caracteres HTML
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -225,7 +225,7 @@ def load_custom_css():
             background: rgba(55, 65, 81, 0.5) !important; color: {COLORS['text_secondary']} !important;
             box-shadow: none !important; transform: none !important; opacity: 0.7; cursor: not-allowed;
         }}
-
+        
         /* === POPOVER === */
         /* Estilos do popover removidos pois não será mais usado diretamente */
         
@@ -377,7 +377,7 @@ if not df.empty:
 
                 for j, row in enumerate(chunk):
                     with cols[j]:
-                        # --- [MUDANÇA AQUI] Renderização completa via Markdown ---
+                        # --- Renderização completa via Markdown ---
                         
                         key_base = f"{g}_{i}_{j}" # Chave única base
                         
@@ -385,7 +385,6 @@ if not df.empty:
                         image_html = ""
                         image_path = row.get("Imagem_Path", "")
                         if image_path and image_path.lower() != 'n/a':
-                             # Escapa o alt text e o path para segurança
                              image_alt_text = html.escape(f"Preview: {row.get('Nome_Dash', '')}", quote=True) 
                              image_path_escaped = html.escape(image_path, quote=True)
                              image_html = f'<img src="{image_path_escaped}" alt="{image_alt_text}" style="width:100%; border-radius: 10px; margin-bottom: 1.5rem; max-height: 200px; object-fit: cover;">'
@@ -413,7 +412,7 @@ if not df.empty:
                         responsavel_escaped = html.escape(row.get('Responsavel', 'N/A'))
                         publico_escaped = html.escape(row.get('Publico', 'N/A'))
                         horario_escaped = html.escape(row.get('Horario', 'N/A'))
-                        # [REMOVIDO] Popover - Detalhes agora são texto simples
+                        # Detalhes simples
                         details_html = f"""
                         <div class="details-text">
                             <span>👤 {responsavel_escaped}</span> | 
@@ -439,8 +438,7 @@ if not df.empty:
                             <h2>{title}</h2>
                             <p>{description}</p>
                             {tags_html}
-                            <div class="card-footer"> {}
-                                {details_html}
+                            <div class="card-footer"> {details_html}
                                 {button_html}
                             </div>
                         </div>
