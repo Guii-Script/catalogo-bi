@@ -30,7 +30,7 @@ COLORS = {
     "gradient_end": "#764ba2"
 }
 
-# --- CSS Customizado (Com Botão Fallback) ---
+# --- CSS Customizado ---
 def load_custom_css():
     st.markdown(f"""
         <style>
@@ -137,7 +137,8 @@ def load_custom_css():
         .portfolio-card {{
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
             backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px; padding: 2rem; min-height: 400px;
+            border-radius: 20px; padding: 2rem; 
+            min-height: 450px; /* Aumentado para imagem */
             display: flex; flex-direction: column; position: relative; overflow: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -158,6 +159,15 @@ def load_custom_css():
             transform: translateY(-15px) scale(1.02);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 80px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             border-color: rgba(139, 92, 246, 0.3);
+        }}
+        
+         /* Estilo para a imagem dentro do card */
+        .portfolio-card img {{
+             border-radius: 10px; /* Cantos arredondados */
+             margin-bottom: 1.5rem; /* Espaço abaixo */
+             max-height: 200px; /* Limita altura */
+             object-fit: cover; /* Cobre a área */
+             width: 100%; /* Garante largura total */
         }}
         
         .portfolio-card h2 {{ /* Título do card */
@@ -219,26 +229,19 @@ def load_custom_css():
 
         /* === [NOVO] ESTILO PARA O BOTÃO DE FALLBACK === */
         .fallback-link-button {{
-            /* Copia os estilos base do botão normal */
             background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
             color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
             font-weight: 600 !important; padding: 12px 24px !important; transition: all 0.3s ease !important;
             position: relative; overflow: hidden;
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important; width: 100%;
-            text-decoration: none !important; /* Remove sublinhado */
-            display: inline-block; /* Importante para aplicar padding e width */
-            text-align: center;
-            line-height: normal;
-            cursor: pointer;
-            box-sizing: border-box; /* Garante que padding não aumente o tamanho total */
+            text-decoration: none !important; display: inline-block; text-align: center;
+            line-height: normal; cursor: pointer; box-sizing: border-box;
         }}
-        /* Efeito de hover igual ao botão normal */
          .fallback-link-button:hover {{
             transform: translateY(-3px) !important;
             box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5) !important;
-            color: {COLORS['white']} !important; /* Mantém a cor do texto no hover */
+            color: {COLORS['white']} !important;
         }}
-         /* Efeito de brilho igual ao botão normal */
         .fallback-link-button::before {{
             content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
@@ -301,7 +304,8 @@ except KeyError:
 def carregar_dados(url):
     try:
         df = pd.read_csv(url, encoding='utf-8')
-        colunas_esperadas = ['Nome_Dash','Descricao','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
+        # [MUDANÇA AQUI] Adicionada 'Imagem_Path'
+        colunas_esperadas = ['Nome_Dash','Descricao', 'Imagem_Path','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
         for c in colunas_esperadas:
             if c not in df.columns: df[c] = pd.NA
         df.fillna("N/A", inplace=True)
@@ -411,6 +415,14 @@ if not df.empty:
                     with cols[j]:
                         st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                         
+                        # [MUDANÇA AQUI] Usa Imagem_Path
+                        image_path = row.get("Imagem_Path", "")
+                        if image_path and image_path.lower() != 'n/a':
+                            try:
+                                st.image(image_path, use_column_width="always")
+                            except Exception as img_err:
+                                st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
+                        
                         platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
                         icon = platform_icons.get(row['Midia'], '📊')
                         
@@ -445,33 +457,18 @@ if not df.empty:
                                 st.write(f"**🎯 Público:** {row['Publico']}")
                         
                         with col_btn2:
-                            # [CORREÇÃO AQUI]
+                            # Lógica do botão de link/fallback
                             link_value_raw = row.get("Link", "") 
                             link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
-
                             if link_value and link_value.lower() != "n/a":
                                 try: 
-                                    st.link_button(
-                                        "🚀 Acessar",
-                                        link_value, # Usa o valor limpo
-                                        use_container_width=True,
-                                        key=f"link_{key_base}" 
-                                    )
+                                    st.link_button( "🚀 Acessar", link_value, use_container_width=True, key=f"link_{key_base}" )
                                 except (TypeError, Exception) as e: 
-                                     # Usa o botão HTML como fallback
-                                     fallback_button_html = f"""
-                                     <a href="{link_value}" target="_blank" class="fallback-link-button" 
-                                        style="text-decoration: none;" 
-                                        title="Abrir link para {row.get('Nome_Dash', 'N/A')}">
-                                         🔗 Link Alternativo 
-                                     </a>
-                                     """
+                                     fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🔗 Link Alternativo</a>"""
                                      st.markdown(fallback_button_html, unsafe_allow_html=True)
-                                     # print(f"Fallback usado para {row.get('Nome_Dash', 'N/A')}: {e}") # Opcional: Logar erro
                             else:
-                                # Botão padrão para links vazios, "N/A", etc.
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
-
+                        
                         st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
                         st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
                 
