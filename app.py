@@ -362,6 +362,8 @@ st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
 # --- Barra Lateral com Logo e Filtros ---
 # Tenta carregar logo/fundo local; se não existir, ignora.
 try:
+    # Verifique se o nome "fundo.png" está correto e se o arquivo
+    # está NA MESMA PASTA que o seu script .py
     st.sidebar.image("fundo.png", use_container_width=True)
 except Exception:
     pass # Ignora silenciosamente se 'fundo.png' não for encontrado
@@ -430,7 +432,7 @@ if df is not None and not df.empty:
                         # --- 1. Obter todos os dados do 'row' ---
                         nome_dash = row.get('Nome_Dash','N/A')
                         descricao = row.get('Descricao','')
-                        image_path = row.get("Imagem_Path", "")
+                        image_path = row.get("Imagem_Path", "") # Pega o caminho da planilha
                         link_value_raw = row.get("Link", "")
                         link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else ""
                         
@@ -446,8 +448,8 @@ if df is not None and not df.empty:
                         # --- 2. Construir o HTML da Imagem ---
                         image_html = ""
                         if image_path and image_path.lower() != 'n/a':
+                            # A tag <img> vai funcionar para URLs ou caminhos locais
                             safe_src = image_path.replace('"', '%22')
-                            # O CSS .portfolio-card img será aplicado aqui
                             image_html = f'<img src="{safe_src}" alt="Imagem do dashboard {nome_dash}">' 
                         else:
                             # Placeholder se não houver imagem
@@ -475,8 +477,8 @@ if df is not None and not df.empty:
                         
                         # --- 4. Construir o HTML dos Botões ---
                         
-                        # Botão 1 (Detalhes): Substituí o Popover por um botão desabilitado com um 'title' (tooltip)
-                        # O Popover nativo não funciona bem quando renderizado dentro de um st.markdown
+                        # Botão 1 (Detalhes): Convertido para um botão HTML desabilitado
+                        # que mostra os detalhes ao passar o mouse (tooltip)
                         details_tooltip = f"Responsável: {responsavel} | Periodicidade: {periodicidade} | Horário: {horario} | Divulgação: {divulgacao} | Público: {publico}"
                         details_button_html = f"""
                         <button disabled title="{details_tooltip}" style="width:100%; padding:12px 24px; border-radius:12px; background:rgba(55,65,81,0.5); color: #94A3B8; border:none; cursor: help; font-weight: 600;">
@@ -484,16 +486,17 @@ if df is not None and not df.empty:
                         </button>
                         """
                         
-                        # Botão 2 (Acessar / Em Breve): Usando sua classe .fallback-link-button
+                        # Botão 2 (Acessar / Em Breve): Convertido para HTML puro
                         access_button_html = ""
                         if link_value and link_value.lower() != "n/a":
-                            # Usando a classe de fallback que você já estilizou no CSS
+                            # Usando a classe .fallback-link-button que você já estilizou
                             access_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" title="Acessar dashboard {nome_dash}">🚀 Acessar</a>"""
                         else:
-                            # Usando o estilo do botão desabilitado
+                            # Botão desabilitado
                             access_button_html = f"""<button disabled style="width:100%; padding:12px 24px; border-radius:12px; background:rgba(55,65,81,0.5); color: #94A3B8; border:none; font-weight: 600;">⏳ Em breve</button>"""
 
                         # --- 5. Montar o Card Completo ---
+                        # Aqui usamos as tags H2 e P que o seu CSS .portfolio-card h2 já estiliza
                         card_html = f"""
                         <div class="portfolio-card" style="animation-delay: {j*0.06}s">
                             {image_html}
@@ -514,7 +517,7 @@ if df is not None and not df.empty:
                         </div>
                         """
                         
-                        # --- 6. Renderizar o card de uma só vez ---
+                        # --- 6. Renderizar o card de UMA SÓ VEZ ---
                         st.markdown(card_html, unsafe_allow_html=True)
                 
                 # Espaço entre as linhas do grid
@@ -522,7 +525,7 @@ if df is not None and not df.empty:
             
             # Espaço extra entre as seções
             st.markdown("<br>", unsafe_allow_html=True)
-
+    # --- [FIM DA CORREÇÃO] ---
 
 else:
     st.warning("📊 Aguardando dados... Verifique a conexão com a planilha ou a variável 'GOOGLE_SHEET_URL' em st.secrets.")
