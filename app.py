@@ -179,6 +179,7 @@ def load_custom_css():
                         0 0 50px rgba(91, 146, 200, 0.18);
         }}
 
+        /* ESTILOS PARA TÍTULO E PARÁGRAFO DENTRO DO CARD */
         .portfolio-card h2 {{
             color: {COLORS['text_accent']}; font-family: 'Space Grotesk', sans-serif;
             font-weight: 700; font-size: 1.35rem; line-height: 1.2; margin-bottom: 0.45rem;
@@ -213,7 +214,7 @@ def load_custom_css():
         .tag.status-ativo {{ background: rgba(6, 214, 160, 0.12); border-color: rgba(6, 214, 160, 0.18); }}
         .tag.status-inativo {{ background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.12); }}
 
-        /* === BOTÕES === */
+        /* === BOTÕES (Usado pelo st.link_button nativo, se funcionar) === */
         [data-testid="stButton"] button, [data-testid="stLinkButton"] a {{
             background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
             color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
@@ -236,7 +237,7 @@ def load_custom_css():
             box-shadow: none !important; transform: none !important; opacity: 0.7; cursor: not-allowed;
         }}
 
-        /* === [NOVO] ESTILO PARA O BOTÃO DE FALLBACK === */
+        /* === ESTILO PARA O BOTÃO DE FALLBACK (HTML PURO) === */
         .fallback-link-button {{
             background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
             color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
@@ -244,7 +245,7 @@ def load_custom_css():
             position: relative; overflow: hidden;
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important; width: 100%;
             text-decoration: none !important; display: inline-block; text-align: center;
-            line-height: normal; cursor: pointer; box-sizing: border-box;
+            line-height: normal; cursor: pointer; box-sizing: border-box; /* Importante p/ padding */
         }}
          .fallback-link-button:hover {{
             transform: translateY(-3px) !important;
@@ -258,7 +259,7 @@ def load_custom_css():
         }}
         .fallback-link-button:hover::before {{ left: 100%; }}
 
-        /* === POPOVER === */
+        /* === POPOVER (Mantido para o futuro, caso o bug seja corrigido) === */
         [data-testid="stPopover"] {{
             background: rgba(30, 41, 59, 0.95) !important; backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;
@@ -363,7 +364,7 @@ st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
 try:
     st.sidebar.image("fundo.png", use_container_width=True)
 except Exception:
-    pass
+    pass # Ignora silenciosamente se 'fundo.png' não for encontrado
 
 st.sidebar.markdown("---")
 st.sidebar.header("Filtros Avançados")
@@ -403,7 +404,7 @@ if df is not None and not df.empty:
         if filtro != padrao:
             df_filtrado = df_filtrado[df_filtrado[col] == filtro]
 
-    # --- Exibição dos Cards em Grid (Com Agrupamento por Público) ---
+    # --- [INÍCIO DA CORREÇÃO] Exibição dos Cards em Grid ---
     if len(df_filtrado) == 0:
         st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
         st.info("💡 Tente ajustar os filtros ou termos de busca.")
@@ -426,89 +427,102 @@ if df is not None and not df.empty:
 
                 for j, row in enumerate(chunk):
                     with cols[j]:
-                        st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.06}s">', unsafe_allow_html=True)
-                        
+                        # --- 1. Obter todos os dados do 'row' ---
+                        nome_dash = row.get('Nome_Dash','N/A')
+                        descricao = row.get('Descricao','')
                         image_path = row.get("Imagem_Path", "")
+                        link_value_raw = row.get("Link", "")
+                        link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else ""
+                        
+                        midia = row.get('Midia','N/A')
+                        status = row.get('Status','N/A')
+                        periodicidade = row.get('Periodicidade','N/A')
+                        
+                        responsavel = row.get('Responsavel','N/A')
+                        horario = row.get('Horario','N/A')
+                        divulgacao = row.get('Divulgacao','N/A')
+                        publico = row.get('Publico','N/A')
+
+                        # --- 2. Construir o HTML da Imagem ---
+                        image_html = ""
                         if image_path and image_path.lower() != 'n/a':
-                            # Inserir a img diretamente no HTML para garantir que fique DENTRO do card
                             safe_src = image_path.replace('"', '%22')
-                            st.markdown(f'<img src="{safe_src}" alt="Imagem do dashboard">', unsafe_allow_html=True)
+                            # O CSS .portfolio-card img será aplicado aqui
+                            image_html = f'<img src="{safe_src}" alt="Imagem do dashboard {nome_dash}">' 
                         else:
-                            st.markdown(f"""
-                                <div style="
-                                    height:220px; border-radius:12px; background:rgba(91,146,200,0.06);
-                                    border:2px dashed rgba(91,146,200,0.12); display:flex; align-items:center; 
-                                    justify-content:center; color:{COLORS['text_secondary']}; font-size:0.95rem; margin-bottom:1.25rem;">
-                                    🖼️ Imagem não disponível
-                                </div>
-                            """, unsafe_allow_html=True)
-                        
-                        platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
-                        icon = platform_icons.get(row.get('Midia',''), '📊')
-                        
-                        st.subheader(f"{icon} {row.get('Nome_Dash','N/A')}")
-                        st.write(row.get('Descricao',''))
-
-                        status_class = "status-ativo" if str(row.get("Status","")).lower() == "ativo" else "status-inativo"
-                        st.markdown(
-                            f"""
-                            <div class="tag-wrapper">
-                                <span class="tag">🖥️ {row.get('Midia','N/A')}</span>
-                                <span class="tag {status_class}">● {row.get('Status','N/A')}</span>
-                                <span class="tag">🕐 {row.get('Periodicidade','N/A')}</span>
+                            # Placeholder se não houver imagem
+                            image_html = f"""
+                            <div style="
+                                height:220px; border-radius:12px; background:rgba(91,146,200,0.06);
+                                border:2px dashed rgba(91,146,200,0.12); display:flex; align-items:center; 
+                                justify-content:center; color:{COLORS['text_secondary']}; font-size:0.95rem; margin-bottom:1.25rem;">
+                                🖼️ Imagem não disponível
                             </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                            """
 
-                        # Chave única inclui o grupo 'g'
-                        key_base = re.sub(r'\\W+', '_', str(g)) + f"_{i}_{j}"
+                        # --- 3. Construir o HTML das Tags ---
+                        platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
+                        icon = platform_icons.get(midia, '📊')
+                        status_class = "status-ativo" if str(status).lower() == "ativo" else "status-inativo"
                         
-                        st.markdown('<div style="margin-top: auto;">', unsafe_allow_html=True) 
-                        col_btn1, col_btn2 = st.columns([1, 1])
+                        tags_html = f"""
+                        <div class="tag-wrapper">
+                            <span class="tag">🖥️ {midia}</span>
+                            <span class="tag {status_class}">● {status}</span>
+                            <span class="tag">🕐 {periodicidade}</span>
+                        </div>
+                        """
                         
-                        with col_btn1:
-                            # Popover SEM key
-                            try:
-                                with st.popover("📋 Detalhes"):
-                                    st.write(f"**👤 Responsável:** {row.get('Responsavel','N/A')}")
-                                    st.write(f"**🕐 Periodicidade:** {row.get('Periodicidade','N/A')}")
-                                    st.write(f"**⏰ Horário:** {row.get('Horario','N/A')}")
-                                    st.write(f"**📢 Divulgação:** {row.get('Divulgacao','N/A')}")
-                                    st.write(f"**🎯 Público:** {row.get('Publico','N/A')}")
-                            except Exception:
-                                # fallback se popover não estiver disponível no ambiente
-                                st.info(f"👤 {row.get('Responsavel','N/A')} • 🕐 {row.get('Periodicidade','N/A')}")
+                        # --- 4. Construir o HTML dos Botões ---
                         
-                        with col_btn2:
-                            link_value_raw = row.get("Link", "") 
-                            link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
+                        # Botão 1 (Detalhes): Substituí o Popover por um botão desabilitado com um 'title' (tooltip)
+                        # O Popover nativo não funciona bem quando renderizado dentro de um st.markdown
+                        details_tooltip = f"Responsável: {responsavel} | Periodicidade: {periodicidade} | Horário: {horario} | Divulgação: {divulgacao} | Público: {publico}"
+                        details_button_html = f"""
+                        <button disabled title="{details_tooltip}" style="width:100%; padding:12px 24px; border-radius:12px; background:rgba(55,65,81,0.5); color: #94A3B8; border:none; cursor: help; font-weight: 600;">
+                            📋 Detalhes
+                        </button>
+                        """
+                        
+                        # Botão 2 (Acessar / Em Breve): Usando sua classe .fallback-link-button
+                        access_button_html = ""
+                        if link_value and link_value.lower() != "n/a":
+                            # Usando a classe de fallback que você já estilizou no CSS
+                            access_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" title="Acessar dashboard {nome_dash}">🚀 Acessar</a>"""
+                        else:
+                            # Usando o estilo do botão desabilitado
+                            access_button_html = f"""<button disabled style="width:100%; padding:12px 24px; border-radius:12px; background:rgba(55,65,81,0.5); color: #94A3B8; border:none; font-weight: 600;">⏳ Em breve</button>"""
 
-                            if link_value and link_value.lower() != "n/a":
-                                try: 
-                                    st.link_button(
-                                        "🚀 Acessar",
-                                        link_value,
-                                        use_container_width=True,
-                                        key=f"link_{key_base}" 
-                                    )
-                                except Exception:
-                                     fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🔗 Link Alternativo</a>"""
-                                     st.markdown(fallback_button_html, unsafe_allow_html=True)
-                            else:
-                                try:
-                                    st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
-                                except Exception:
-                                    st.markdown('<button disabled style="width:100%; padding:12px; border-radius:10px; background:rgba(55,65,81,0.5); color: #94A3B8; border:none;">⏳ Em breve</button>', unsafe_allow_html=True)
+                        # --- 5. Montar o Card Completo ---
+                        card_html = f"""
+                        <div class="portfolio-card" style="animation-delay: {j*0.06}s">
+                            {image_html}
+                            
+                            <h2>{icon} {nome_dash}</h2>
+                            <p>{descricao}</p>
+                            
+                            {tags_html}
+                            
+                            <div style="margin-top: auto; display: flex; gap: 10px; width: 100%; padding-top: 1rem;">
+                                <div style="flex: 1;">
+                                    {details_button_html}
+                                </div>
+                                <div style="flex: 1;">
+                                    {access_button_html}
+                                </div>
+                            </div>
+                        </div>
+                        """
                         
-                        st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
-                        st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
+                        # --- 6. Renderizar o card de uma só vez ---
+                        st.markdown(card_html, unsafe_allow_html=True)
                 
                 # Espaço entre as linhas do grid
                 st.markdown("<br>", unsafe_allow_html=True) 
             
             # Espaço extra entre as seções
-            st.markdown("<br>", unsafe_allow_html=True) 
+            st.markdown("<br>", unsafe_allow_html=True)
+
 
 else:
     st.warning("📊 Aguardando dados... Verifique a conexão com a planilha ou a variável 'GOOGLE_SHEET_URL' em st.secrets.")
