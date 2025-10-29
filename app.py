@@ -10,6 +10,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed" # Menu começa fechado
 )
 
+# --- [NOVO] Inicialização do Session State ---
+# Isso rastreia se o usuário já escolheu um time.
+if 'team_selected' not in st.session_state:
+    st.session_state.team_selected = False
+if 'selected_team' not in st.session_state:
+    st.session_state.selected_team = "Todos" # Valor padrão
+
+
 # --- Paleta de Cores Expandida ---
 COLORS = {
     "primary_dark": "#0d2e5b",
@@ -319,190 +327,280 @@ def carregar_dados(url):
 
 df = carregar_dados(URL_PLANILHA)
 
-# --- Header com Estatísticas ---
-st.markdown('<div class="main-header">', unsafe_allow_html=True)
-st.title("Portfólio de Business Intelligence")
-
-st.markdown(
-    "<div class='subtitle-container'><p>Descubra insights poderosos através da nossa coleção de dashboards estratégicos</p></div>",
-    unsafe_allow_html=True,
-)
+# --- [NOVO] Função Helper movida para cima ---
+# Precisamos dela antes da lógica de seleção de time
+def lista(col):
+    if df.empty:
+        return ["Todos"]
+    return ["Todos"] + sorted(df[col].replace('N/A', pd.NA).dropna().unique().tolist())
 
 
-if not df.empty:
-    total_dashboards = len(df)
-    ativos = len(df[df['Status'].str.lower() == 'ativo'])
-    plataformas = df[df['Midia'].str.lower() != 'n/a']['Midia'].nunique()
+# --- [NOVO] "ROTEADOR" PRINCIPAL ---
+# Se o time ainda NÃO foi selecionado, mostra a tela de seleção
+if not st.session_state.team_selected:
     
-    st.markdown(f"""
-        <div class="stats-container">
-            <div class="stat-item">
-                <span class="stat-number">{total_dashboards}</span>
-                <span class="stat-label">Dashboards</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number">{ativos}</span>
-                <span class="stat-label">Ativos</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number">{plataformas}</span>
-                <span class="stat-label">Plataformas</span>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="main-header">', unsafe_allow_html=True)
+    st.title("Bem-vindo(a) ao Portfólio BI")
+    st.markdown(
+        "<div class='subtitle-container'><p>Para começar, selecione o seu time para ver os dashboards relevantes.</p></div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
+    if not df.empty:
+        # Pega a lista de times da coluna "Publico"
+        teams = lista("Publico") 
+        # Remove "Todos" e "N/A" das opções de botão
+        teams = [t for t in teams if t.lower() not in ["todos", "n/a"]] 
 
-# --- Barra Lateral com Logo e Filtros ---
-try:
-    st.sidebar.image("fundo.png", use_container_width=True) # Adiciona Logo
-except Exception:
-    st.sidebar.warning("Logo 'fundo.png' não encontrada.")
-    
-st.sidebar.markdown("---")
-st.sidebar.header("Filtros Avançados")
-
-if not df.empty:
-    def lista(col):
-        return ["Todos"] + sorted(df[col].replace('N/A', pd.NA).dropna().unique().tolist())
-
-    filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsavel"))
-    filtro_publico = st.sidebar.selectbox("🎯 Público", lista("Publico"))
-    filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Midia"))
-    filtro_status = st.sidebar.selectbox("📈 Status", lista("Status"))
-    
-    st.sidebar.markdown("---") # Divisor
-
-    # --- Lógica de Busca e Filtro ---
-    search_term = st.text_input("🔍 **Buscar dashboards:**", placeholder="Digite o nome do dashboard, tecnologia ou palavra-chave...")
-    st.markdown("<br>", unsafe_allow_html=True) # Espaçamento
-
-    # Aplicar filtros
-    df_filtrado = df.copy()
-    if search_term:
-        df_filtrado = df_filtrado[
-            df_filtrado["Nome_Dash"].str.contains(search_term, case=False, na=False) |
-            df_filtrado["Descricao"].str.contains(search_term, case=False, na=False) |
-            df_filtrado["Midia"].str.contains(search_term, case=False, na=False)
-        ]
-    
-    filter_mapping = {
-        "Responsavel": (filtro_responsavel, "Todos"),
-        "Publico": (filtro_publico, "Todos"), # [CORREÇÃO] Corrigido typo "filto_publico"
-        "Midia": (filtro_midia, "Todos"),
-        "Status": (filtro_status, "Todos")
-    }
-    
-    for col, (filtro, padrao) in filter_mapping.items():
-        if filtro != padrao:
-            df_filtrado = df_filtrado[df_filtrado[col] == filtro]
-
-    # --- Exibição dos Cards em Grid (Com Agrupamento por Público) ---
-    if len(df_filtrado) == 0:
-        st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
-        st.info("💡 Tente ajustar os filtros ou termos de busca.")
+        if not teams:
+            # Fallback caso a coluna 'Publico' esteja vazia ou só tenha 'N/A'
+            st.warning("Nenhum time (Público) encontrado nos dados. Carregando todos os dashboards.")
+            if st.button("Continuar"):
+                st.session_state.team_selected = True
+                st.session_state.selected_team = "Todos"
+                st.rerun()
+        else:
+            st.markdown("### 🎯 Selecione seu Time:")
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            num_cols = 3 # Você pode ajustar isso
+            cols = st.columns(num_cols)
+            col_index = 0
+            
+            for team in teams:
+                with cols[col_index % num_cols]:
+                    # Para cada time, cria um botão
+                    if st.button(team, key=f"team_{team}", use_container_width=True):
+                        # Ao clicar, define o 'session_state' e recarrega a página
+                        st.session_state.team_selected = True
+                        st.session_state.selected_team = team
+                        st.rerun()
+                col_index += 1
+            
+            st.markdown("<br><br><br>", unsafe_allow_html=True)
+            st.markdown("---")
+            st.markdown("Ou veja todos os dashboards disponíveis:")
+            # Botão para ver todos, caso o usuário não queira filtrar
+            if st.button("Ver Todos os Dashboards 🚀", key="view_all", use_container_width=False):
+                st.session_state.team_selected = True
+                st.session_state.selected_team = "Todos"
+                st.rerun()
     else:
-        # Define os grupos de público para iterar
-        grupos = [filtro_publico] if filtro_publico != "Todos" else sorted(df_filtrado["Publico"].replace('N/A', pd.NA).dropna().unique())
-        
-        for g in grupos:
-            # Adiciona o título da seção
-            st.markdown(f"### {g}") # Removido o emoji
-            # Filtra o dataframe para o grupo atual
-            subset = df_filtrado[df_filtrado["Publico"] == g]
-            
-            reports_list = subset.to_dict('records')
-            NUM_COLUNAS = 3
-                  
-            for i in range(0, len(reports_list), NUM_COLUNAS):
-                cols = st.columns(NUM_COLUNAS)
-                chunk = reports_list[i : i + NUM_COLUNAS]
+        st.info("Carregando dados dos times...")
 
-                for j, row in enumerate(chunk):
-                    with cols[j]:
-                        
-                        # --- 1. Renderiza a IMAGEM (Nativa) ---
-                        # Ela aparece ACIMA do card de texto
-                        image_path = row.get("Imagem_Path", "")
-                        if image_path and image_path.lower() != 'n/a':
-                            try:
-                                st.image(image_path, use_container_width=True)
-                            except Exception as img_err:
-                                st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
-                        
-                        
-                        # 2b. Agrupa todo o CONTEÚDO HTML (título, texto, tags)
-                        # O .tag-wrapper (com margin-top: auto) empurrará ele mesmo
-                        # e os botões (item 2c) para o fundo do card.
-                        platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
-                        icon = platform_icons.get(row['Midia'], '📊')
-                        status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
-                        
-                        html_content = f"""
-                            <h2>{icon} {row['Nome_Dash']}</h2>
-                            <p>{row['Descricao']}</p>
-                            <div class="tag-wrapper">
-                                <span class="tag">🖥️ {row['Midia']}</span>
-                                <span class="tag {status_class}">● {row['Status']}</span>
-                                <span class="tag">🕐 {row['Periodicidade']}</span>
-                            </div>
-                        """
-                        st.markdown(html_content, unsafe_allow_html=True)
-
-                        # 2c. Adiciona os BOTÕES (Nativos do Streamlit)
-                        # Eles são renderizados "dentro" do card porque
-                        # o st.markdown('</div>') ainda não foi chamado.
-                        key_base = f"{g}_{i}_{j}" 
-                        
-                        # [REMOVIDO] Wrapper de div redundante
-                        col_btn1, col_btn2 = st.columns([1, 1])
-                        
-                        with col_btn1:
-                            with st.popover("📋 Detalhes"):
-                                st.write(f"**👤 Responsável:** {row['Responsavel']}")
-                                st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
-                                st.write(f"**⏰ Horário:** {row['Horario']}")
-                                st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
-                                st.write(f"**🎯 Público:** {row['Publico']}")
-                        
-                        with col_btn2:
-                            link_value_raw = row.get("Link", "") 
-                            link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
-
-                            if link_value and link_value.lower() != "n/a":
-                                try: 
-                                    st.link_button(
-                                        "🚀 Acessar",
-                                        link_value,
-                                        use_container_width=True,
-                                        key=f"link_{key_base}" 
-                                    )
-                                except (TypeError, Exception) as e: 
-                                    fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🔗 Link Alternativo</a>"""
-                                    st.markdown(fallback_button_html, unsafe_allow_html=True)
-                            else:
-                                st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
-                        
-                        # 2d. Fecha o card
-                        st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
-                
-                # Espaço entre as linhas do grid
-                st.markdown("<br>", unsafe_allow_html=True) 
-            
-            # Espaço extra entre as seções
-            st.markdown("<br>", unsafe_allow_html=True) 
-
+# --- [MODIFICADO] APLICAÇÃO PRINCIPAL ---
+# Se o time JÁ foi selecionado, mostra a galeria (seu código original)
 else:
-    st.warning("📊 Aguardando dados... Verifique a conexão com a planilha.")
+    # --- Header com Estatísticas ---
+    st.markdown('<div class="main-header">', unsafe_allow_html=True)
+    st.title("Portfólio de Business Intelligence")
 
-# --- Footer ---
-st.sidebar.markdown("---")
-st.sidebar.markdown(
-    f"""
-    <div style='color: {COLORS['text_secondary']}; font-size: 0.8rem; text-align: center;'>
-        <p>✨ Portfólio BI v2.0</p>
-        <p>Dados atualizados a cada 10 minutos</p>
-    </div>
-    """, 
-    unsafe_allow_html=True
-)
+    st.markdown(
+        "<div class='subtitle-container'><p>Descubra insights poderosos através da nossa coleção de dashboards estratégicos</p></div>",
+        unsafe_allow_html=True,
+    )
+
+
+    if not df.empty:
+        total_dashboards = len(df)
+        ativos = len(df[df['Status'].str.lower() == 'ativo'])
+        plataformas = df[df['Midia'].str.lower() != 'n/a']['Midia'].nunique()
+        
+        st.markdown(f"""
+            <div class="stats-container">
+                <div class="stat-item">
+                    <span class="stat-number">{total_dashboards}</span>
+                    <span class="stat-label">Dashboards</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{ativos}</span>
+                    <span class="stat-label">Ativos</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{plataformas}</span>
+                    <span class="stat-label">Plataformas</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
+
+    # --- Barra Lateral com Logo e Filtros ---
+    try:
+        st.sidebar.image("fundo.png", use_container_width=True) # Adiciona Logo
+    except Exception:
+        st.sidebar.warning("Logo 'fundo.png' não encontrada.")
+        
+    st.sidebar.markdown("---")
+    
+    # --- [NOVO] Botão para Voltar ---
+    if st.sidebar.button("⬅️ Voltar (Trocar Time)", use_container_width=True):
+        st.session_state.team_selected = False
+        st.session_state.selected_team = "Todos"
+        st.rerun()
+        
+    st.sidebar.markdown("---")
+    st.sidebar.header("Filtros Avançados")
+
+    if not df.empty:
+        # A função 'lista' já foi definida lá em cima
+
+        # --- [MODIFICADO] Filtro de Público ---
+        # Agora ele usa o 'selected_team' do session_state como padrão
+        publico_list = lista("Publico")
+        try:
+            # Tenta encontrar o índice do time que o usuário selecionou
+            default_index = publico_list.index(st.session_state.selected_team)
+        except ValueError:
+            # Se não encontrar (por segurança), usa "Todos"
+            default_index = 0 
+            
+        filtro_publico = st.sidebar.selectbox(
+            "🎯 Público", 
+            publico_list, 
+            index=default_index # Define o padrão!
+        )
+        
+        filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsavel"))
+        filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Midia"))
+        filtro_status = st.sidebar.selectbox("📈 Status", lista("Status"))
+        
+        st.sidebar.markdown("---") # Divisor
+
+        # --- Lógica de Busca e Filtro ---
+        search_term = st.text_input("🔍 **Buscar dashboards:**", placeholder="Digite o nome do dashboard, tecnologia ou palavra-chave...")
+        st.markdown("<br>", unsafe_allow_html=True) # Espaçamento
+
+        # Aplicar filtros
+        df_filtrado = df.copy()
+        if search_term:
+            df_filtrado = df_filtrado[
+                df_filtrado["Nome_Dash"].str.contains(search_term, case=False, na=False) |
+                df_filtrado["Descricao"].str.contains(search_term, case=False, na=False) |
+                df_filtrado["Midia"].str.contains(search_term, case=False, na=False)
+            ]
+        
+        filter_mapping = {
+            "Responsavel": (filtro_responsavel, "Todos"),
+            "Publico": (filtro_publico, "Todos"), # [CORREÇÃO] Corrigido typo "filto_publico"
+            "Midia": (filtro_midia, "Todos"),
+            "Status": (filtro_status, "Todos")
+        }
+        
+        for col, (filtro, padrao) in filter_mapping.items():
+            if filtro != padrao:
+                df_filtrado = df_filtrado[df_filtrado[col] == filtro]
+
+        # --- Exibição dos Cards em Grid (Com Agrupamento por Público) ---
+        if len(df_filtrado) == 0:
+            st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
+            st.info("💡 Tente ajustar os filtros ou termos de busca.")
+        else:
+            # Define os grupos de público para iterar
+            grupos = [filtro_publico] if filtro_publico != "Todos" else sorted(df_filtrado["Publico"].replace('N/A', pd.NA).dropna().unique())
+            
+            for g in grupos:
+                # Adiciona o título da seção
+                st.markdown(f"### {g}") # Removido o emoji
+                # Filtra o dataframe para o grupo atual
+                subset = df_filtrado[df_filtrado["Publico"] == g]
+                
+                reports_list = subset.to_dict('records')
+                NUM_COLUNAS = 3
+                        
+                for i in range(0, len(reports_list), NUM_COLUNAS):
+                    cols = st.columns(NUM_COLUNAS)
+                    chunk = reports_list[i : i + NUM_COLUNAS]
+
+                    for j, row in enumerate(chunk):
+                        with cols[j]:
+                            
+                            # --- 1. Inicia o Card HTML ---
+                            # [MODIFICAÇÃO] Envolve tudo em um único st.markdown
+                            # para garantir que a imagem e os botões fiquem
+                            # visualmente "dentro" do mesmo container.
+                            # Usamos 'st.container()' nativo para melhor controle.
+                            
+                            with st.container():
+                                # --- 1. Renderiza a IMAGEM (Nativa) ---
+                                image_path = row.get("Imagem_Path", "")
+                                if image_path and image_path.lower() != 'n/a':
+                                    try:
+                                        st.image(image_path, use_container_width=True)
+                                    except Exception as img_err:
+                                        st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
+                                
+                                # --- 2. Abre o Wrapper do Card CSS ---
+                                st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+                                
+                                # 2b. Agrupa todo o CONTEÚDO HTML
+                                platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
+                                icon = platform_icons.get(row['Midia'], '📊')
+                                status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
+                                
+                                html_content = f"""
+                                    <h2>{icon} {row['Nome_Dash']}</h2>
+                                    <p>{row['Descricao']}</p>
+                                    <div class="tag-wrapper">
+                                        <span class="tag">🖥️ {row['Midia']}</span>
+                                        <span class="tag {status_class}">● {row['Status']}</span>
+                                        <span class="tag">🕐 {row['Periodicidade']}</span>
+                                    </div>
+                                """
+                                st.markdown(html_content, unsafe_allow_html=True)
+
+                                # 2c. Adiciona os BOTÕES (Nativos do Streamlit)
+                                key_base = f"{g}_{i}_{j}" 
+                                
+                                col_btn1, col_btn2 = st.columns([1, 1])
+                                
+                                with col_btn1:
+                                    with st.popover("📋 Detalhes"):
+                                        st.write(f"**👤 Responsável:** {row['Responsavel']}")
+                                        st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
+                                        st.write(f"**⏰ Horário:** {row['Horario']}")
+                                        st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
+                                        st.write(f"**🎯 Público:** {row['Publico']}")
+                                
+                                with col_btn2:
+                                    link_value_raw = row.get("Link", "") 
+                                    link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
+
+                                    if link_value and link_value.lower() != "n/a":
+                                        try: 
+                                            st.link_button(
+                                                "🚀 Acessar",
+                                                link_value,
+                                                use_container_width=True,
+                                                key=f"link_{key_base}" 
+                                            )
+                                        except (TypeError, Exception) as e: 
+                                            fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🚀 Acessar</a>"""
+                                            st.markdown(fallback_button_html, unsafe_allow_html=True)
+                                    else:
+                                        st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
+                                
+                                # 2d. Fecha o card
+                                st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
+                        
+                    # Espaço entre as linhas do grid
+                    st.markdown("<br>", unsafe_allow_html=True) 
+                
+                # Espaço extra entre as seções
+                st.markdown("<br>", unsafe_allow_html=True) 
+
+    else:
+        st.warning("📊 Aguardando dados... Verifique a conexão com a planilha.")
+
+    # --- Footer ---
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(
+        f"""
+        <div style='color: {COLORS['text_secondary']}; font-size: 0.8rem; text-align: center;'>
+            <p>✨ Portfólio BI v2.0</p>
+            <p>Dados atualizados a cada 10 minutos</p>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
