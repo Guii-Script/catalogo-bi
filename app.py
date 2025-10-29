@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
 import re
+import random # Embora importado, random não está sendo usado. Pode ser removido.
 
 # --- Configuração da Página ---
 st.set_page_config(
     page_title="Portfólio BI | Dashboard Gallery",
     page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed" # Menu começa fechado
 )
 
 # --- Paleta de Cores Expandida ---
@@ -112,7 +113,7 @@ def load_custom_css():
             background: rgba(15, 23, 42, 0.95) !important; backdrop-filter: blur(20px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
         }}
-        [data-testid="stSidebar"] h2 {{
+        [data-testid="stSidebar"] h2 {{ /* Título "Filtros Avançados" */
             color: {COLORS['text_primary']} !important; font-family: 'Space Grotesk', sans-serif;
             font-weight: 700; font-size: 1.8rem;
             background: linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['accent_purple']});
@@ -135,67 +136,56 @@ def load_custom_css():
         /* === CARDS === */
         .portfolio-card {{
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
-            backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px; padding: 1.6rem; 
-            min-height: 380px;
+            backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; padding: 2rem; 
+            min-height: 450px; /* Aumentado para imagem */
             display: flex; flex-direction: column; position: relative; overflow: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             animation: cardEntrance 0.8s ease-out forwards; opacity: 0; transform: translateY(50px);
             z-index: 2;
         }}
         @keyframes cardEntrance {{ to {{ opacity: 1; transform: translateY(0); }} }}
 
-        .portfolio-card::before {{
+        .portfolio-card::before {{ /* Efeito de brilho */
             content: ''; position: absolute; top: 0; left: -100%;
             width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
             transition: left 0.6s;
         }}
         .portfolio-card:hover::before {{ left: 100%; }}
 
         .portfolio-card:hover {{
-            transform: translateY(-12px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 80px rgba(139, 92, 246, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.03);
-            border-color: rgba(139, 92, 246, 0.18);
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 80px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-color: rgba(139, 92, 246, 0.3);
         }}
         
-        /* === IMAGEM (MOLDURA NA PRÓPRIA FOTO) === */
+         /* Estilo para a imagem dentro do card */
         .portfolio-card img {{
-            border-radius: 12px;
-            margin-bottom: 1.25rem;
-            max-height: 220px;
-            object-fit: cover;
-            width: 100%;
-            border: 3px solid rgba(139, 92, 246, 0.28);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
-                        0 0 25px rgba(139, 92, 246, 0.18);
-            transition: all 0.35s ease;
-            display: block;
-        }}
-        .portfolio-card img:hover {{
-            transform: scale(1.03);
-            box-shadow: 0 16px 40px rgba(139, 92, 246, 0.32),
-                        0 0 50px rgba(91, 146, 200, 0.18);
-        }}
-
-        /* ESTILOS PARA TÍTULO E PARÁGRAFO DENTRO DO CARD */
-        .portfolio-card h2 {{
-            color: {COLORS['text_accent']}; font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700; font-size: 1.35rem; line-height: 1.2; margin-bottom: 0.45rem;
+             border-radius: 10px; /* Cantos arredondados */
+             margin-bottom: 1.5rem; /* Espaço abaixo */
+             max-height: 200px; /* Limita altura */
+             object-fit: cover; /* Cobre a área */
+             width: 100%; /* Garante largura total */
         }}
         
-        .portfolio-card p {{
-             color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.45; margin-bottom: 1rem;
+        .portfolio-card h2 {{ /* Título do card */
+            color: {COLORS['text_accent']}; font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; font-size: 1.5rem; line-height: 1.3; margin-bottom: 0.5rem;
+        }}
+        
+        .portfolio-card p {{ /* Descrição do card */
+             color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;
         }}
 
         /* === TÍTULOS DAS SEÇÕES === */
         h3 {{
             font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 2.5rem; text-align: center;
-            margin-top: 3rem; margin-bottom: 1rem; padding-bottom: 25px;
+            margin-top: 5rem; margin-bottom: 1rem; padding-bottom: 25px;
             position: relative; color: {COLORS['text_primary']}; z-index: 5;
         }}
-        h3::after {{
+        h3::after {{ /* Linha decorativa */
             content: ''; position: absolute; bottom: 0; left: 50%;
             transform: translateX(-50%); width: 100px; height: 4px;
             background: linear-gradient(90deg, {COLORS['accent_purple']}, {COLORS['accent_teal']});
@@ -203,41 +193,41 @@ def load_custom_css():
         }}
 
         /* === TAGS === */
-        .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1rem 0 0 0; margin-top: auto; }}
+        .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1.5rem 0; margin-top: auto; }}
         .tag {{
-            background: rgba(139, 92, 246, 0.14); color: {COLORS['text_primary']}; padding: 8px 14px;
-            border-radius: 20px; font-weight: 600; font-size: 0.85rem;
-            border: 1px solid rgba(139, 92, 246, 0.18); backdrop-filter: blur(6px);
-            transition: all 0.25s ease;
+            background: rgba(139, 92, 246, 0.2); color: {COLORS['text_primary']}; padding: 8px 16px;
+            border-radius: 25px; font-weight: 600; font-size: 0.85rem;
+            border: 1px solid rgba(139, 92, 246, 0.3); backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }}
-        .tag:hover {{ transform: translateY(-2px); background: rgba(139, 92, 246, 0.22); box-shadow: 0 6px 18px rgba(139, 92, 246, 0.08); }}
-        .tag.status-ativo {{ background: rgba(6, 214, 160, 0.12); border-color: rgba(6, 214, 160, 0.18); }}
-        .tag.status-inativo {{ background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.12); }}
+        .tag:hover {{ transform: translateY(-2px); background: rgba(139, 92, 246, 0.3); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2); }}
+        .tag.status-ativo {{ background: rgba(6, 214, 160, 0.2); border-color: rgba(6, 214, 160, 0.3); }}
+        .tag.status-inativo {{ background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.3); }}
 
-        /* === BOTÕES (Usado pelo st.link_button nativo, se funcionar) === */
+        /* === BOTÕES === */
         [data-testid="stButton"] button, [data-testid="stLinkButton"] a {{
             background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
             color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
             font-weight: 600 !important; padding: 12px 24px !important; transition: all 0.3s ease !important;
             position: relative; overflow: hidden;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2) !important; width: 100%;
-            text-decoration: none; display: inline-block; text-align: center; line-height: normal; cursor: pointer;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important; width: 100%;
+            text-decoration: none; display: inline-block; text-align: center; line-height: normal; cursor: pointer; /* Estilos base */
         }}
-        [data-testid="stButton"] button::before, [data-testid="stLinkButton"] a::before {{
+        [data-testid="stButton"] button::before, [data-testid="stLinkButton"] a::before {{ /* Efeito de brilho */
             content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: left 0.5s;
         }}
         [data-testid="stButton"] button:hover::before, [data-testid="stLinkButton"] a:hover::before {{ left: 100%; }}
         [data-testid="stButton"] button:hover, [data-testid="stLinkButton"] a:hover {{
-            transform: translateY(-3px) !important; box-shadow: 0 12px 35px rgba(139, 92, 246, 0.35) !important;
+            transform: translateY(-3px) !important; box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5) !important;
         }}
-        [data-testid="stButton"] button:disabled {{
+        [data-testid="stButton"] button:disabled {{ /* Botão desabilitado */
             background: rgba(55, 65, 81, 0.5) !important; color: {COLORS['text_secondary']} !important;
             box-shadow: none !important; transform: none !important; opacity: 0.7; cursor: not-allowed;
         }}
 
-        /* === ESTILO PARA O BOTÃO DE FALLBACK (HTML PURO) === */
+        /* === [NOVO] ESTILO PARA O BOTÃO DE FALLBACK === */
         .fallback-link-button {{
             background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
             color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
@@ -245,7 +235,7 @@ def load_custom_css():
             position: relative; overflow: hidden;
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3) !important; width: 100%;
             text-decoration: none !important; display: inline-block; text-align: center;
-            line-height: normal; cursor: pointer; box-sizing: border-box; /* Importante p/ padding */
+            line-height: normal; cursor: pointer; box-sizing: border-box;
         }}
          .fallback-link-button:hover {{
             transform: translateY(-3px) !important;
@@ -254,12 +244,12 @@ def load_custom_css():
         }}
         .fallback-link-button::before {{
             content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: left 0.5s;
         }}
         .fallback-link-button:hover::before {{ left: 100%; }}
 
-        /* === POPOVER (Mantido para o futuro, caso o bug seja corrigido) === */
+        /* === POPOVER === */
         [data-testid="stPopover"] {{
             background: rgba(30, 41, 59, 0.95) !important; backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;
@@ -267,7 +257,7 @@ def load_custom_css():
         }}
         [data-testid="stPopover"] p, [data-testid="stPopover"] span, [data-testid="stPopover"] li {{ color: {COLORS['text_primary']} !important; }}
         [data-testid="stPopover"] strong {{ color: {COLORS['accent_teal']}; }}
-        [data-testid="stPopover"] button {{ 
+        [data-testid="stPopover"] button {{ /* Botão "Detalhes" */
              background: rgba(55, 65, 81, 0.5) !important; color: {COLORS['text_primary']} !important;
              border: 1px solid rgba(255, 255, 255, 0.1) !important; width: 100%;
         }}
@@ -277,10 +267,10 @@ def load_custom_css():
         .stats-container {{ display: flex; justify-content: center; gap: 3rem; margin: 2rem 0; flex-wrap: wrap; }}
         .stat-item {{
             text-align: center; background: rgba(30, 41, 59, 0.6); padding: 1.5rem 2rem;
-            border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px); transition: all 0.3s ease;
         }}
-        .stat-item:hover {{ transform: translateY(-5px); border-color: {COLORS['accent_purple']}; box-shadow: 0 10px 25px rgba(139, 92, 246, 0.12); }}
+        .stat-item:hover {{ transform: translateY(-5px); border-color: {COLORS['accent_purple']}; box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2); }}
         .stat-number {{
             font-size: 2.5rem; font-weight: 800; display: block;
             background: linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['accent_teal']});
@@ -305,14 +295,12 @@ load_custom_css()
 # --- Carregamento de Dados ---
 try:
     URL_PLANILHA = st.secrets["GOOGLE_SHEET_URL"]
-except Exception:
-    # Mantemos a experiência: mostra mensagem e não trava por KeyError em dev
-    URL_PLANILHA = None
+except KeyError:
+    st.error("Erro de Configuração: O 'GOOGLE_SHEET_URL' não foi configurado.")
+    st.stop()
 
 @st.cache_data(ttl=600)
 def carregar_dados(url):
-    if not url:
-        return pd.DataFrame()
     try:
         df = pd.read_csv(url, encoding='utf-8')
         colunas_esperadas = ['Nome_Dash','Descricao', 'Imagem_Path','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
@@ -335,7 +323,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if df is not None and not df.empty:
+
+if not df.empty:
     total_dashboards = len(df)
     ativos = len(df[df['Status'].str.lower() == 'ativo'])
     plataformas = df[df['Midia'].str.lower() != 'n/a']['Midia'].nunique()
@@ -360,18 +349,11 @@ if df is not None and not df.empty:
 st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
 
 # --- Barra Lateral com Logo e Filtros ---
-# Tenta carregar logo/fundo local; se não existir, ignora.
-try:
-    # Verifique se o nome "fundo.png" está correto e se o arquivo
-    # está NA MESMA PASTA que o seu script .py
-    st.sidebar.image("fundo.png", use_container_width=True)
-except Exception:
-    pass # Ignora silenciosamente se 'fundo.png' não for encontrado
-
+st.sidebar.image("fundo.png", use_container_width=True) # Adiciona Logo
 st.sidebar.markdown("---")
 st.sidebar.header("Filtros Avançados")
 
-if df is not None and not df.empty:
+if not df.empty:
     def lista(col):
         return ["Todos"] + sorted(df[col].replace('N/A', pd.NA).dropna().unique().tolist())
 
@@ -406,7 +388,7 @@ if df is not None and not df.empty:
         if filtro != padrao:
             df_filtrado = df_filtrado[df_filtrado[col] == filtro]
 
-    # --- [ESTE É O BLOCO CORRIGIDO] Exibição dos Cards em Grid ---
+    # --- Exibição dos Cards em Grid (Com Agrupamento por Público) ---
     if len(df_filtrado) == 0:
         st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
         st.info("💡 Tente ajustar os filtros ou termos de busca.")
@@ -416,7 +398,7 @@ if df is not None and not df.empty:
         
         for g in grupos:
             # Adiciona o título da seção
-            st.markdown(f"### {g}", unsafe_allow_html=True)
+            st.markdown(f"### {g}") # Removido o emoji
             # Filtra o dataframe para o grupo atual
             subset = df_filtrado[df_filtrado["Publico"] == g]
             
@@ -429,106 +411,80 @@ if df is not None and not df.empty:
 
                 for j, row in enumerate(chunk):
                     with cols[j]:
-                        # --- 1. Obter todos os dados do 'row' ---
-                        nome_dash = row.get('Nome_Dash','N/A')
-                        descricao = row.get('Descricao','')
-                        image_path = row.get("Imagem_Path", "") # Pega o caminho da planilha
-                        link_value_raw = row.get("Link", "")
-                        link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else ""
+                        st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                         
-                        midia = row.get('Midia','N/A')
-                        status = row.get('Status','N/A')
-                        periodicidade = row.get('Periodicidade','N/A')
-                        
-                        responsavel = row.get('Responsavel','N/A')
-                        horario = row.get('Horario','N/A')
-                        divulgacao = row.get('Divulgacao','N/A')
-                        publico = row.get('Publico','N/A')
-
-                        # --- 2. Construir o HTML da Imagem ---
-                        image_html = ""
+                        image_path = row.get("Imagem_Path", "")
                         if image_path and image_path.lower() != 'n/a':
-                            # A tag <img> vai funcionar para URLs ou caminhos locais
-                            safe_src = image_path.replace('"', '%22')
-                            image_html = f'<img src="{safe_src}" alt="Imagem do dashboard {nome_dash}">' 
-                        else:
-                            # Placeholder se não houver imagem
-                            image_html = f"""
-                            <div style="
-                                height:220px; border-radius:12px; background:rgba(91,146,200,0.06);
-                                border:2px dashed rgba(91,146,200,0.12); display:flex; align-items:center; 
-                                justify-content:center; color:{COLORS['text_secondary']}; font-size:0.95rem; margin-bottom:1.25rem;">
-                                🖼️ Imagem não disponível
-                            </div>
-                            """
-
-                        # --- 3. Construir o HTML das Tags ---
+                            try:
+                                # [CORREÇÃO AQUI] Troca use_column_width por use_container_width
+                                st.image(image_path, use_container_width=True) 
+                            except Exception as img_err:
+                                st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
+                        
                         platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
-                        icon = platform_icons.get(midia, '📊')
-                        status_class = "status-ativo" if str(status).lower() == "ativo" else "status-inativo"
+                        icon = platform_icons.get(row['Midia'], '📊')
                         
-                        tags_html = f"""
-                        <div class="tag-wrapper">
-                            <span class="tag">🖥️ {midia}</span>
-                            <span class="tag {status_class}">● {status}</span>
-                            <span class="tag">🕐 {periodicidade}</span>
-                        </div>
-                        """
-                        
-                        # --- 4. Construir o HTML dos Botões ---
-                        
-                        # Botão 1 (Detalhes): Convertido para um botão HTML desabilitado
-                        # que mostra os detalhes ao passar o mouse (tooltip)
-                        details_tooltip = f"Responsável: {responsavel} | Periodicidade: {periodicidade} | Horário: {horario} | Divulgação: {divulgacao} | Público: {publico}"
-                        details_button_html = f"""
-                        <button disabled title="{details_tooltip}" style="width:100%; padding:12px 24px; border-radius:12px; background:rgba(55,65,81,0.5); color: #94A3B8; border:none; cursor: help; font-weight: 600;">
-                            📋 Detalhes
-                        </button>
-                        """
-                        
-                        # Botão 2 (Acessar / Em Breve): Convertido para HTML puro
-                        access_button_html = ""
-                        if link_value and link_value.lower() != "n/a":
-                            # Usando a classe .fallback-link-button que você já estilizou
-                            access_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" title="Acessar dashboard {nome_dash}">🚀 Acessar</a>"""
-                        else:
-                            # Botão desabilitado
-                            access_button_html = f"""<button disabled style="width:100%; padding:12px 24px; border-radius:12px; background:rgba(55,65,81,0.5); color: #94A3B8; border:none; font-weight: 600;">⏳ Em breve</button>"""
+                        st.subheader(f"{icon} {row['Nome_Dash']}")
+                        st.write(row['Descricao'])
 
-                        # --- 5. Montar o Card Completo ---
-                        # Aqui usamos as tags H2 e P que o seu CSS .portfolio-card h2 já estiliza
-                        card_html = f"""
-                        <div class="portfolio-card" style="animation-delay: {j*0.06}s">
-                            {image_html}
-                            
-                            <h2>{icon} {nome_dash}</h2>
-                            <p>{descricao}</p>
-                            
-                            {tags_html}
-                            
-                            <div style="margin-top: auto; display: flex; gap: 10px; width: 100%; padding-top: 1rem;">
-                                <div style="flex: 1;">
-                                    {details_button_html}
-                                </div>
-                                <div style="flex: 1;">
-                                    {access_button_html}
-                                </div>
+                        status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
+                        st.markdown(
+                            f"""
+                            <div class="tag-wrapper">
+                                <span class="tag">🖥️ {row['Midia']}</span>
+                                <span class="tag {status_class}">● {row['Status']}</span>
+                                <span class="tag">🕐 {row['Periodicidade']}</span>
                             </div>
-                        </div>
-                        """
+                            """,
+                            unsafe_allow_html=True
+                        )
+
+                        # Chave única inclui o grupo 'g'
+                        key_base = f"{g}_{i}_{j}" 
                         
-                        # --- 6. Renderizar o card de UMA SÓ VEZ ---
-                        st.markdown(card_html, unsafe_allow_html=True)
+                        st.markdown('<div style="margin-top: auto;">', unsafe_allow_html=True) 
+                        col_btn1, col_btn2 = st.columns([1, 1])
+                        
+                        with col_btn1:
+                            # Popover SEM key
+                            with st.popover("📋 Detalhes"):
+                                st.write(f"**👤 Responsável:** {row['Responsavel']}")
+                                st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
+                                st.write(f"**⏰ Horário:** {row['Horario']}")
+                                st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
+                                st.write(f"**🎯 Público:** {row['Publico']}")
+                        
+                        with col_btn2:
+                            link_value_raw = row.get("Link", "") 
+                            link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
+
+                            if link_value and link_value.lower() != "n/a":
+                                try: 
+                                    # [CORREÇÃO AQUI] Remove 'type' de link_button
+                                    st.link_button(
+                                        "🚀 Acessar",
+                                        link_value, # Usa o valor limpo
+                                        use_container_width=True,
+                                        key=f"link_{key_base}" 
+                                    )
+                                except (TypeError, Exception) as e: 
+                                     fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🔗 Link Alternativo</a>"""
+                                     st.markdown(fallback_button_html, unsafe_allow_html=True)
+                                     # print(f"Fallback usado para {row.get('Nome_Dash', 'N/A')}: {e}") # Opcional: Logar erro
+                            else:
+                                st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
+                        
+                        st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
+                        st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
                 
                 # Espaço entre as linhas do grid
                 st.markdown("<br>", unsafe_allow_html=True) 
             
             # Espaço extra entre as seções
-            st.markdown("<br>", unsafe_allow_html=True)
-    # --- [FIM DO BLOCO CORRIGIDO] ---
+            st.markdown("<br>", unsafe_allow_html=True) 
 
 else:
-    st.warning("📊 Aguardando dados... Verifique a conexão com a planilha ou a variável 'GOOGLE_SHEET_URL' em st.secrets.")
+    st.warning("📊 Aguardando dados... Verifique a conexão com a planilha.")
 
 # --- Footer ---
 st.sidebar.markdown("---")
