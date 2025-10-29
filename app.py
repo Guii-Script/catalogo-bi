@@ -431,11 +431,6 @@ if not df.empty:
                                 st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
                         
                         
-                        # --- 2. Renderiza o CARD de texto abaixo ---
-                        
-                        # 2a. Abre o card
-                        st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
-                        
                         # 2b. Agrupa todo o CONTEÚDO HTML (título, texto, tags)
                         # O .tag-wrapper (com margin-top: auto) empurrará ele mesmo
                         # e os botões (item 2c) para o fundo do card.
