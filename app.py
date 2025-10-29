@@ -404,29 +404,37 @@ if not df.empty:
             
             reports_list = subset.to_dict('records')
             NUM_COLUNAS = 3
-                
+                  
             for i in range(0, len(reports_list), NUM_COLUNAS):
                 cols = st.columns(NUM_COLUNAS)
                 chunk = reports_list[i : i + NUM_COLUNAS]
 
                 for j, row in enumerate(chunk):
                     with cols[j]:
+                        # 1. Abre o card
                         st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                         
+                        # --- [CORREÇÃO 1/3]: Converter st.image() para HTML ---
                         image_path = row.get("Imagem_Path", "")
                         if image_path and image_path.lower() != 'n/a':
                             try:
-                                # [CORREÇÃO AQUI] Troca use_column_width por use_container_width
-                                st.image(image_path, use_container_width=True) 
+                                # Usa uma tag <img> para renderizar a imagem DENTRO do card.
+                                st.markdown(f'<img src="{image_path}" alt="Preview do {row["Nome_Dash"]}">', unsafe_allow_html=True)
                             except Exception as img_err:
                                 st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
                         
                         platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
                         icon = platform_icons.get(row['Midia'], '📊')
                         
-                        st.subheader(f"{icon} {row['Nome_Dash']}")
-                        st.write(row['Descricao'])
+                        # --- [CORREÇÃO 2/3]: Converter st.subheader() para HTML ---
+                        # Usa <h2> para bater com o seu CSS (.portfolio-card h2)
+                        st.markdown(f"<h2>{icon} {row['Nome_Dash']}</h2>", unsafe_allow_html=True)
+                        
+                        # --- [CORREÇÃO 3/3]: Converter st.write() para HTML ---
+                        # Usa <p> para bater com o seu CSS (.portfolio-card p)
+                        st.markdown(f"<p>{row['Descricao']}</p>", unsafe_allow_html=True)
 
+                        # O seu código de tags já está em HTML, então está perfeito!
                         status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
                         st.markdown(
                             f"""
@@ -442,6 +450,7 @@ if not df.empty:
                         # Chave única inclui o grupo 'g'
                         key_base = f"{g}_{i}_{j}" 
                         
+                        # Este container de botões com 'margin-top: auto' está correto.
                         st.markdown('<div style="margin-top: auto;">', unsafe_allow_html=True) 
                         col_btn1, col_btn2 = st.columns([1, 1])
                         
@@ -460,7 +469,6 @@ if not df.empty:
 
                             if link_value and link_value.lower() != "n/a":
                                 try: 
-                                    # [CORREÇÃO AQUI] Remove 'type' de link_button
                                     st.link_button(
                                         "🚀 Acessar",
                                         link_value, # Usa o valor limpo
@@ -468,9 +476,8 @@ if not df.empty:
                                         key=f"link_{key_base}" 
                                     )
                                 except (TypeError, Exception) as e: 
-                                     fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🔗 Link Alternativo</a>"""
-                                     st.markdown(fallback_button_html, unsafe_allow_html=True)
-                                     # print(f"Fallback usado para {row.get('Nome_Dash', 'N/A')}: {e}") # Opcional: Logar erro
+                                    fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🔗 Link Alternativo</a>"""
+                                    st.markdown(fallback_button_html, unsafe_allow_html=True)
                             else:
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
                         
