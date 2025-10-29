@@ -336,7 +336,6 @@ def lista(col):
 # --- [NOVO] "ROTEADOR" PRINCIPAL ---
 if not st.session_state.team_selected:
     
-    st.markdown('<div class="main-header">', unsafe_allow_html=True)
     st.title("Bem-vindo(a) ao Portfólio BI")
     st.markdown(
         "<div class='subtitle-container'><p>Para começar, selecione o seu time para ver os dashboards relevantes.</p></div>",
