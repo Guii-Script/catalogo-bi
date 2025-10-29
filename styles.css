@@ -1,34 +1,31 @@
-/* === GERAL === */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap');
+
 body {
     background-color: #01080D;
-    color: #F8FAFC;
+    font-family: 'Inter', sans-serif;
+    color: #E2E8F0;
+}
+
+/* === HEADER === */
+.header-container {
+    text-align: center;
+    margin-bottom: 2rem;
+    animation: fadeDown 1.2s ease;
+}
+.title {
     font-family: 'Poppins', sans-serif;
-}
-
-.main-title {
+    font-size: 2.3rem;
     color: #2EF2AA;
-    text-align: center;
-    font-weight: 700;
-    font-size: 2.2rem;
-    letter-spacing: 1px;
-    animation: neonPulse 3s infinite;
-    margin-bottom: 0.5rem;
+    text-shadow: 0 0 15px rgba(46, 242, 170, 0.7);
+    animation: pulseNeon 3s infinite;
 }
-
 .subtitle {
+    font-size: 1rem;
     color: #94A3B8;
-    text-align: center;
-    font-size: 1.1rem;
-    margin-bottom: 2.5rem;
 }
 
-@keyframes neonPulse {
-    0%, 100% { text-shadow: 0 0 10px #2EF2AA, 0 0 20px #5B92C8; }
-    50% { text-shadow: 0 0 20px #2EF2AA, 0 0 40px #5B92C8; }
-}
-
-/* === CONTAINER DOS CARDS === */
-.portfolio-container {
+/* === GRID DE CARDS === */
+.portfolio-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
     gap: 2.5rem;
@@ -36,69 +33,86 @@ body {
 }
 
 /* === CARD === */
-.portfolio-card {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.85));
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    padding: 1.8rem;
+.card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 18px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(46, 242, 170, 0.1);
+    backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(10px);
 }
-.portfolio-card:hover {
+.card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 15px 40px rgba(91, 146, 200, 0.3);
+    box-shadow: 0 0 25px rgba(46, 242, 170, 0.3);
 }
 
 /* === IMAGEM === */
-.portfolio-card img {
-    border-radius: 15px;
-    margin-bottom: 1.5rem;
-    max-height: 220px;
-    object-fit: cover;
+.card-image img {
     width: 100%;
-    border: 3px solid rgba(139, 92, 246, 0.3);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
-                0 0 25px rgba(139, 92, 246, 0.2);
-    transition: all 0.4s ease;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 14px;
+    margin-bottom: 1rem;
+    border: 2px solid rgba(46, 242, 170, 0.4);
+    box-shadow: 0 0 15px rgba(46, 242, 170, 0.2);
 }
-.portfolio-card img:hover {
-    transform: scale(1.03);
-    box-shadow: 0 15px 40px rgba(139, 92, 246, 0.4),
-                0 0 50px rgba(91, 146, 200, 0.3);
+.placeholder {
+    background: rgba(255,255,255,0.05);
+    height: 200px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94A3B8;
 }
 
-/* === TEXTO === */
-.portfolio-title {
-    font-size: 1.4rem;
-    font-weight: 600;
+/* === CONTEÚDO === */
+.card-content h3 {
     color: #2EF2AA;
-    margin-bottom: 0.4rem;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
 }
-.portfolio-subtitle {
+.card-content .category {
     color: #5B92C8;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     margin-bottom: 0.8rem;
 }
-.portfolio-description {
-    color: #94A3B8;
-    font-size: 0.95rem;
-    line-height: 1.5;
+.card-content .desc {
+    font-size: 0.9rem;
+    color: #A1A1AA;
     margin-bottom: 1rem;
 }
 
-/* === LINK === */
-.portfolio-link {
-    text-decoration: none;
+/* === BOTÃO === */
+.btn {
     background: linear-gradient(90deg, #2EF2AA, #5B92C8);
-    color: black;
-    font-weight: 600;
-    padding: 0.7rem 1.2rem;
+    color: #01080D;
+    padding: 0.6rem 1.2rem;
     border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
     text-align: center;
     transition: all 0.3s ease;
-    box-shadow: 0 0 15px rgba(46, 242, 170, 0.4);
 }
+.btn:hover {
+    background: linear-gradient(90deg, #5B92C8, #2EF2AA);
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(46, 242, 170, 0.4);
+}
+
+/* === ANIMAÇÕES === */
+@keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseNeon {
+    0%, 100% { text-shadow: 0 0 10px #2EF2AA, 0 0 20px #2EF2AA; }
+    50% { text-shadow: 0 0 25px #2EF2AA, 0 0 50px #5B92C8; }
+}
+.fadeIn { animation: fadeIn 0.8s ease forwards; }

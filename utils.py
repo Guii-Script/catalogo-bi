@@ -1,29 +1,25 @@
 import streamlit as st
 
 def create_portfolio_cards(df):
-    html = "<div class='portfolio-container'>"
-
+    html = "<div class='portfolio-grid'>"
     for _, row in df.iterrows():
         title = row.get("Título", "Sem título")
-        subtitle = row.get("Categoria", "")
+        category = row.get("Categoria", "")
         desc = row.get("Descrição", "")
         link = row.get("Link", "#")
-        image_path = row.get("Imagem_Path", "")
+        image = row.get("Imagem_Path", "")
 
-        html += "<div class='portfolio-card'>"
-
-        # Imagem
-        if image_path and image_path.lower() != "n/a":
-            html += f'<img src="{image_path}" alt="{title}">'
-        else:
-            html += "<div class='image-placeholder'>🖼️ Imagem não disponível</div>"
-
-        # Conteúdo textual
         html += f"""
-            <div class="portfolio-title">{title}</div>
-            <div class="portfolio-subtitle">{subtitle}</div>
-            <div class="portfolio-description">{desc}</div>
-            <a href="{link}" target="_blank" class="portfolio-link">🔗 Ver Projeto</a>
+        <div class="card fadeIn">
+            <div class="card-image">
+                {'<img src="' + image + '" alt="' + title + '">' if image else '<div class="placeholder">Sem imagem</div>'}
+            </div>
+            <div class="card-content">
+                <h3>{title}</h3>
+                <p class="category">{category}</p>
+                <p class="desc">{desc}</p>
+                <a href="{link}" target="_blank" class="btn">Ver Projeto</a>
+            </div>
         </div>
         """
     html += "</div>"
