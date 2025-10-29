@@ -324,16 +324,29 @@ def carregar_dados(url):
         st.error(f"Erro ao carregar dados: {e}")
         return pd.DataFrame()
 
-df = carregar_dados(URL_PLANILHA)
+# --- [MODIFICAÇÃO 1] ---
+# Carrega o DataFrame COMPLETO para os KPIs
+df_full = carregar_dados(URL_PLANILHA)
 
-# --- [NOVO] Função Helper movida para cima ---
+# Cria um DataFrame filtrado (só ativos) para usar no app (filtros, cards)
+if not df_full.empty and 'Status' in df_full.columns:
+    df_active = df_full[df_full['Status'].str.lower() == 'ativo'].copy()
+else:
+    # Garante um df vazio com as colunas certas, se o df_full estiver vazio
+    df_active = pd.DataFrame(columns=df_full.columns)
+# --- [FIM DA MODIFICAÇÃO] ---
+
+
+# --- [MODIFICAÇÃO 2] Função Helper usa 'df_active' ---
 def lista(col):
-    if df.empty:
+    if df_active.empty:
         return ["Todos"]
-    return ["Todos"] + sorted(df[col].replace('N/A', pd.NA).dropna().unique().tolist())
+    # Usa df_active para que os filtros só mostrem opções de dashboards ativos
+    return ["Todos"] + sorted(df_active[col].replace('N/A', pd.NA).dropna().unique().tolist())
 
 
 # --- [NOVO] "ROTEADOR" PRINCIPAL ---
+# Esta parte usa 'lista()', que agora está corretamente filtrada por 'df_active'
 if not st.session_state.team_selected:
     
     st.title("Bem-vindo(a) ao Portfólio BI")
@@ -343,7 +356,7 @@ if not st.session_state.team_selected:
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
-    if not df.empty:
+    if not df_active.empty: # Usa df_active para popular os times
         teams = lista("Publico") 
         teams = [t for t in teams if t.lower() not in ["todos", "n/a"]] 
 
@@ -379,7 +392,6 @@ if not st.session_state.team_selected:
     else:
         st.info("Carregando dados dos times...")
 
-# --- [MODIFICADO] APLICAÇÃO PRINCIPAL ---
 else:
     # --- Header com Estatísticas ---
     st.title("Portfólio de Business Intelligence")
@@ -389,11 +401,11 @@ else:
         unsafe_allow_html=True,
     )
 
-
-    if not df.empty:
-        total_dashboards = len(df)
-        ativos = len(df[df['Status'].str.lower() == 'ativo'])
-        plataformas = df[df['Midia'].str.lower() != 'n/a']['Midia'].nunique()
+    # --- [MODIFICAÇÃO 3] KPIs usam 'df_full' ---
+    if not df_full.empty:
+        total_dashboards = len(df_full) # KPI usa o total (incluindo inativos)
+        ativos = len(df_full[df_full['Status'].str.lower() == 'ativo'])
+        plataformas = df_full[df_full['Midia'].str.lower() != 'n/a']['Midia'].nunique()
         
         st.markdown(f"""
             <div class="stats-container">
@@ -430,7 +442,8 @@ else:
     st.sidebar.markdown("---")
     st.sidebar.header("Filtros Avançados")
 
-    if not df.empty:
+    # --- [MODIFICAÇÃO 4] Filtros usam 'df_active' e 'Status' é removido ---
+    if not df_active.empty: # Filtros são baseados apenas em dashboards ativos
         publico_list = lista("Publico")
         try:
             default_index = publico_list.index(st.session_state.selected_team)
@@ -445,7 +458,7 @@ else:
         
         filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsavel"))
         filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Midia"))
-        filtro_status = st.sidebar.selectbox("📈 Status", lista("Status"))
+        # A linha do filtro_status foi REMOVIDA
         
         st.sidebar.markdown("---") 
 
@@ -453,8 +466,10 @@ else:
         search_term = st.text_input("🔍 **Buscar dashboards:**", placeholder="Digite o nome do dashboard, tecnologia ou palavra-chave...")
         st.markdown("<br>", unsafe_allow_html=True) 
 
-        # Aplicar filtros
-        df_filtrado = df.copy()
+        # --- [MODIFICAÇÃO 5] Lógica de filtragem ---
+        # Começa a partir dos dashboards ativos
+        df_filtrado = df_active.copy()
+        
         if search_term:
             df_filtrado = df_filtrado[
                 df_filtrado["Nome_Dash"].str.contains(search_term, case=False, na=False) |
@@ -462,18 +477,21 @@ else:
                 df_filtrado["Midia"].str.contains(search_term, case=False, na=False)
             ]
         
+        # O 'Status' foi REMOVIDO do mapping
         filter_mapping = {
             "Responsavel": (filtro_responsavel, "Todos"),
             "Publico": (filtro_publico, "Todos"),
-            "Midia": (filtro_midia, "Todos"),
-            "Status": (filtro_status, "Todos")
+            "Midia": (filtro_midia, "Todos")
         }
         
         for col, (filtro, padrao) in filter_mapping.items():
             if filtro != padrao:
                 df_filtrado = df_filtrado[df_filtrado[col] == filtro]
+        
+        # --- [FIM DAS MODIFICAÇÕES] ---
 
         # --- Exibição dos Cards em Grid (Com Agrupamento por Público) ---
+        # Esta seção agora usa df_filtrado, que é inerentemente apenas de 'Ativos'
         if len(df_filtrado) == 0:
             st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
             st.info("💡 Tente ajustar os filtros ou termos de busca.")
@@ -486,27 +504,23 @@ else:
                 
                 reports_list = subset.to_dict('records')
                 NUM_COLUNAS = 3
-                        
+                            
                 for i in range(0, len(reports_list), NUM_COLUNAS):
                     cols = st.columns(NUM_COLUNAS)
                     chunk = reports_list[i : i + NUM_COLUNAS]
 
-                    # ######################################################
-                    # ### INÍCIO DA CORREÇÃO ###
-                    # ######################################################
-
                     for j, row in enumerate(chunk):
                         with cols[j]:
+                            st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
                             
                             # --- 1. Renderiza a IMAGEM (Nativa) ---
-                            # Ela fica FORA do div .portfolio-card
                             image_path = row.get("Imagem_Path", "")
                             if image_path and image_path.lower() != 'n/a':
                                 try:
                                     st.image(image_path, use_container_width=True)
                                 except Exception as img_err:
                                     st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
-                        
+                            
                             
                             # 2b. Agrupa todo o CONTEÚDO HTML
                             platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
@@ -533,7 +547,7 @@ else:
                                 with st.popover("📋 Detalhes"):
                                     st.write(f"**👤 Responsável:** {row['Responsavel']}")
                                     st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
-                                    st.write(f"**⏰ Horário:** {row['Horario']}")
+                                    st.write(f"**⏰ Horário:** {row['Horário']}")
                                     st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
                                     st.write(f"**🎯 Público:** {row['Publico']}")
                             
