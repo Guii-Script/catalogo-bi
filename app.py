@@ -382,7 +382,6 @@ if not st.session_state.team_selected:
 # --- [MODIFICADO] APLICAÇÃO PRINCIPAL ---
 else:
     # --- Header com Estatísticas ---
-    st.markdown('<div class="main-header">', unsafe_allow_html=True)
     st.title("Portfólio de Business Intelligence")
 
     st.markdown(
