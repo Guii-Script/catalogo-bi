@@ -508,10 +508,7 @@ else:
                                     st.image(image_path, use_container_width=True)
                                 except Exception as img_err:
                                     st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
-                            
-                            # --- 2. Abre o Wrapper do Card CSS ---
-                            # Este div contém APENAS o texto e os botões
-                            st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+                        
                             
                             # 2b. Agrupa todo o CONTEÚDO HTML
                             platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
