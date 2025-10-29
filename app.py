@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import re
 import random # Embora importado, random não está sendo usado. Pode ser removido.
-import base64  # [NOVO] Para converter imagens
-import os      # [NOVO] Para verificar se o arquivo existe
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -140,7 +138,11 @@ def load_custom_css():
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
             backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px; padding: 2rem; 
-            min-height: 450px; /* Aumentado para imagem */
+            
+            /* [REMOVIDO] min-height: 450px; - O card de texto não precisa mais ser tão alto */
+            /* [NOVO] O card de texto terá sua própria altura */
+            min-height: 250px; 
+            
             display: flex; flex-direction: column; position: relative; overflow: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -157,19 +159,28 @@ def load_custom_css():
         }}
         .portfolio-card:hover::before {{ left: 100%; }}
 
+        /* [AJUSTE] O hover agora se aplica ao card de texto */
         .portfolio-card:hover {{
             transform: translateY(-15px) scale(1.02);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 80px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             border-color: rgba(139, 92, 246, 0.3);
         }}
         
-         /* Estilo para a imagem dentro do card */
-        .portfolio-card img {{
-             border-radius: 10px; /* Cantos arredondados */
-             margin-bottom: 1.5rem; /* Espaço abaixo */
-             max-height: 200px; /* Limita altura */
-             object-fit: cover; /* Cobre a área */
-             width: 100%; /* Garante largura total */
+         /* [AJUSTE] Este CSS não será mais usado, pois st.image() não está dentro do card */
+         /* .portfolio-card img {{
+             border-radius: 10px; 
+             margin-bottom: 1.5rem; 
+             max-height: 200px; 
+             object-fit: cover; 
+             width: 100%; 
+        }}
+        */
+
+        /* [NOVO] Estilo para a imagem nativa do Streamlit */
+        [data-testid="stImage"] img {{
+             border-radius: 10px !important;
+             object-fit: cover;
+             max-height: 200px;
         }}
         
         .portfolio-card h2 {{ /* Título do card */
@@ -294,21 +305,6 @@ def load_custom_css():
 # Executa o CSS
 load_custom_css()
 
-# --- [NOVO] Função Auxiliar para Imagens Locais ---
-@st.cache_data
-def get_image_base64(image_path):
-    """Converte uma imagem local em uma string Base64 para embutir no HTML."""
-    # Verifica se o caminho é válido, não é 'n/a' e se o arquivo existe
-    if not image_path or image_path.lower() == 'n/a' or not os.path.isfile(image_path):
-        return None
-    try:
-        with open(image_path, "rb") as img_file:
-            # Lê o arquivo e codifica em base64
-            return base64.b64encode(img_file.read()).decode('utf-8')
-    except Exception as e:
-        # Em caso de erro na leitura, loga no console (opcional) e retorna None
-        print(f"Erro ao ler a imagem {image_path}: {e}")
-        return None
 
 # --- Carregamento de Dados ---
 try:
@@ -367,12 +363,11 @@ if not df.empty:
 st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
 
 # --- Barra Lateral com Logo e Filtros ---
-# Garanta que "fundo.png" esteja na pasta do seu projeto
 try:
-    st.sidebar.image("fundo.png", use_container_width=True) 
+    st.sidebar.image("fundo.png", use_container_width=True) # Adiciona Logo
 except Exception:
     st.sidebar.warning("Logo 'fundo.png' não encontrada.")
-
+    
 st.sidebar.markdown("---")
 st.sidebar.header("Filtros Avançados")
 
@@ -434,67 +429,47 @@ if not df.empty:
 
                 for j, row in enumerate(chunk):
                     with cols[j]:
+                        
+                        # --- [CORREÇÃO 1/2]: Renderizar a IMAGEM primeiro (nativamente) ---
+                        # st.image() sabe carregar arquivos locais (ex: "dash.png")
+                        image_path = row.get("Imagem_Path", "")
+                        if image_path and image_path.lower() != 'n/a':
+                            try:
+                                # A imagem será renderizada AQUI, FORA do card
+                                st.image(image_path, use_container_width=True)
+                            except Exception as img_err:
+                                st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
+                        
+                        
+                        # --- [CORREÇÃO 2/2]: Renderizar o CARD de texto abaixo ---
+                        
                         # 1. Abre o card
                         st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                         
-                        # --- [CORREÇÃO PARA IMAGEM LOCAL] ---
-                        # Pega o nome do arquivo da planilha (ex: "dash_celular.jpg")
-                        image_path_from_sheet = row.get("Imagem_Path", "")
-                        
-                        # Converte a imagem local para Base64
-                        image_base64 = get_image_base64(image_path_from_sheet) 
-
-                        if image_base64:
-                            try:
-                                # Define o tipo de imagem (png, jpg, etc.)
-                                file_extension = os.path.splitext(image_path_from_sheet)[1].lower().replace(".", "")
-                                if file_extension not in ['jpeg', 'jpg', 'png', 'gif']:
-                                    file_extension = 'png' # Usa png como padrão
-                                
-                                # Embutir a imagem usando a string Base64
-                                st.markdown(
-                                    f'<img src="data:image/{file_extension};base64,{image_base64}" alt="Preview do {row["Nome_Dash"]}">', 
-                                    unsafe_allow_html=True
-                                )
-                            except Exception as img_err:
-                                st.warning(f"⚠️ Erro ao embutir imagem: {image_path_from_sheet}", icon="🖼️")
-                        
-                        elif image_path_from_sheet and image_path_from_sheet.lower() != 'n/a':
-                            # Se a função retornou None, mas o caminho não era 'n/a', o arquivo não foi encontrado
-                            st.warning(f"⚠️ Imagem local não encontrada: {image_path_from_sheet}", icon="🖼️")
-                        # --- [FIM DA CORREÇÃO DE IMAGEM] ---
-
+                        # 2. Agrupa todo o CONTEÚDO (título, texto, tags) em UM bloco HTML
                         platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
                         icon = platform_icons.get(row['Midia'], '📊')
-                        
-                        # Renderiza o Título
-                        st.markdown(f"<h2>{icon} {row['Nome_Dash']}</h2>", unsafe_allow_html=True)
-                        
-                        # Renderiza a Descrição
-                        st.markdown(f"<p>{row['Descricao']}</p>", unsafe_allow_html=True)
-
-                        # Renderiza as Tags
                         status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
-                        st.markdown(
-                            f"""
+                        
+                        html_content = f"""
+                            <h2>{icon} {row['Nome_Dash']}</h2>
+                            <p>{row['Descricao']}</p>
                             <div class="tag-wrapper">
                                 <span class="tag">🖥️ {row['Midia']}</span>
                                 <span class="tag {status_class}">● {row['Status']}</span>
                                 <span class="tag">🕐 {row['Periodicidade']}</span>
                             </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                        """
+                        st.markdown(html_content, unsafe_allow_html=True)
 
-                        # Chave única inclui o grupo 'g'
+                        # 3. Adiciona os BOTÕES (nativos do Streamlit)
                         key_base = f"{g}_{i}_{j}" 
                         
-                        # Container dos Botões
+                        # O 'margin-top: auto;' no CSS das tags vai empurrar os botões para baixo
                         st.markdown('<div style="margin-top: auto;">', unsafe_allow_html=True) 
                         col_btn1, col_btn2 = st.columns([1, 1])
                         
                         with col_btn1:
-                            # Popover de Detalhes
                             with st.popover("📋 Detalhes"):
                                 st.write(f"**👤 Responsável:** {row['Responsavel']}")
                                 st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
@@ -503,7 +478,6 @@ if not df.empty:
                                 st.write(f"**🎯 Público:** {row['Publico']}")
                         
                         with col_btn2:
-                            # Botão de Acesso
                             link_value_raw = row.get("Link", "") 
                             link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
 
@@ -511,7 +485,7 @@ if not df.empty:
                                 try: 
                                     st.link_button(
                                         "🚀 Acessar",
-                                        link_value, # Usa o valor limpo
+                                        link_value,
                                         use_container_width=True,
                                         key=f"link_{key_base}" 
                                     )
