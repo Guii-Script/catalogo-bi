@@ -1,0 +1,130 @@
+/* === CORES === */
+:root {
+    --primary: #2EF2AA;
+    --secondary: #5B92C8;
+    --background: #01080D;
+    --card-bg: #0E1A24;
+    --text: #F8FAFC;
+    --text-secondary: #94A3B8;
+}
+
+/* === GERAL === */
+body {
+    background-color: var(--background);
+    color: var(--text);
+    font-family: 'Poppins', sans-serif;
+}
+
+.main {
+    background-color: var(--background);
+    padding: 2rem 3rem;
+}
+
+/* === TÍTULO === */
+.main-title {
+    color: var(--primary);
+    text-align: center;
+    font-weight: 700;
+    font-size: 2.2rem;
+    letter-spacing: 1px;
+    animation: neonPulse 3s infinite;
+}
+@keyframes neonPulse {
+    0%, 100% { text-shadow: 0 0 10px var(--primary), 0 0 20px var(--secondary); }
+    50% { text-shadow: 0 0 20px var(--primary), 0 0 40px var(--secondary); }
+}
+
+/* === CONTAINER DOS CARDS === */
+.portfolio-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 2.5rem;
+    margin-top: 2rem;
+}
+
+/* === CARD === */
+.portfolio-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.85));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+}
+.portfolio-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(91, 146, 200, 0.3);
+}
+
+/* === IMAGEM === */
+.portfolio-card img {
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+    max-height: 220px;
+    object-fit: cover;
+    width: 100%;
+    border: 3px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
+                0 0 25px rgba(139, 92, 246, 0.2);
+    transition: all 0.4s ease;
+}
+.portfolio-card img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 15px 40px rgba(139, 92, 246, 0.4),
+                0 0 50px rgba(91, 146, 200, 0.3);
+}
+
+/* === TEXTO === */
+.portfolio-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 0.4rem;
+}
+.portfolio-subtitle {
+    color: var(--secondary);
+    font-size: 0.95rem;
+    margin-bottom: 0.8rem;
+}
+.portfolio-description {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+/* === BOTÃO/LINK === */
+.portfolio-link {
+    text-decoration: none;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    color: black;
+    font-weight: 600;
+    padding: 0.7rem 1.2rem;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(46, 242, 170, 0.4);
+}
+.portfolio-link:hover {
+    background: linear-gradient(90deg, var(--secondary), var(--primary));
+    box-shadow: 0 0 25px rgba(91, 146, 200, 0.6);
+    transform: scale(1.05);
+}
+
+/* === PLACEHOLDER === */
+.image-placeholder {
+    height: 220px;
+    border-radius: 15px;
+    background: rgba(91,146,200,0.1);
+    border: 2px dashed rgba(91,146,200,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
