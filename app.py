@@ -424,7 +424,7 @@ else:
         
     st.sidebar.markdown("---")
     
-    if st.sidebar.button("⬅️ Voltar (Trocar Time)", use_container_width=True):
+    if st.sidebar.button("⬅ Voltar (Trocar Time)", use_container_width=True):
         st.session_state.team_selected = False
         st.session_state.selected_team = "Todos"
         st.rerun()
