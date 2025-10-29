@@ -530,7 +530,7 @@ if df is not None and not df.empty:
 else:
     st.warning("📊 Aguardando dados... Verifique a conexão com a planilha ou a variável 'GOOGLE_SHEET_URL' em st.secrets.")
 
-# --- Footer ---
+# ---- Footer ---
 st.sidebar.markdown("---")
 st.sidebar.markdown(
     f"""
