@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-import re
-import random # Embora importado, random não está sendo usado. Pode ser removido.
+
 
 # --- Configuração da Página ---
 st.set_page_config(
@@ -139,9 +138,11 @@ def load_custom_css():
             backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px; padding: 2rem; 
             
-            /* [REMOVIDO] min-height: 450px; - O card de texto não precisa mais ser tão alto */
-            /* [NOVO] O card de texto terá sua própria altura */
             min-height: 250px; 
+            
+            /* [MELHORIA DE ALINHAMENTO] */
+            /* Força o card a ocupar 100% da altura da coluna */
+            height: 100%; 
             
             display: flex; flex-direction: column; position: relative; overflow: hidden;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -159,23 +160,12 @@ def load_custom_css():
         }}
         .portfolio-card:hover::before {{ left: 100%; }}
 
-        /* [AJUSTE] O hover agora se aplica ao card de texto */
         .portfolio-card:hover {{
             transform: translateY(-15px) scale(1.02);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 80px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             border-color: rgba(139, 92, 246, 0.3);
         }}
         
-         /* [AJUSTE] Este CSS não será mais usado, pois st.image() não está dentro do card */
-         /* .portfolio-card img {{
-             border-radius: 10px; 
-             margin-bottom: 1.5rem; 
-             max-height: 200px; 
-             object-fit: cover; 
-             width: 100%; 
-        }}
-        */
-
         /* [NOVO] Estilo para a imagem nativa do Streamlit */
         [data-testid="stImage"] img {{
              border-radius: 10px !important;
@@ -206,6 +196,7 @@ def load_custom_css():
         }}
 
         /* === TAGS === */
+        /* margin-top: auto é a chave para empurrar as tags (e os botões) para o fundo */
         .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1.5rem 0; margin-top: auto; }}
         .tag {{
             background: rgba(139, 92, 246, 0.2); color: {COLORS['text_primary']}; padding: 8px 16px;
@@ -397,7 +388,7 @@ if not df.empty:
     
     filter_mapping = {
         "Responsavel": (filtro_responsavel, "Todos"),
-        "Publico": (filtro_publico, "Todos"), 
+        "Publico": (filtro_publico, "Todos"), # [CORREÇÃO] Corrigido typo "filto_publico"
         "Midia": (filtro_midia, "Todos"),
         "Status": (filtro_status, "Todos")
     }
@@ -430,21 +421,24 @@ if not df.empty:
                 for j, row in enumerate(chunk):
                     with cols[j]:
                         
-                        # --- [CORREÇÃO 1/2]: Renderizar a IMAGEM primeiro (nativamente) ---
-                        # st.image() sabe carregar arquivos locais (ex: "dash.png")
+                        # --- 1. Renderiza a IMAGEM (Nativa) ---
+                        # Ela aparece ACIMA do card de texto
                         image_path = row.get("Imagem_Path", "")
                         if image_path and image_path.lower() != 'n/a':
                             try:
-                                # A imagem será renderizada AQUI, FORA do card
                                 st.image(image_path, use_container_width=True)
                             except Exception as img_err:
                                 st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
                         
                         
-                        # --- [CORREÇÃO 2/2]: Renderizar o CARD de texto abaixo ---
+                        # --- 2. Renderiza o CARD de texto abaixo ---
                         
+                        # 2a. Abre o card
+                        st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                         
-                        # 2. Agrupa todo o CONTEÚDO (título, texto, tags) em UM bloco HTML
+                        # 2b. Agrupa todo o CONTEÚDO HTML (título, texto, tags)
+                        # O .tag-wrapper (com margin-top: auto) empurrará ele mesmo
+                        # e os botões (item 2c) para o fundo do card.
                         platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
                         icon = platform_icons.get(row['Midia'], '📊')
                         status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
@@ -460,11 +454,12 @@ if not df.empty:
                         """
                         st.markdown(html_content, unsafe_allow_html=True)
 
-                        # 3. Adiciona os BOTÕES (nativos do Streamlit)
+                        # 2c. Adiciona os BOTÕES (Nativos do Streamlit)
+                        # Eles são renderizados "dentro" do card porque
+                        # o st.markdown('</div>') ainda não foi chamado.
                         key_base = f"{g}_{i}_{j}" 
                         
-                        # O 'margin-top: auto;' no CSS das tags vai empurrar os botões para baixo
-                        st.markdown('<div style="margin-top: auto;">', unsafe_allow_html=True) 
+                        # [REMOVIDO] Wrapper de div redundante
                         col_btn1, col_btn2 = st.columns([1, 1])
                         
                         with col_btn1:
@@ -493,7 +488,7 @@ if not df.empty:
                             else:
                                 st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
                         
-                        st.markdown('</div>', unsafe_allow_html=True) # Fecha container do rodapé
+                        # 2d. Fecha o card
                         st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
                 
                 # Espaço entre as linhas do grid
