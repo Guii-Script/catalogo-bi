@@ -159,12 +159,6 @@ def load_custom_css():
         }}
         @keyframes cardEntrance {{ to {{ opacity: 1; transform: translateY(0); }} }}
 
-        .portfolio-card::before {{ /* Efeito de brilho */
-            content: ''; position: absolute; top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.6s;
-        }}
         .portfolio-card:hover::before {{ left: 100%; }}
 
         .portfolio-card:hover {{
@@ -180,15 +174,6 @@ def load_custom_css():
              max-height: 200px;
         }}
         
-        .portfolio-card h2 {{ /* Título do card */
-            color: {COLORS['text_accent']}; font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700; font-size: 1.5rem; line-height: 1.3; margin-bottom: 0.5rem;
-        }}
-        
-        .portfolio-card p {{ /* Descrição do card */
-             color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;
-        }}
-
         /* === TÍTULOS DAS SEÇÕES === */
         h3 {{
             font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 2.5rem; text-align: center;
@@ -511,8 +496,7 @@ else:
 
                     for j, row in enumerate(chunk):
                         with cols[j]:
-                            st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
-                            
+
                             # --- 1. Renderiza a IMAGEM (Nativa) ---
                             image_path = row.get("Imagem_Path", "")
                             if image_path and image_path.lower() != 'n/a':
@@ -547,7 +531,7 @@ else:
                                 with st.popover("📋 Detalhes"):
                                     st.write(f"**👤 Responsável:** {row['Responsavel']}")
                                     st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
-                                    st.write(f"**⏰ Horário:** {row['Horário']}")
+                                    st.write(f"**⏰ Horário:** {row['Horario']}")
                                     st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
                                     st.write(f"**🎯 Público:** {row['Publico']}")
                             
@@ -569,9 +553,6 @@ else:
                                         st.markdown(fallback_button_html, unsafe_allow_html=True)
                                 else:
                                     st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
-                            
-                            # 2d. Fecha o card
-                            st.markdown('</div>', unsafe_allow_html=True) # Fecha .portfolio-card
                         
                     # Espaço entre as linhas do grid
                     st.markdown("<br>", unsafe_allow_html=True) 
