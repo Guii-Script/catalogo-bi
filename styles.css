@@ -1,37 +1,30 @@
-/* === CORES === */
-:root {
-    --primary: #2EF2AA;
-    --secondary: #5B92C8;
-    --background: #01080D;
-    --card-bg: #0E1A24;
-    --text: #F8FAFC;
-    --text-secondary: #94A3B8;
-}
-
 /* === GERAL === */
 body {
-    background-color: var(--background);
-    color: var(--text);
+    background-color: #01080D;
+    color: #F8FAFC;
     font-family: 'Poppins', sans-serif;
 }
 
-.main {
-    background-color: var(--background);
-    padding: 2rem 3rem;
-}
-
-/* === TÍTULO === */
 .main-title {
-    color: var(--primary);
+    color: #2EF2AA;
     text-align: center;
     font-weight: 700;
     font-size: 2.2rem;
     letter-spacing: 1px;
     animation: neonPulse 3s infinite;
+    margin-bottom: 0.5rem;
 }
+
+.subtitle {
+    color: #94A3B8;
+    text-align: center;
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+}
+
 @keyframes neonPulse {
-    0%, 100% { text-shadow: 0 0 10px var(--primary), 0 0 20px var(--secondary); }
-    50% { text-shadow: 0 0 20px var(--primary), 0 0 40px var(--secondary); }
+    0%, 100% { text-shadow: 0 0 10px #2EF2AA, 0 0 20px #5B92C8; }
+    50% { text-shadow: 0 0 20px #2EF2AA, 0 0 40px #5B92C8; }
 }
 
 /* === CONTAINER DOS CARDS === */
@@ -82,25 +75,25 @@ body {
 .portfolio-title {
     font-size: 1.4rem;
     font-weight: 600;
-    color: var(--primary);
+    color: #2EF2AA;
     margin-bottom: 0.4rem;
 }
 .portfolio-subtitle {
-    color: var(--secondary);
+    color: #5B92C8;
     font-size: 0.95rem;
     margin-bottom: 0.8rem;
 }
 .portfolio-description {
-    color: var(--text-secondary);
+    color: #94A3B8;
     font-size: 0.95rem;
     line-height: 1.5;
     margin-bottom: 1rem;
 }
 
-/* === BOTÃO/LINK === */
+/* === LINK === */
 .portfolio-link {
     text-decoration: none;
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    background: linear-gradient(90deg, #2EF2AA, #5B92C8);
     color: black;
     font-weight: 600;
     padding: 0.7rem 1.2rem;
@@ -108,23 +101,4 @@ body {
     text-align: center;
     transition: all 0.3s ease;
     box-shadow: 0 0 15px rgba(46, 242, 170, 0.4);
-}
-.portfolio-link:hover {
-    background: linear-gradient(90deg, var(--secondary), var(--primary));
-    box-shadow: 0 0 25px rgba(91, 146, 200, 0.6);
-    transform: scale(1.05);
-}
-
-/* === PLACEHOLDER === */
-.image-placeholder {
-    height: 220px;
-    border-radius: 15px;
-    background: rgba(91,146,200,0.1);
-    border: 2px dashed rgba(91,146,200,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
 }

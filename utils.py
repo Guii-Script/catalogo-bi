@@ -2,6 +2,7 @@ import streamlit as st
 
 def create_portfolio_cards(df):
     html = "<div class='portfolio-container'>"
+
     for _, row in df.iterrows():
         title = row.get("Título", "Sem título")
         subtitle = row.get("Categoria", "")
@@ -11,12 +12,13 @@ def create_portfolio_cards(df):
 
         html += "<div class='portfolio-card'>"
 
-        # Imagem ou placeholder
+        # Imagem
         if image_path and image_path.lower() != "n/a":
             html += f'<img src="{image_path}" alt="{title}">'
         else:
             html += "<div class='image-placeholder'>🖼️ Imagem não disponível</div>"
 
+        # Conteúdo textual
         html += f"""
             <div class="portfolio-title">{title}</div>
             <div class="portfolio-subtitle">{subtitle}</div>
