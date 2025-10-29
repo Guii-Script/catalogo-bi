@@ -443,8 +443,6 @@ if not df.empty:
                         
                         # --- [CORREÇÃO 2/2]: Renderizar o CARD de texto abaixo ---
                         
-                        # 1. Abre o card
-                        st.markdown(f'<div class="portfolio-card" style="animation-delay: {j*0.1}s">', unsafe_allow_html=True)
                         
                         # 2. Agrupa todo o CONTEÚDO (título, texto, tags) em UM bloco HTML
                         platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
