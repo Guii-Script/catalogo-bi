@@ -7,8 +7,7 @@ st.set_page_config(
     page_title="Portfólio BI | Dashboard Gallery",
     page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="collapsed", # Menu começa fechado
-    theme="dark" # Define o tema padrão como escuro
+    initial_sidebar_state="collapsed" # Menu começa fechado
 )
 
 # --- Inicialização do Session State ---
