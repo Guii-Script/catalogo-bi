@@ -503,8 +503,6 @@ else:
 
                     for j, row in enumerate(chunk):
                         with cols[j]:
-                            # A div do card é aplicada via CSS
-                            st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
                             
                             # --- Imagem ---
                             image_path = row.get("Imagem_Path", "")
