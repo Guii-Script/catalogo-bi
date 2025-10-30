@@ -502,10 +502,7 @@ else:
                     chunk = reports_list[i : i + NUM_COLUNAS]
 
                     for j, row in enumerate(chunk):
-                        with cols[j]:
-                            # A div do card é aplicada via CSS
-                            st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
-                            
+                        with cols[j]:                           
                             # --- Imagem ---
                             image_path = row.get("Imagem_Path", "")
                             if image_path and image_path.lower() != 'n/a':
