@@ -7,7 +7,8 @@ st.set_page_config(
     page_title="Portfólio BI | Dashboard Gallery",
     page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="collapsed" # Menu começa fechado
+    initial_sidebar_state="collapsed", # Menu começa fechado
+    theme="dark" # Define o tema padrão como escuro
 )
 
 # --- Inicialização do Session State ---
@@ -503,6 +504,8 @@ else:
 
                     for j, row in enumerate(chunk):
                         with cols[j]:
+                            # A div do card é aplicada via CSS
+                            st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
                             
                             # --- Imagem ---
                             image_path = row.get("Imagem_Path", "")
