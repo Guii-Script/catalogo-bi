@@ -2,14 +2,14 @@ import streamlit as st
 from pathlib import Path 
 import pandas as pd      
 
-# --- Paleta de Cores Profissional ---
+# --- Paleta de Cores Original (Vibrante) ---
 COLORS = {
     "primary_dark": "#0d2e5b",
     "primary_medium": "#1e4a7f",
     "primary_light": "#5b92c8",
-    "accent_purple": "#5b92c8",
+    "accent_purple": "#8B5CF6",
     "accent_teal": "#06D6A0",
-    "accent_orange": "#5b92c8",
+    "accent_orange": "#FF9E64",
     "background_main": "#0F172A",
     "background_card": "#1E293B",
     "background_sidebar": "#0F172A",
@@ -17,8 +17,8 @@ COLORS = {
     "text_secondary": "#94A3B8",
     "text_accent": "#E2E8F0",
     "white": "#FFFFFF",
-    "gradient_start": "#1e4a7f",
-    "gradient_end": "#0d2e5b"
+    "gradient_start": "#667eea",
+    "gradient_end": "#764ba2"
 }
 
 def load_css():
