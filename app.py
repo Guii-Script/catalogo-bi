@@ -344,13 +344,13 @@ if not st.session_state.team_selected:
         teams = [t for t in teams if t.lower() not in ["todos", "n/a"]] 
 
         if not teams:
-            st.warning("Nenhum time (Público) encontrado nos dados. Carregando todos os dashboards.")
+            st.warning("Nenhum setor (Público) encontrado nos dados. Carregando todos os dashboards.")
             if st.button("Continuar"):
                 st.session_state.team_selected = True
                 st.session_state.selected_team = "Todos"
                 st.rerun()
         else:
-            st.markdown("### 🎯 Selecione seu Time:")
+            st.markdown("### 🎯 Selecione seu Setor:")
             st.markdown("<br>", unsafe_allow_html=True)
             
             num_cols = 3 
@@ -418,7 +418,7 @@ else:
         
     st.sidebar.markdown("---")
     
-    if st.sidebar.button("⬅ Voltar (Trocar Time)", use_container_width=True):
+    if st.sidebar.button("⬅ Voltar (Trocar Setor)", use_container_width=True):
         st.session_state.team_selected = False
         st.session_state.selected_team = "Todos"
         st.rerun()
