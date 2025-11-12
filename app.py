@@ -332,7 +332,7 @@ if not st.session_state.team_selected:
     
     st.title("Bem-vindo(a) ao Portfólio BI")
     st.markdown(
-        "<div class='subtitle-container'><p>Para começar, selecione o seu time para ver os dashboards relevantes.</p></div>",
+        "<div class='subtitle-container'><p>Para começar, selecione seu setor para ver os dashboards relevantes.</p></div>",
         unsafe_allow_html=True,
     )
     st.markdown('</div>', unsafe_allow_html=True)
