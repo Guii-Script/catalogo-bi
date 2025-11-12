@@ -130,48 +130,12 @@ def load_custom_css():
         }}
         [data-testid="stSidebarNavCollapseButton"] svg {{ fill: {COLORS['text_primary']}; }}
 
-        /* === CARDS === */
-        .portfolio-card {{
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
-            backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px; padding: 2rem; 
-            min-height: 250px; 
-            height: 100%; 
-            display: flex; flex-direction: column; position: relative; overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            animation: cardEntrance 0.8s ease-out forwards; opacity: 0; transform: translateY(50px);
-            z-index: 2;
-        }}
         @keyframes cardEntrance {{ to {{ opacity: 1; transform: translateY(0); }} }}
-
-        .portfolio-card::before {{ /* Efeito de brilho sutil */
-            content: ''; position: absolute; top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-            transition: left 0.6s;
-        }}
-        .portfolio-card:hover::before {{ left: 100%; }}
-
-        .portfolio-card:hover {{
-            transform: translateY(-10px) scale(1.01);
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            border-color: {COLORS['accent_purple']};
-        }}
         
         [data-testid="stImage"] img {{
              border-radius: 10px !important;
              object-fit: cover;
              max-height: 200px;
-        }}
-        
-        .portfolio-card h2 {{ /* Título do card */
-            color: {COLORS['text_accent']}; font-family: 'Space Grotesk', sans-serif;
-            font-weight: 700; font-size: 1.5rem; line-height: 1.3; margin-bottom: 0.5rem;
-        }}
-        
-        .portfolio-card p {{ /* Descrição do card */
-             color: {COLORS['text_secondary']}; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem;
         }}
 
         /* === TÍTULOS DAS SEÇÕES === */
@@ -560,8 +524,6 @@ else:
 
                     for j, row in enumerate(chunk):
                         with cols[j]:
-                            # Inicia o card
-                            st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
                             
                             # --- Imagem ---
                             image_path = row.get("Imagem_Path", "")
