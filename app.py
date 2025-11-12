@@ -24,7 +24,7 @@ COLORS = {
     "primary_light": "#5b92c8",
     "accent_purple": "#5b92c8",      # Cor de acento principal (azul)
     "accent_teal": "#06D6A0",        # Usado para status "Ativo"
-    "accent_orange": "#5b92c8",     # Cor de acento secundária (azul)
+    "accent_orange": "#5b92c8",      # Cor de acento secundária (azul)
     "background_main": "#0F172A",
     "background_card": "#1E293B",
     "background_sidebar": "#0F172A",
@@ -335,11 +335,32 @@ else:
 
 
 # --- Função Helper ---
+# --- MODIFICAÇÃO 1: Função 'lista' atualizada para lidar com 'Publico' ---
 def lista(col):
     if df_active.empty:
         return ["Todos"]
-    # Usa df_active para que os filtros só mostrem opções de dashboards ativos
+    
+    # Lógica especial para a coluna "Publico"
+    if col == "Publico":
+        # 1. Pega todos os valores únicos (ex: "Gerente/Supervisor", "Diretor", "Gerente")
+        publico_strings = df_active['Publico'].replace('N/A', pd.NA).dropna().unique()
+        
+        # 2. Usa um set para armazenar valores individuais (evita duplicatas)
+        all_individual_teams = set()
+
+        # 3. Itera, quebra (split) por "/" e adiciona ao set
+        for s in publico_strings:
+            split_teams = [team.strip() for team in s.split('/')] 
+            all_individual_teams.update(split_teams)
+        
+        # 4. Converte para uma lista ordenada e remove valores vazios
+        teams = sorted(list(all_individual_teams))
+        teams = [t for t in teams if t and t.lower() not in ["todos", "n/a"]]
+        return ["Todos"] + teams
+    
+    # Comportamento padrão para todas as outras colunas
     return ["Todos"] + sorted(df_active[col].replace('N/A', pd.NA).dropna().unique().tolist())
+# --- FIM DA MODIFICAÇÃO 1 ---
 
 
 # --- "ROTEADOR" PRINCIPAL (Tela de Seleção de Time) ---
@@ -353,6 +374,8 @@ if not st.session_state.team_selected:
     st.markdown('</div>', unsafe_allow_html=True)
 
     if not df_active.empty: # Usa df_active para popular os times
+        
+        # (Não é necessária modificação aqui, pois a 'lista("Publico")' já foi corrigida)
         teams = lista("Publico") 
         teams = [t for t in teams if t.lower() not in ["todos", "n/a"]] 
 
@@ -443,8 +466,10 @@ else:
     if not df_active.empty: 
         publico_list = lista("Publico")
         try:
+            # Tenta encontrar o time selecionado na lista (ex: "Gerente")
             default_index = publico_list.index(st.session_state.selected_team)
         except ValueError:
+            # Se não encontrar (ex: "Todos" foi selecionado), usa o index 0
             default_index = 0 
             
         filtro_publico = st.sidebar.selectbox(
@@ -472,37 +497,72 @@ else:
                 df_filtrado["Midia"].str.contains(search_term, case=False, na=False)
             ]
         
-        # Filtros aplicados
-        filter_mapping = {
+        # --- MODIFICAÇÃO 2: Lógica de Filtro atualizada ---
+        
+        # Aplicar filtros de Responsavel e Midia (que são de correspondência exata)
+        exact_filter_mapping = {
             "Responsavel": (filtro_responsavel, "Todos"),
-            "Publico": (filtro_publico, "Todos"),
             "Midia": (filtro_midia, "Todos")
         }
         
-        for col, (filtro, padrao) in filter_mapping.items():
+        for col, (filtro, padrao) in exact_filter_mapping.items():
             if filtro != padrao:
                 df_filtrado = df_filtrado[df_filtrado[col] == filtro]
+                
+        # Aplicar filtro de Público (que usa 'contains' para correspondência parcial)
+        if filtro_publico != "Todos":
+            # Isso garante que "Gerente" corresponda a "Gerente" e "Gerente/Supervisor"
+            df_filtrado = df_filtrado[df_filtrado["Publico"].str.contains(filtro_publico, case=False, na=False)]
+        # --- FIM DA MODIFICAÇÃO 2 ---
 
         # --- Exibição dos Cards em Grid (Com Agrupamento por Público) ---
         if len(df_filtrado) == 0:
             st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
             st.info("💡 Tente ajustar os filtros ou termos de busca.")
         else:
-            grupos = [filtro_publico] if filtro_publico != "Todos" else sorted(df_filtrado["Publico"].replace('N/A', pd.NA).dropna().unique())
             
-            for g in grupos:
-                st.markdown(f"### {g}") 
-                subset = df_filtrado[df_filtrado["Publico"] == g]
+            # --- MODIFICAÇÃO 3: Lógica de Agrupamento atualizada ---
+            
+            # Se um filtro de público específico foi selecionado (ex: "Gerente"),
+            # mostramos todos os resultados sob um único título.
+            if filtro_publico != "Todos":
+                st.markdown(f"### 🎯 Exibindo resultados para: {filtro_publico}")
+                # Criamos uma "tupla" simples para o loop de renderização
+                grupos_de_dados = [("Resultados", df_filtrado)] 
+            
+            # Se "Todos" estiver selecionado, agrupamos pelos valores únicos ORIGINAIS
+            else:
+                grupos = sorted(df_filtrado["Publico"].replace('N/A', pd.NA).dropna().unique())
+                grupos_de_dados = []
+                for g in grupos:
+                    # Filtro exato aqui para criar os grupos corretos
+                    subset = df_filtrado[df_filtrado["Publico"] == g]
+                    grupos_de_dados.append((g, subset)) # (Título, DataFrame)
+            
+            # --- FIM DA MODIFICAÇÃO 3 ---
+            
+            # Loop de renderização (agora usa 'grupos_de_dados')
+            for titulo_grupo, subset in grupos_de_dados:
+                
+                if subset.empty: # Pula se o grupo estiver vazio
+                    continue
+                
+                # Se o título for "Resultados", o título já foi impresso antes do loop
+                if titulo_grupo != "Resultados":
+                    st.markdown(f"### {titulo_grupo}") 
                 
                 reports_list = subset.to_dict('records')
                 NUM_COLUNAS = 3
-                            
+                        
                 for i in range(0, len(reports_list), NUM_COLUNAS):
                     cols = st.columns(NUM_COLUNAS)
                     chunk = reports_list[i : i + NUM_COLUNAS]
 
                     for j, row in enumerate(chunk):
-                        with cols[j]:                           
+                        with cols[j]:
+                            # Inicia o card
+                            st.markdown('<div class="portfolio-card">', unsafe_allow_html=True)
+                            
                             # --- Imagem ---
                             image_path = row.get("Imagem_Path", "")
                             if image_path and image_path.lower() != 'n/a':
@@ -528,7 +588,7 @@ else:
                             st.markdown(html_content, unsafe_allow_html=True)
 
                             # --- Botões Nativos ---
-                            key_base = f"{g}_{i}_{j}" 
+                            key_base = f"{titulo_grupo}_{i}_{j}" 
                             
                             col_btn1, col_btn2 = st.columns([1, 1])
                             
@@ -561,7 +621,7 @@ else:
                             
                             # Fecha o card
                             st.markdown('</div>', unsafe_allow_html=True)
-                        
+                    
                     # Espaço entre as linhas do grid
                     st.markdown("<br>", unsafe_allow_html=True) 
                 
