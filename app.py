@@ -17,18 +17,18 @@ if 'selected_team' not in st.session_state:
 
 # --- Paleta de Cores e Configurações de Design ---
 THEME = {
-    "bg_dark": "#0f172a",          # Slate 900
-    "bg_card": "rgba(30, 41, 59, 0.7)", # Slate 800 (Glass)
+    "bg_dark": "#0f172a",          # Slate 900 (Fundo Principal)
+    "bg_card": "rgba(30, 41, 59, 0.7)", # Slate 800 (Efeito Vidro)
     "border": "rgba(148, 163, 184, 0.1)",
-    "accent": "#38bdf8",           # Sky 400 (Destaque principal)
+    "accent": "#38bdf8",           # Sky 400 (Azul Destaque)
     "accent_hover": "#0ea5e9",     # Sky 500
-    "text_main": "#f8fafc",        # Slate 50
-    "text_muted": "#94a3b8",       # Slate 400
-    "success": "#10b981",          # Emerald 500
-    "offline": "#64748b",          # Slate 500
+    "text_main": "#f8fafc",        # Slate 50 (Texto Claro)
+    "text_muted": "#94a3b8",       # Slate 400 (Texto Secundário)
+    "success": "#10b981",          # Emerald 500 (Status Ativo)
+    "offline": "#64748b",          # Slate 500 (Status Inativo)
 }
 
-# --- CSS Profissional (Injetado) ---
+# --- CSS Profissional (Corrigido) ---
 def load_custom_css():
     st.markdown(f"""
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -41,7 +41,7 @@ def load_custom_css():
             font-family: 'Inter', sans-serif;
         }}
         
-        /* Remove padding extra do topo */
+        /* Ajuste de padding do container principal */
         .block-container {{
             padding-top: 2rem;
             padding-bottom: 5rem;
@@ -149,7 +149,7 @@ def load_custom_css():
             font-size: 0.85rem;
             color: {THEME['text_muted']};
             line-height: 1.5;
-            height: 40px; /* Limita altura */
+            height: 40px; /* Limita altura do texto */
             overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -173,10 +173,11 @@ def load_custom_css():
         .badge-status-off {{ background: rgba(100, 116, 139, 0.1); color: {THEME['offline']}; border: 1px solid rgba(100, 116, 139, 0.2); }}
 
         /* === BOTÕES CUSTOMIZADOS === */
-        /* Target Streamlit Buttons to look integrated */
+        
+        /* Botões dentro das colunas (Cards) */
         div[data-testid="column"] button {{
             width: 100%;
-            border-radius: 0 0 12px 12px !important; /* Arredonda só embaixo se for o ultimo */
+            border-radius: 0 0 12px 12px !important;
             border: 1px solid {THEME['border']} !important;
             background-color: #1e293b !important;
             color: white !important;
@@ -212,6 +213,7 @@ def load_custom_css():
         </style>
     """, unsafe_allow_html=True)
 
+# Executa o CSS
 load_custom_css()
 
 # --- Carregamento de Dados ---
@@ -234,10 +236,11 @@ def carregar_dados(url):
         st.error(f"Erro ao conectar com a base de dados: {e}")
         return pd.DataFrame()
 
+# Carrega Dados
 df_full = carregar_dados(URL_PLANILHA)
 df_active = df_full[df_full['Status'].str.lower() == 'ativo'].copy() if not df_full.empty else pd.DataFrame(columns=df_full.columns)
 
-# --- Lógica de Negócio (Helpers) ---
+# --- Função Helper ---
 def get_unique_list(col):
     if df_active.empty: return ["Todos"]
     if col == "Publico":
@@ -274,14 +277,13 @@ if not st.session_state.team_selected:
                 st.session_state.selected_team = "Todos"
                 st.rerun()
         else:
-            st.markdown("<h3 style='text-align:center; color:#94a3b8; margin-bottom:2rem; font-weight:400;'>Selecione sua área de atuação</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='text-align:center; color:{THEME['text_muted']}; margin-bottom:2rem; font-weight:400;'>Selecione sua área de atuação</h3>", unsafe_allow_html=True)
             
             # Grid de botões estilizados
             col_count = 4
             cols = st.columns(col_count)
             for idx, team in enumerate(teams):
                 with cols[idx % col_count]:
-                    # Usamos botões nativos mas o CSS global os deixa bonitos
                     if st.button(f"{team}", key=f"land_{team}", use_container_width=True):
                         st.session_state.team_selected = True
                         st.session_state.selected_team = team
@@ -290,7 +292,7 @@ if not st.session_state.team_selected:
             st.markdown("<br><br>", unsafe_allow_html=True)
             c1, c2, c3 = st.columns([1,2,1])
             with c2:
-                if st.button("Ver Catálogo Completo ➜", type="secondary", use_container_width=True):
+                if st.button("Ver Catálogo Completo ➜", use_container_width=True):
                     st.session_state.team_selected = True
                     st.session_state.selected_team = "Todos"
                     st.rerun()
@@ -316,7 +318,9 @@ else:
     # Filtros
     if not df_active.empty:
         publico_opts = get_unique_list("Publico")
-        idx_pub = publico_opts.index(st.session_state.selected_team) if st.session_state.selected_team in publico_opts else 0
+        # Tenta preservar a seleção caso o usuário mude
+        current_selection = st.session_state.selected_team
+        idx_pub = publico_opts.index(current_selection) if current_selection in publico_opts else 0
         
         sel_publico = st.sidebar.selectbox("🎯 Público Alvo", publico_opts, index=idx_pub)
         sel_resp = st.sidebar.selectbox("👤 Responsável", get_unique_list("Responsavel"))
@@ -326,15 +330,15 @@ else:
     st.sidebar.info(f"**Status:** Conectado\n\n**Atualizado:** {pd.Timestamp.now().strftime('%H:%M')}")
 
     # --- Header Principal ---
+    # Calculando estatísticas básicas
     total_active = len(df_active)
-    total_views = df_full['Link'].count() # Exemplo
     
     st.markdown(f"""
         <div class="header-container" style="padding: 1rem 0; margin-bottom: 2rem; text-align: left;">
             <h1 class="header-title" style="font-size: 2.5rem;">Catálogo de Dashboards</h1>
             <p class="header-subtitle" style="margin: 0; text-align: left;">
                 Visão consolidada dos indicadores de performance
-                <span style="color: {THEME['accent']}"> | {st.session_state.selected_team}</span>
+                <span style="color: {THEME['accent']}"> | {sel_publico}</span>
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -365,7 +369,7 @@ else:
 
     # --- Filtragem de Dados ---
     if df_active.empty:
-        st.warning("Base de dados vazia.")
+        st.warning("Base de dados vazia ou inativa.")
     else:
         df_show = df_active.copy()
         
@@ -385,15 +389,15 @@ else:
 
         # --- Renderização dos Cards ---
         if df_show.empty:
-            st.markdown("""
-                <div style="text-align: center; padding: 4rem; color: #64748b;">
+            st.markdown(f"""
+                <div style="text-align: center; padding: 4rem; color: {THEME['offline']};">
                     <i class="fa-regular fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem;"></i>
                     <h3>Nenhum dashboard encontrado</h3>
                     <p>Tente ajustar os filtros ou o termo de busca.</p>
                 </div>
             """, unsafe_allow_html=True)
         else:
-            # Agrupamento (igual ao original, mas simplificado visualmente)
+            # Agrupamento Lógico
             if sel_publico != "Todos":
                 groups = [("Resultados Filtrados", df_show)]
             else:
@@ -411,23 +415,22 @@ else:
                 rows = subset.to_dict('records')
                 N_COLS = 3
                 
-                # Grid System manual usando colunas do Streamlit
                 for i in range(0, len(rows), N_COLS):
                     cols = st.columns(N_COLS)
                     batch = rows[i:i+N_COLS]
                     
                     for j, row in enumerate(batch):
                         with cols[j]:
-                            # Ícone baseado na mídia
-                            midia_lower = row['Midia'].lower()
+                            # Ícone dinâmico baseado na mídia
+                            midia_lower = str(row['Midia']).lower()
                             icon_class = "fa-chart-simple"
                             if "power" in midia_lower: icon_class = "fa-chart-bar"
                             elif "excel" in midia_lower: icon_class = "fa-file-excel"
                             elif "google" in midia_lower: icon_class = "fa-google"
                             
-                            status_badge = "badge-status-on" if row['Status'].lower() == 'ativo' else "badge-status-off"
+                            status_badge = "badge-status-on" if str(row['Status']).lower() == 'ativo' else "badge-status-off"
                             
-                            # Parte HTML (Visual do Card)
+                            # --- 1. Parte Visual (HTML) ---
                             st.markdown(f"""
                             <div class="dash-card-header">
                                 <div class="dash-img-container">
@@ -445,9 +448,7 @@ else:
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # Parte Interativa (Botões Streamlit fora do HTML puro para funcionarem)
-                            # Usamos um container com margin-top negativo via CSS (se necessário) ou apenas visualmente colado
-                            
+                            # --- 2. Parte Interativa (Botões) ---
                             b_col1, b_col2 = st.columns([1, 1])
                             with b_col1:
                                 with st.popover("📋 Detalhes", use_container_width=True):
@@ -467,4 +468,5 @@ else:
                                 else:
                                     st.button("Indisponível", disabled=True, key=f"btn_dis_{i}_{j}", use_container_width=True)
                             
+                            # Espaçamento inferior
                             st.markdown("<div style='margin-bottom: 2rem;'></div>", unsafe_allow_html=True)
