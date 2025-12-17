@@ -28,9 +28,9 @@ THEME = {
     "offline": "#64748b",
 }
 
-# --- CSS Profissional (COMPATIBILIDADE TOTAL) ---
+# --- CSS Profissional (BLINDADO E COMPATÍVEL) ---
 def load_custom_css():
-    # CSS escrito como string crua para evitar erros de renderização
+    # CSS sem comentários e usando classes HTML manuais para garantir funcionamento
     css_raw = """
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -215,7 +215,41 @@ def load_custom_css():
             border: 1px solid rgba(100, 116, 139, 0.2);
         }
 
-        /* FORÇA LARGURA TOTAL NOS BOTOES */
+        /* Estilo do Botão HTML Personalizado */
+        .custom-button {
+            display: inline-block;
+            width: 100%;
+            padding: 0.6rem 1rem;
+            background: linear-gradient(135deg, _ACCENT_, #2563eb);
+            color: white !important;
+            text-align: center;
+            text-decoration: none !important;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .custom-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(56, 189, 248, 0.3);
+            color: white !important;
+        }
+        
+        .custom-button:visited {
+            color: white !important;
+        }
+        
+        /* Botão Desabilitado Visualmente */
+        .custom-button-disabled {
+            background: #334155;
+            color: #94a3b8 !important;
+            cursor: not-allowed;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
         div[data-testid="column"] button {
             width: 100%;
             border-radius: 0 0 12px 12px !important;
@@ -231,31 +265,8 @@ def load_custom_css():
             color: _ACCENT_ !important;
             background-color: rgba(56, 189, 248, 0.05) !important;
         }
-
-        div[data-testid="column"] a {
-            text-decoration: none;
-        }
-
-        /* Estilo específico para o Link Button ocupar 100% via CSS */
-        [data-testid="stLinkButton"] {
-            width: 100% !important;
-        }
         
-        [data-testid="stLinkButton"] > a {
-            background: linear-gradient(135deg, _ACCENT_, #2563eb) !important;
-            border: none !important;
-            color: white !important;
-            font-weight: 600 !important;
-            width: 100% !important;
-            display: block !important;
-            text-align: center;
-        }
-
-        [data-testid="stLinkButton"] > a:hover {
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3) !important;
-            transform: translateY(-2px) !important;
-        }
-        
+        /* Ajuste do Expander para ficar transparente */
         [data-testid="stExpander"] {
             background-color: transparent !important;
             border: none !important;
@@ -356,7 +367,6 @@ if not st.session_state.team_selected:
         else:
             st.markdown(f"<h3 style='text-align:center; color:{THEME['text_muted']}; margin-bottom:2rem; font-weight:400;'>Selecione sua área de atuação</h3>", unsafe_allow_html=True)
             
-            # Grid de botões
             col_count = 4
             cols = st.columns(col_count)
             for idx, team in enumerate(teams):
@@ -539,9 +549,18 @@ else:
                             with b_col2:
                                 link = row.get('Link', '#')
                                 if link and str(link).lower() not in ['nan', 'n/a', '']:
-                                    # REMOVIDO use_container_width=True para compatibilidade
-                                    st.link_button("Acessar 🚀", link, key=f"lnk_{unique_key}")
+                                    # SUBSTITUIÇÃO: Botão em HTML Puro para compatibilidade total
+                                    st.markdown(f"""
+                                        <a href="{link}" target="_blank" class="custom-button">
+                                            Acessar 🚀
+                                        </a>
+                                    """, unsafe_allow_html=True)
                                 else:
-                                    st.button("Indisponível", disabled=True, key=f"btn_dis_{unique_key}", use_container_width=True)
+                                    # Botão HTML Desabilitado Visualmente
+                                    st.markdown(f"""
+                                        <a class="custom-button custom-button-disabled">
+                                            Indisponível
+                                        </a>
+                                    """, unsafe_allow_html=True)
                             
                             st.markdown("<div style='margin-bottom: 2rem;'></div>", unsafe_allow_html=True)
