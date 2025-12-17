@@ -30,8 +30,7 @@ THEME = {
 
 # --- CSS Profissional (BLINDADO) ---
 def load_custom_css():
-    # CSS escrito como string crua SEM COMENTÁRIOS para não quebrar o Markdown
-    # Assegura que botões ocupem 100% da largura mesmo sem o parâmetro Python
+    # CSS escrito como string crua SEM COMENTÁRIOS para garantir compatibilidade total
     css_raw = """
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -216,7 +215,6 @@ def load_custom_css():
             border: 1px solid rgba(100, 116, 139, 0.2);
         }
 
-        /* Target para forçar largura total nos botões */
         div[data-testid="column"] button {
             width: 100%;
             border-radius: 0 0 12px 12px !important;
@@ -242,7 +240,7 @@ def load_custom_css():
             border: none !important;
             color: white !important;
             font-weight: 600 !important;
-            width: 100%; /* Força largura no CSS */
+            width: 100%;
             display: block;
             text-align: center;
         }
@@ -250,6 +248,17 @@ def load_custom_css():
         [data-testid="stLinkButton"] > a:hover {
             box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3) !important;
             transform: translateY(-2px) !important;
+        }
+        
+        [data-testid="stExpander"] {
+            background-color: transparent !important;
+            border: none !important;
+        }
+        
+        [data-testid="stExpander"] details {
+            border: 1px solid _BORDER_ !important;
+            border-radius: 8px !important;
+            background-color: #1e293b !important;
         }
 
         hr {
@@ -475,7 +484,7 @@ else:
                     
                     for j, row in enumerate(batch):
                         with cols[j]:
-                            # --- CHAVES ÚNICAS PARA EVITAR CONFLITO E ERROS ---
+                            # CHAVES ÚNICAS
                             sanitized_name = str(row['Nome_Dash']).replace(" ", "_").lower()
                             sanitized_group = str(group_name).replace(" ", "_").lower()
                             unique_key = f"{sanitized_group}_{sanitized_name}_{i}_{j}"
@@ -506,16 +515,17 @@ else:
                             """, unsafe_allow_html=True)
                             
                             b_col1, b_col2 = st.columns([1, 1])
+                            
+                            # SOLUÇÃO DEFINITIVA: Trocamos 'st.popover' por 'st.expander'
+                            # 'st.expander' funciona em TODAS as versões e não crasha.
                             with b_col1:
-                                # CORREÇÃO AQUI: removido 'use_container_width' do popover
-                                with st.popover("📋 Detalhes", key=f"pop_{unique_key}"):
+                                with st.expander("📋 Detalhes"):
                                     st.markdown(f"""
-                                    ### Ficha Técnica
-                                    - **Responsável:** {row['Responsavel']}
-                                    - **Atualização:** {row['Periodicidade']}
-                                    - **Horário:** {row['Horario']}
-                                    - **Público:** {row['Publico']}
-                                    - **Forma de Divulgação:** {row['Divulgacao']}
+                                    **Responsável:** {row['Responsavel']}
+                                    **Atualização:** {row['Periodicidade']}
+                                    **Horário:** {row['Horario']}
+                                    **Público:** {row['Publico']}
+                                    **Divulgação:** {row['Divulgacao']}
                                     """)
                             
                             with b_col2:
