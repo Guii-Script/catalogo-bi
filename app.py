@@ -1,270 +1,606 @@
 import streamlit as st
 import pandas as pd
 
-# --- CONFIGURAÇÃO DA PÁGINA ---
+
+# --- Configuração da Página ---
 st.set_page_config(
-    page_title="Analytics Hub | Corporate Portfolio",
-    page_icon="🎯",
+    page_title="Portfólio BI | Dashboard Gallery",
+    page_icon="🚀",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed" # Menu começa fechado
 )
 
-# --- PALETA DE CORES (MODERNA/SaaS) ---
+# --- Inicialização do Session State ---
+if 'team_selected' not in st.session_state:
+    st.session_state.team_selected = False
+if 'selected_team' not in st.session_state:
+    st.session_state.selected_team = "Todos" # Valor padrão
+
+
+# --- Paleta de Cores Profissional ---
 COLORS = {
-    "bg_main": "#F8FAFC",
-    "bg_card": "#FFFFFF",
-    "primary": "#0F172A",      # Slate 900
-    "accent": "#4F46E5",       # Indigo 600
-    "text_main": "#1E293B",    # Slate 800
-    "text_muted": "#64748B",   # Slate 500
-    "border": "#E2E8F0",       # Slate 200
-    "success": "#10B981"
+    "primary_dark": "#0d2e5b",
+    "primary_medium": "#1e4a7f",
+    "primary_light": "#5b92c8",
+    "accent_purple": "#5b92c8",      # Cor de acento principal (azul)
+    "accent_teal": "#06D6A0",        # Usado para status "Ativo"
+    "accent_orange": "#5b92c8",      # Cor de acento secundária (azul)
+    "background_main": "#0F172A",
+    "background_card": "#1E293B",
+    "background_sidebar": "#0F172A",
+    "text_primary": "#F1F5F9",
+    "text_secondary": "#94A3B8",
+    "text_accent": "#E2E8F0",
+    "white": "#FFFFFF",
+    "gradient_start": "#1e4a7f",
+    "gradient_end": "#0d2e5b"
 }
 
-# --- CSS CUSTOMIZADO (CLEAN UI) ---
+# --- CSS Customizado ---
 def load_custom_css():
     st.markdown(f"""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
         
-        /* Reset Geral */
-        html, body, [data-testid="stAppViewContainer"] {{
-            background-color: {COLORS['bg_main']};
+        /* === FUNDO === */
+        [data-testid="stAppViewContainer"] {{
+            background: linear-gradient(-45deg, {COLORS['background_main']}, {COLORS['primary_dark']}, {COLORS['background_sidebar']}, {COLORS['primary_medium']});
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            color: {COLORS['text_primary']};
             font-family: 'Inter', sans-serif;
-            color: {COLORS['text_main']};
+            position: relative;
+            overflow-x: hidden;
+        }}
+        @keyframes gradientShift {{ 0%{{background-position:0% 50%}} 50%{{background-position:100% 50%}} 100%{{background-position:0% 50%}} }}
+
+        /* === PARTÍCULAS === */
+        [data-testid="stAppViewContainer"]::before {{
+            content: ""; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, {COLORS['primary_light']}aa, transparent 50%),
+                radial-gradient(2px 2px at 40px 70px, {COLORS['accent_purple']}aa, transparent 50%),
+                radial-gradient(1px 1px at 90px 40px, {COLORS['accent_teal']}aa, transparent 50%),
+                radial-gradient(1px 1px at 130px 80px, {COLORS['accent_orange']}aa, transparent 50%);
+            background-repeat: repeat; background-size: 250px 250px;
+            animation: float 20s linear infinite; z-index: 0; opacity: 0.3;
+        }}
+        @keyframes float {{ 100% {{ transform: translateY(-250px); }} }}
+
+        /* === HEADER === */
+        .main-header {{
+            background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem 0; margin-bottom: 3rem;
+            position: relative; z-index: 10;
         }}
 
-        /* Header e Títulos */
-        .main-title {{
-            font-weight: 700;
-            font-size: 2.5rem;
-            color: {COLORS['primary']};
-            letter-spacing: -0.02em;
-            margin-bottom: 0.5rem;
-        }}
-        .section-title {{
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: {COLORS['primary']};
-            margin: 2rem 0 1rem 0;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid {COLORS['border']};
+        /* === TÍTULO PRINCIPAL === */
+        h1 {{
+            font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 4rem; text-align: center;
+            color: {COLORS['text_primary']}; 
+            margin-bottom: 1rem; position: relative; z-index: 5;
         }}
 
-        /* Cards de Dashboard */
-        .db-card {{
-            background: {COLORS['bg_card']};
-            border: 1px solid {COLORS['border']};
-            border-radius: 8px;
-            padding: 1.5rem;
-            height: 100%;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        /* === SUBTÍTULO === */
+        .subtitle-container {{ text-align: center; position: relative; z-index: 5; }}
+         .subtitle-container p {{
+            color: {COLORS['text_secondary']} !important; font-size: 1.3rem;
+            max-width: 700px; margin: 0 auto 3rem auto;
+            line-height: 1.6; font-weight: 300;
         }}
-        .db-card:hover {{
-            border-color: {COLORS['accent']};
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+
+        /* === BARRA DE BUSCA === */
+        [data-testid="stTextInput"] {{ position: relative; z-index: 10; }}
+        [data-testid="stTextInput"] input {{
+            background: rgba(30, 41, 59, 0.8) !important; backdrop-filter: blur(10px);
+            border: 2px solid rgba(91, 146, 200, 0.3) !important; border-radius: 15px !important;
+            color: {COLORS['text_primary']} !important; padding: 1rem 1.5rem !important;
+            font-size: 1.1rem !important; transition: all 0.3s ease !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+        }}
+        [data-testid="stTextInput"] input:focus {{
+            border-color: {COLORS['accent_purple']} !important; 
             transform: translateY(-2px);
         }}
+        [data-testid="stTextInput"] input::placeholder {{ color: {COLORS['text_secondary']} !important; }}
 
-        /* Tags e Status */
-        .tag-container {{
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-        }}
-        .badge {{
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            background: #F1F5F9;
-            color: {COLORS['text_muted']};
-            border: 1px solid {COLORS['border']};
-        }}
-        .badge-status {{
-            background: #ECFDF5;
-            color: {COLORS['success']};
-            border: 1px solid #D1FAE5;
-        }}
-
-        /* Botões */
-        div.stButton > button {{
-            background-color: {COLORS['primary']} !important;
-            color: white !important;
-            border-radius: 6px !important;
-            border: none !important;
-            font-weight: 500 !important;
-            padding: 0.5rem 1rem !important;
-            width: 100%;
-        }}
-        div.stButton > button:hover {{
-            background-color: {COLORS['accent']} !important;
-        }}
-        
-        /* Ajuste Sidebar */
+        /* === SIDEBAR === */
         [data-testid="stSidebar"] {{
-            background-color: {COLORS['bg_card']};
-            border-right: 1px solid {COLORS['border']};
+            background: rgba(15, 23, 42, 0.95) !important; backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }}
+        [data-testid="stSidebar"] h2 {{ /* Título "Filtros Avançados" */
+            color: {COLORS['text_primary']} !important; font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; font-size: 1.8rem;
+            margin-bottom: 2rem;
         }}
         
-        /* KPI Boxes */
-        .kpi-box {{
-            background: {COLORS['bg_card']};
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid {COLORS['border']};
-            text-align: center;
+        /* === BOTÃO DE RECOLHER/EXPANDIR SIDEBAR === */
+        [data-testid="stSidebarNavCollapseButton"] {{
+            background-color: rgba(91, 146, 200, 0.2);
+            border: 1px solid rgba(91, 146, 200, 0.4); border-radius: 50%;
+            transition: all 0.3s ease; transform: scale(1.1);
         }}
-        .kpi-value {{
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: {COLORS['accent']};
-            display: block;
+        [data-testid="stSidebarNavCollapseButton"]:hover {{
+            background-color: rgba(91, 146, 200, 0.3);
+            border-color: rgba(91, 146, 200, 0.5);
+            transform: scale(1.2);
         }}
-        .kpi-label {{
-            font-size: 0.8rem;
-            color: {COLORS['text_muted']};
-            text-transform: uppercase;
+        [data-testid="stSidebarNavCollapseButton"] svg {{ fill: {COLORS['text_primary']}; }}
+
+        @keyframes cardEntrance {{ to {{ opacity: 1; transform: translateY(0); }} }}
+        
+        [data-testid="stImage"] img {{
+             border-radius: 10px !important;
+             object-fit: cover;
+             max-height: 200px;
+        }}
+
+        /* === TÍTULOS DAS SEÇÕES === */
+        h3 {{
+            font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 2.5rem; text-align: center;
+            margin-top: 5rem; margin-bottom: 1rem; padding-bottom: 25px;
+            position: relative; color: {COLORS['text_primary']}; z-index: 5;
+        }}
+        h3::after {{ /* Linha decorativa */
+            content: ''; position: absolute; bottom: 0; left: 50%;
+            transform: translateX(-50%); width: 100px; height: 4px;
+            background: {COLORS['accent_purple']};
+            border-radius: 2px;
+        }}
+
+        /* === TAGS === */
+        .tag-wrapper {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 1.5rem 0; margin-top: auto; }}
+        .tag {{
+            background: rgba(91, 146, 200, 0.2); 
+            color: {COLORS['text_primary']}; padding: 8px 16px;
+            border-radius: 25px; font-weight: 600; font-size: 0.85rem;
+            border: 1px solid rgba(91, 146, 200, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }}
+        .tag:hover {{ 
+            transform: translateY(-2px); 
+            background: rgba(91, 146, 200, 0.3);
+        }}
+        .tag.status-ativo {{ background: rgba(6, 214, 160, 0.2); border-color: rgba(6, 214, 160, 0.3); }}
+        .tag.status-inativo {{ background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.3); }}
+
+        /* === BOTÕES === */
+        [data-testid="stButton"] button, [data-testid="stLinkButton"] a {{
+            background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
+            color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
+            font-weight: 600 !important; padding: 12px 24px !important; transition: all 0.3s ease !important;
+            position: relative; overflow: hidden;
+            width: 100%;
+            text-decoration: none; display: inline-block; text-align: center; line-height: normal; cursor: pointer;
+        }}
+        [data-testid="stButton"] button::before, [data-testid="stLinkButton"] a::before {{ /* Efeito de brilho sutil */
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }}
+        [data-testid="stButton"] button:hover::before, [data-testid="stLinkButton"] a:hover::before {{ left: 100%; }}
+        
+        [data-testid="stButton"] button:hover, [data-testid="stLinkButton"] a:hover {{
+            transform: translateY(-3px) !important; 
+        }}
+        [data-testid="stButton"] button:disabled {{ /* Botão desabilitado */
+            background: rgba(55, 65, 81, 0.5) !important; color: {COLORS['text_secondary']} !important;
+            box-shadow: none !important; transform: none !important; opacity: 0.7; cursor: not-allowed;
+        }}
+
+        /* === ESTILO PARA O BOTÃO DE FALLBACK === */
+        .fallback-link-button {{
+            background: linear-gradient(135deg, {COLORS['accent_purple']}, {COLORS['primary_light']}) !important;
+            color: {COLORS['white']} !important; border: none !important; border-radius: 12px !important;
+            font-weight: 600 !important; padding: 12px 24px !important; transition: all 0.3s ease !important;
+            position: relative; overflow: hidden;
+            width: 100%;
+            text-decoration: none !important; display: inline-block; text-align: center;
+            line-height: normal; cursor: pointer; box-sizing: border-box;
+        }}
+         .fallback-link-button:hover {{
+            transform: translateY(-3px) !important;
+            color: {COLORS['white']} !important;
+        }}
+        .fallback-link-button::before {{
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }}
+        .fallback-link-button:hover::before {{ left: 100%; }}
+
+        /* === POPOVER === */
+        [data-testid="stPopover"] {{
+            background: rgba(30, 41, 59, 0.95) !important; backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }}
+        [data-testid="stPopover"] p, [data-testid="stPopover"] span, [data-testid="stPopover"] li {{ color: {COLORS['text_primary']} !important; }}
+        [data-testid="stPopover"] strong {{ color: {COLORS['accent_teal']}; }}
+        [data-testid="stPopover"] button {{ /* Botão "Detalhes" */
+             background: rgba(55, 65, 81, 0.5) !important; color: {COLORS['text_primary']} !important;
+             border: 1px solid rgba(255, 255, 255, 0.1) !important; width: 100%;
+        }}
+        [data-testid="stPopover"] button:hover {{ 
+            background: rgba(75, 85, 99, 0.7) !important; 
+            border-color: {COLORS['accent_purple']} !important;
+        }}
+
+        /* === ESTATÍSTICAS NO HEADER === */
+        .stats-container {{ display: flex; justify-content: center; gap: 3rem; margin: 2rem 0; flex-wrap: wrap; }}
+        .stat-item {{
+            text-align: center; background: rgba(30, 41, 59, 0.6); padding: 1.5rem 2rem;
+            border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px); transition: all 0.3s ease;
+        }}
+        .stat-item:hover {{ 
+            transform: translateY(-5px); 
+            border-color: {COLORS['accent_purple']};
+        }}
+        .stat-number {{
+            font-size: 2.5rem; font-weight: 800; display: block;
+            color: {COLORS['primary_light']};
+        }}
+        .stat-label {{ color: {COLORS['text_secondary']}; font-size: 0.9rem; margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 1px; }}
+
+        /* === RESPONSIVIDADE === */
+        @media (max-width: 768px) {{ h1 {{ font-size: 2.5rem; }} .stats-container {{ gap: 1rem; }} .stat-item {{ padding: 1rem; }} }}
+
+        /* === SCROLLBAR === */
+        ::-webkit-scrollbar {{ width: 8px; }}
+        ::-webkit-scrollbar-track {{ background: {COLORS['background_main']}; }}
+        ::-webkit-scrollbar-thumb {{ 
+            background: {COLORS['primary_medium']}; 
+            border-radius: 4px; 
+        }}
+        ::-webkit-scrollbar-thumb:hover {{ 
+            background: {COLORS['primary_light']}; 
         }}
         </style>
     """, unsafe_allow_html=True)
 
+# Executa o CSS
 load_custom_css()
 
-# --- LOGICA DE DADOS ---
-if 'team_selected' not in st.session_state:
-    st.session_state.team_selected = False
-if 'selected_team' not in st.session_state:
-    st.session_state.selected_team = "Todos"
+
+# --- Carregamento de Dados ---
+try:
+    URL_PLANILHA = st.secrets["GOOGLE_SHEET_URL"]
+except KeyError:
+    st.error("Erro de Configuração: O 'GOOGLE_SHEET_URL' não foi configurado.")
+    st.stop()
 
 @st.cache_data(ttl=600)
-def load_data():
+def carregar_dados(url):
     try:
-        url = st.secrets["GOOGLE_SHEET_URL"]
-        df = pd.read_csv(url)
+        df = pd.read_csv(url, encoding='utf-8')
+        colunas_esperadas = ['Nome_Dash','Descricao', 'Imagem_Path','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
+        for c in colunas_esperadas:
+            if c not in df.columns: df[c] = pd.NA
         df.fillna("N/A", inplace=True)
-        return df
-    except:
-        # Fallback para exemplo estruturado se a URL falhar
-        return pd.DataFrame(columns=['Nome_Dash','Descricao','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao'])
+        return df.astype(str)
+    except Exception as e:
+        st.error(f"Erro ao carregar dados: {e}")
+        return pd.DataFrame()
 
-df_full = load_data()
-df_active = df_full[df_full['Status'].str.lower() == 'ativo'].copy() if not df_full.empty else df_full
+# Carrega o DataFrame COMPLETO para os KPIs
+df_full = carregar_dados(URL_PLANILHA)
 
-def get_unique_options(col):
-    if df_active.empty: return ["Todos"]
+# Cria um DataFrame filtrado (só ativos) para usar no app (filtros, cards)
+if not df_full.empty and 'Status' in df_full.columns:
+    df_active = df_full[df_full['Status'].str.lower() == 'ativo'].copy()
+else:
+    # Garante um df vazio com as colunas certas, se o df_full estiver vazio
+    df_active = pd.DataFrame(columns=df_full.columns)
+
+
+# --- Função Helper ---
+# --- MODIFICAÇÃO 1: Função 'lista' atualizada para lidar com 'Publico' ---
+def lista(col):
+    if df_active.empty:
+        return ["Todos"]
+    
+    # Lógica especial para a coluna "Publico"
     if col == "Publico":
-        items = set()
-        for s in df_active['Publico'].unique():
-            items.update([i.strip() for i in str(s).split('/')])
-        return ["Todos"] + sorted([i for i in items if i.lower() not in ["todos", "n/a"]])
-    return ["Todos"] + sorted(df_active[col].unique().tolist())
+        # 1. Pega todos os valores únicos (ex: "Gerente/Supervisor", "Diretor", "Gerente")
+        publico_strings = df_active['Publico'].replace('N/A', pd.NA).dropna().unique()
+        
+        # 2. Usa um set para armazenar valores individuais (evita duplicatas)
+        all_individual_teams = set()
 
-# --- VIEW: SELEÇÃO INICIAL ---
+        # 3. Itera, quebra (split) por "/" e adiciona ao set
+        for s in publico_strings:
+            split_teams = [team.strip() for team in s.split('/')] 
+            all_individual_teams.update(split_teams)
+        
+        # 4. Converte para uma lista ordenada e remove valores vazios
+        teams = sorted(list(all_individual_teams))
+        teams = [t for t in teams if t and t.lower() not in ["todos", "n/a"]]
+        return ["Todos"] + teams
+    
+    # Comportamento padrão para todas as outras colunas
+    return ["Todos"] + sorted(df_active[col].replace('N/A', pd.NA).dropna().unique().tolist())
+# --- FIM DA MODIFICAÇÃO 1 ---
+
+
+# --- "ROTEADOR" PRINCIPAL (Tela de Seleção de Time) ---
 if not st.session_state.team_selected:
-    st.markdown("<h1 style='text-align: center; margin-top: 100px;'>Central de Business Intelligence</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #64748B;'>Selecione sua área de atuação para visualizar os painéis disponíveis.</p>", unsafe_allow_html=True)
     
-    st.write("---")
-    
-    teams = get_unique_options("Publico")[1:] # Remove "Todos"
-    cols = st.columns(3)
-    for idx, team in enumerate(teams):
-        with cols[idx % 3]:
-            if st.button(team, key=f"init_{team}"):
+    st.title("Bem-vindo(a) ao Portfólio BI")
+    st.markdown(
+        "<div class='subtitle-container'><p>Para começar, selecione seu setor para ver os dashboards relevantes.</p></div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    if not df_active.empty: # Usa df_active para popular os times
+        
+        # (Não é necessária modificação aqui, pois a 'lista("Publico")' já foi corrigida)
+        teams = lista("Publico") 
+        teams = [t for t in teams if t.lower() not in ["todos", "n/a"]] 
+
+        if not teams:
+            st.warning("Nenhum setor (Público) encontrado nos dados. Carregando todos os dashboards.")
+            if st.button("Continuar"):
                 st.session_state.team_selected = True
-                st.session_state.selected_team = team
+                st.session_state.selected_team = "Todos"
                 st.rerun()
+        else:
+            st.markdown("### 🎯 Selecione seu Setor:")
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            num_cols = 3 
+            cols = st.columns(num_cols)
+            col_index = 0
+            
+            for team in teams:
+                with cols[col_index % num_cols]:
+                    if st.button(team, key=f"team_{team}", use_container_width=True):
+                        st.session_state.team_selected = True
+                        st.session_state.selected_team = team
+                        st.rerun()
+                col_index += 1
+            
+            st.markdown("<br><br><br>", unsafe_allow_html=True)
+            st.markdown("---")
+            st.markdown("Ou veja todos os dashboards disponíveis:")
+            if st.button("Ver Todos os Dashboards 🚀", key="view_all", use_container_width=False):
+                st.session_state.team_selected = True
+                st.session_state.selected_team = "Todos"
+                st.rerun()
+    else:
+        st.info("Carregando dados dos times...")
+
+# --- PÁGINA PRINCIPAL DO PORTFÓLIO ---
+else:
+    # --- Header com Estatísticas ---
+    st.title("Portfólio de Business Intelligence")
+
+    st.markdown(
+        "<div class='subtitle-container'><p>Descubra insights poderosos através da nossa coleção de dashboards estratégicos</p></div>",
+        unsafe_allow_html=True,
+    )
+
+    # KPIs usam 'df_full' para mostrar o universo total
+    if not df_full.empty:
+        total_dashboards = len(df_full) # KPI usa o total (incluindo inativos)
+        ativos = len(df_full[df_full['Status'].str.lower() == 'ativo'])
+        plataformas = df_full[df_full['Midia'].str.lower() != 'n/a']['Midia'].nunique()
+        
+        st.markdown(f"""
+            <div class="stats-container">
+                <div class="stat-item">
+                    <span class="stat-number">{total_dashboards}</span>
+                    <span class="stat-label">Dashboards</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{ativos}</span>
+                    <span class="stat-label">Ativos</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">{plataformas}</span>
+                    <span class="stat-label">Plataformas</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True) # Fecha .main-header
+
+    # --- Barra Lateral com Logo e Filtros ---
+    try:
+        st.sidebar.image("fundo.png", use_container_width=True) # Adiciona Logo
+    except Exception:
+        st.sidebar.warning("Logo 'fundo.png' não encontrada.")
+        
+    st.sidebar.markdown("---")
     
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("Acessar Catálogo Completo", use_container_width=True, type="secondary"):
-        st.session_state.team_selected = True
+    if st.sidebar.button("⬅ Voltar (Trocar Setor)", use_container_width=True):
+        st.session_state.team_selected = False
         st.session_state.selected_team = "Todos"
         st.rerun()
-
-# --- VIEW: DASHBOARD HUB ---
-else:
-    # Top Bar
-    c1, c2 = st.columns([3, 1])
-    with c1:
-        st.markdown(f"<h1 class='main-title'>Analytics Hub: {st.session_state.selected_team}</h1>", unsafe_allow_html=True)
-    with c2:
-        if st.button("Alterar Área"):
-            st.session_state.team_selected = False
-            st.rerun()
-
-    # KPIs
-    k1, k2, k3, k4 = st.columns(4)
-    with k1:
-        st.markdown(f"<div class='kpi-box'><span class='kpi-value'>{len(df_full)}</span><span class='kpi-label'>Total de Assets</span></div>", unsafe_allow_html=True)
-    with k2:
-        st.markdown(f"<div class='kpi-box'><span class='kpi-value'>{len(df_active)}</span><span class='kpi-label'>Painéis Ativos</span></div>", unsafe_allow_html=True)
-    with k3:
-        st.markdown(f"<div class='kpi-box'><span class='kpi-value'>{df_active['Midia'].nunique()}</span><span class='kpi-label'>Plataformas</span></div>", unsafe_allow_html=True)
-    with k4:
-        st.markdown(f"<div class='kpi-box'><span class='kpi-value'>10min</span><span class='kpi-label'>Refresh Rate</span></div>", unsafe_allow_html=True)
-
-    # Filtros Laterais
-    st.sidebar.title("Filtros")
-    f_publico = st.sidebar.selectbox("Público-Alvo", get_unique_options("Publico"), 
-                                    index=get_unique_options("Publico").index(st.session_state.selected_team) if st.session_state.selected_team in get_unique_options("Publico") else 0)
-    f_midia = st.sidebar.selectbox("Plataforma", get_unique_options("Midia"))
-    search = st.text_input("Buscar por nome ou tecnologia", placeholder="Ex: Financeiro, Power BI...")
-
-    # Lógica de Filtro
-    df_filtered = df_active.copy()
-    if f_publico != "Todos":
-        df_filtered = df_filtered[df_filtered["Publico"].str.contains(f_publico, case=False, na=False)]
-    if f_midia != "Todos":
-        df_filtered = df_filtered[df_filtered["Midia"] == f_midia]
-    if search:
-        df_filtered = df_filtered[df_filtered["Nome_Dash"].str.contains(search, case=False)]
-
-    # Grid de Conteúdo
-    if df_filtered.empty:
-        st.info("Nenhum dashboard encontrado para os filtros selecionados.")
-    else:
-        # Agrupamento por categoria se "Todos" estiver selecionado
-        groups = [("Resultados", df_filtered)] if f_publico != "Todos" else df_filtered.groupby("Publico")
         
-        for name, group in groups:
-            st.markdown(f"<div class='section-title'>{name}</div>", unsafe_allow_html=True)
-            
-            rows = [group.iloc[i:i+3] for i in range(0, len(group), 3)]
-            for row_data in rows:
-                cols = st.columns(3)
-                for idx, (index, row) in enumerate(row_data.iterrows()):
-                    with cols[idx]:
-                        # Card HTML
-                        st.markdown(f"""
-                            <div class='db-card'>
-                                <div style='font-size: 0.7rem; color: {COLORS['accent']}; font-weight: 700; text-transform: uppercase;'>{row['Midia']}</div>
-                                <div style='font-size: 1.15rem; font-weight: 600; margin: 0.5rem 0;'>{row['Nome_Dash']}</div>
-                                <div style='font-size: 0.85rem; color: {COLORS['text_muted']}; min-height: 50px;'>{row['Descricao']}</div>
-                                <div class='tag-container'>
-                                    <span class='badge badge-status'>Online</span>
-                                    <span class='badge'>{row['Periodicidade']}</span>
-                                </div>
-                                <div style='margin-top: 1.5rem;'></div>
-                            </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Botões de Ação
-                        btn_c1, btn_c2 = st.columns(2)
-                        with btn_c1:
-                            with st.popover("Metadados"):
-                                st.caption("Detalhes Técnicos")
-                                st.write(f"**Responsável:** {row['Responsavel']}")
-                                st.write(f"**Atualização:** {row['Horario']}")
-                                st.write(f"**Canal:** {row['Divulgacao']}")
-                        with btn_c2:
-                            link = str(row['Link']).strip()
-                            if link.lower() != "n/a":
-                                st.link_button("Abrir Report", link)
-                            else:
-                                st.button("Indisponível", disabled=True)
-
     st.sidebar.markdown("---")
-    st.sidebar.caption("Analytics Portal v2.0.0 | Enterprise Edition")
+    st.sidebar.header("Filtros Avançados")
+
+    # Filtros são baseados apenas em dashboards ativos ('df_active')
+    if not df_active.empty: 
+        publico_list = lista("Publico")
+        try:
+            # Tenta encontrar o time selecionado na lista (ex: "Gerente")
+            default_index = publico_list.index(st.session_state.selected_team)
+        except ValueError:
+            # Se não encontrar (ex: "Todos" foi selecionado), usa o index 0
+            default_index = 0 
+            
+        filtro_publico = st.sidebar.selectbox(
+            "🎯 Público", 
+            publico_list, 
+            index=default_index 
+        )
+        
+        filtro_responsavel = st.sidebar.selectbox("👤 Responsável", lista("Responsavel"))
+        filtro_midia = st.sidebar.selectbox("🖥️ Plataforma BI", lista("Midia"))
+        
+        st.sidebar.markdown("---") 
+
+        # --- Lógica de Busca e Filtro ---
+        search_term = st.text_input("🔍 **Buscar dashboards:**", placeholder="Digite o nome do dashboard, tecnologia ou palavra-chave...")
+        st.markdown("<br>", unsafe_allow_html=True) 
+
+        # Começa a partir dos dashboards ativos
+        df_filtrado = df_active.copy()
+        
+        if search_term:
+            df_filtrado = df_filtrado[
+                df_filtrado["Nome_Dash"].str.contains(search_term, case=False, na=False) |
+                df_filtrado["Descricao"].str.contains(search_term, case=False, na=False) |
+                df_filtrado["Midia"].str.contains(search_term, case=False, na=False)
+            ]
+        
+        # --- MODIFICAÇÃO 2: Lógica de Filtro atualizada ---
+        
+        # Aplicar filtros de Responsavel e Midia (que são de correspondência exata)
+        exact_filter_mapping = {
+            "Responsavel": (filtro_responsavel, "Todos"),
+            "Midia": (filtro_midia, "Todos")
+        }
+        
+        for col, (filtro, padrao) in exact_filter_mapping.items():
+            if filtro != padrao:
+                df_filtrado = df_filtrado[df_filtrado[col] == filtro]
+                
+        # Aplicar filtro de Público (que usa 'contains' para correspondência parcial)
+        if filtro_publico != "Todos":
+            # Isso garante que "Gerente" corresponda a "Gerente" e "Gerente/Supervisor"
+            df_filtrado = df_filtrado[df_filtrado["Publico"].str.contains(filtro_publico, case=False, na=False)]
+        # --- FIM DA MODIFICAÇÃO 2 ---
+
+        # --- Exibição dos Cards em Grid (Com Agrupamento por Público) ---
+        if len(df_filtrado) == 0:
+            st.error("🔍 Nenhum dashboard encontrado com os critérios selecionados.")
+            st.info("💡 Tente ajustar os filtros ou termos de busca.")
+        else:
+            
+            # --- MODIFICAÇÃO 3: Lógica de Agrupamento atualizada ---
+            
+            # Se um filtro de público específico foi selecionado (ex: "Gerente"),
+            # mostramos todos os resultados sob um único título.
+            if filtro_publico != "Todos":
+                st.markdown(f"### 🎯 Exibindo resultados para: {filtro_publico}")
+                # Criamos uma "tupla" simples para o loop de renderização
+                grupos_de_dados = [("Resultados", df_filtrado)] 
+            
+            # Se "Todos" estiver selecionado, agrupamos pelos valores únicos ORIGINAIS
+            else:
+                grupos = sorted(df_filtrado["Publico"].replace('N/A', pd.NA).dropna().unique())
+                grupos_de_dados = []
+                for g in grupos:
+                    # Filtro exato aqui para criar os grupos corretos
+                    subset = df_filtrado[df_filtrado["Publico"] == g]
+                    grupos_de_dados.append((g, subset)) # (Título, DataFrame)
+            
+            # --- FIM DA MODIFICAÇÃO 3 ---
+            
+            # Loop de renderização (agora usa 'grupos_de_dados')
+            for titulo_grupo, subset in grupos_de_dados:
+                
+                if subset.empty: # Pula se o grupo estiver vazio
+                    continue
+                
+                # Se o título for "Resultados", o título já foi impresso antes do loop
+                if titulo_grupo != "Resultados":
+                    st.markdown(f"### {titulo_grupo}") 
+                
+                reports_list = subset.to_dict('records')
+                NUM_COLUNAS = 3
+                        
+                for i in range(0, len(reports_list), NUM_COLUNAS):
+                    cols = st.columns(NUM_COLUNAS)
+                    chunk = reports_list[i : i + NUM_COLUNAS]
+
+                    for j, row in enumerate(chunk):
+                        with cols[j]:
+                            
+                            # --- Imagem ---
+                            image_path = row.get("Imagem_Path", "")
+                            if image_path and image_path.lower() != 'n/a':
+                                try:
+                                    st.image(image_path, use_container_width=True)
+                                except Exception as img_err:
+                                    st.warning(f"⚠️ Imagem não encontrada: {image_path}", icon="🖼️")
+                            
+                            # --- Conteúdo HTML ---
+                            platform_icons = {'Power BI': '📊','Tableau': '📈','Qlik': '🔍','Google Data Studio': '🌐','Excel': '📋','Metabase': '🛠️'}
+                            icon = platform_icons.get(row['Midia'], '📊')
+                            status_class = "status-ativo" if row["Status"].lower() == "ativo" else "status-inativo"
+                            
+                            html_content = f"""
+                                <h2>{icon} {row['Nome_Dash']}</h2>
+                                <p>{row['Descricao']}</p>
+                                <div class="tag-wrapper">
+                                    <span class="tag">🖥️ {row['Midia']}</span>
+                                    <span class="tag {status_class}">● {row['Status']}</span>
+                                    <span class="tag">🕐 {row['Periodicidade']}</span>
+                                </div>
+                            """
+                            st.markdown(html_content, unsafe_allow_html=True)
+
+                            # --- Botões Nativos ---
+                            key_base = f"{titulo_grupo}_{i}_{j}" 
+                            
+                            col_btn1, col_btn2 = st.columns([1, 1])
+                            
+                            with col_btn1:
+                                with st.popover("📋 Detalhes"):
+                                    st.write(f"**👤 Responsável:** {row['Responsavel']}")
+                                    st.write(f"**🕐 Periodicidade:** {row['Periodicidade']}")
+                                    st.write(f"**⏰ Horário:** {row['Horario']}")
+                                    st.write(f"**📢 Divulgação:** {row['Divulgacao']}")
+                                    st.write(f"**🎯 Público:** {row['Publico']}")
+                            
+                            with col_btn2:
+                                link_value_raw = row.get("Link", "") 
+                                link_value = link_value_raw.strip() if isinstance(link_value_raw, str) else "" 
+
+                                if link_value and link_value.lower() != "n/a":
+                                    try: 
+                                        st.link_button(
+                                            "🚀 Acessar",
+                                            link_value,
+                                            use_container_width=True,
+                                            key=f"link_{key_base}" 
+                                        )
+                                    except (TypeError, Exception) as e: 
+                                        # Fallback para links que falham no st.link_button
+                                        fallback_button_html = f"""<a href="{link_value}" target="_blank" class="fallback-link-button" style="text-decoration: none;" title="Abrir link para {row.get('Nome_Dash', 'N/A')}">🚀 Acessar</a>"""
+                                        st.markdown(fallback_button_html, unsafe_allow_html=True)
+                                else:
+                                    st.button("⏳ Em breve", use_container_width=True, disabled=True, key=f"btn_{key_base}")
+                            
+                            # Fecha o card
+                            st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # Espaço entre as linhas do grid
+                    st.markdown("<br>", unsafe_allow_html=True) 
+                
+                # Espaço extra entre as seções
+                st.markdown("<br>", unsafe_allow_html=True) 
+
+    else:
+        st.warning("📊 Aguardando dados... Verifique a conexão com a planilha.")
+
+    # --- Footer ---
+    st.sidebar.markdown("---")
+    st.sidebar.markdown(
+        f"""
+        <div style='color: {COLORS['text_secondary']}; font-size: 0.8rem; text-align: center;'>
+            <p>✨ Portfólio BI v2.0</p>
+            <p>Dados atualizados a cada 10 minutos</p>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
