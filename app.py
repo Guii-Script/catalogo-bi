@@ -31,6 +31,7 @@ THEME = {
 # --- CSS Profissional (BLINDADO) ---
 def load_custom_css():
     # CSS escrito como string crua SEM COMENTÁRIOS para não quebrar o Markdown
+    # Assegura que botões ocupem 100% da largura mesmo sem o parâmetro Python
     css_raw = """
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -215,6 +216,7 @@ def load_custom_css():
             border: 1px solid rgba(100, 116, 139, 0.2);
         }
 
+        /* Target para forçar largura total nos botões */
         div[data-testid="column"] button {
             width: 100%;
             border-radius: 0 0 12px 12px !important;
@@ -240,6 +242,9 @@ def load_custom_css():
             border: none !important;
             color: white !important;
             font-weight: 600 !important;
+            width: 100%; /* Força largura no CSS */
+            display: block;
+            text-align: center;
         }
 
         [data-testid="stLinkButton"] > a:hover {
@@ -254,7 +259,7 @@ def load_custom_css():
     </style>
     """
     
-    # Substituição Segura - Sem usar f-strings do Python no bloco CSS
+    # Substituição Segura
     final_css = css_raw.replace("_BG_DARK_", THEME['bg_dark']) \
                        .replace("_BG_CARD_", THEME['bg_card']) \
                        .replace("_BORDER_", THEME['border']) \
@@ -470,8 +475,7 @@ else:
                     
                     for j, row in enumerate(batch):
                         with cols[j]:
-                            # --- CRIAÇÃO DE CHAVE ÚNICA (CORREÇÃO DO ERRO) ---
-                            # Usamos group_name + nome_dash + índices para garantir unicidade absoluta
+                            # --- CHAVES ÚNICAS PARA EVITAR CONFLITO E ERROS ---
                             sanitized_name = str(row['Nome_Dash']).replace(" ", "_").lower()
                             sanitized_group = str(group_name).replace(" ", "_").lower()
                             unique_key = f"{sanitized_group}_{sanitized_name}_{i}_{j}"
@@ -503,8 +507,8 @@ else:
                             
                             b_col1, b_col2 = st.columns([1, 1])
                             with b_col1:
-                                # Chave única aplicada ao popover
-                                with st.popover("📋 Detalhes", use_container_width=True, key=f"pop_{unique_key}"):
+                                # CORREÇÃO AQUI: removido 'use_container_width' do popover
+                                with st.popover("📋 Detalhes", key=f"pop_{unique_key}"):
                                     st.markdown(f"""
                                     ### Ficha Técnica
                                     - **Responsável:** {row['Responsavel']}
@@ -517,10 +521,8 @@ else:
                             with b_col2:
                                 link = row.get('Link', '#')
                                 if link and str(link).lower() not in ['nan', 'n/a', '']:
-                                    # Chave única aplicada ao botão de link (se necessário, mas boa prática)
                                     st.link_button("Acessar 🚀", link, use_container_width=True, key=f"lnk_{unique_key}")
                                 else:
-                                    # Chave única aplicada ao botão desabilitado
                                     st.button("Indisponível", disabled=True, key=f"btn_dis_{unique_key}", use_container_width=True)
                             
                             st.markdown("<div style='margin-bottom: 2rem;'></div>", unsafe_allow_html=True)
