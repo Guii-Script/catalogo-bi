@@ -29,25 +29,23 @@ THEME = {
 }
 
 # --- CSS Profissional (Corrigido) ---
+# --- CSS Profissional (Versão Limpa/Sem Comentários para evitar bugs) ---
 def load_custom_css():
     st.markdown(f"""
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
-        /* === GERAL === */
         .stApp {{
             background-color: {THEME['bg_dark']};
             font-family: 'Inter', sans-serif;
         }}
         
-        /* Ajuste de padding do container principal */
         .block-container {{
             padding-top: 2rem;
             padding-bottom: 5rem;
         }}
 
-        /* === HEADER === */
         .header-container {{
             text-align: center;
             margin-bottom: 4rem;
@@ -73,7 +71,6 @@ def load_custom_css():
             margin: 0 auto;
         }}
 
-        /* === ESTATÍSTICAS (KPIs) === */
         .kpi-grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -89,22 +86,22 @@ def load_custom_css():
             text-align: center;
             transition: transform 0.2s ease;
         }}
+        
         .kpi-card:hover {{ transform: translateY(-2px); border-color: {THEME['accent']}; }}
         
         .kpi-value {{ font-size: 2rem; font-weight: 700; color: {THEME['text_main']}; }}
         .kpi-label {{ color: {THEME['accent']}; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 5px; }}
         .kpi-icon {{ font-size: 1.5rem; color: {THEME['text_muted']}; margin-bottom: 10px; opacity: 0.5; }}
 
-        /* === INPUTS & FILTROS === */
         [data-testid="stTextInput"] input, [data-testid="stSelectbox"] > div > div {{
             background-color: #1e293b !important;
             color: white !important;
             border: 1px solid {THEME['border']} !important;
             border-radius: 8px !important;
         }}
+        
         [data-testid="stTextInput"] input:focus {{ border-color: {THEME['accent']} !important; }}
 
-        /* === CARDS DE DASHBOARD === */
         .dash-card-header {{
             background: {THEME['bg_card']};
             border: 1px solid {THEME['border']};
@@ -149,7 +146,7 @@ def load_custom_css():
             font-size: 0.85rem;
             color: {THEME['text_muted']};
             line-height: 1.5;
-            height: 40px; /* Limita altura do texto */
+            height: 40px;
             overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -157,8 +154,8 @@ def load_custom_css():
             margin-bottom: 1rem;
         }}
         
-        /* Tags dentro do Card */
         .meta-tags {{ display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0.5rem; }}
+        
         .badge {{
             font-size: 0.7rem;
             padding: 4px 8px;
@@ -168,13 +165,11 @@ def load_custom_css():
             align-items: center;
             gap: 4px;
         }}
+        
         .badge-tech {{ background: rgba(56, 189, 248, 0.1); color: {THEME['accent']}; border: 1px solid rgba(56, 189, 248, 0.2); }}
         .badge-status-on {{ background: rgba(16, 185, 129, 0.1); color: {THEME['success']}; border: 1px solid rgba(16, 185, 129, 0.2); }}
         .badge-status-off {{ background: rgba(100, 116, 139, 0.1); color: {THEME['offline']}; border: 1px solid rgba(100, 116, 139, 0.2); }}
 
-        /* === BOTÕES CUSTOMIZADOS === */
-        
-        /* Botões dentro das colunas (Cards) */
         div[data-testid="column"] button {{
             width: 100%;
             border-radius: 0 0 12px 12px !important;
@@ -195,21 +190,19 @@ def load_custom_css():
             text-decoration: none;
         }}
         
-        /* Botão de Link (Primary) */
         [data-testid="stLinkButton"] > a {{
             background: linear-gradient(135deg, {THEME['accent']}, #2563eb) !important;
             border: none !important;
             color: white !important;
             font-weight: 600 !important;
         }}
+        
         [data-testid="stLinkButton"] > a:hover {{
             box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3) !important;
             transform: translateY(-2px) !important;
         }}
 
-        /* === SEPARADORES === */
         hr {{ border-color: {THEME['border']}; margin: 3rem 0; }}
-        
         </style>
     """, unsafe_allow_html=True)
 
@@ -470,3 +463,12 @@ else:
                             
                             # Espaçamento inferior
                             st.markdown("<div style='margin-bottom: 2rem;'></div>", unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+                            
