@@ -15,45 +15,44 @@ if 'team_selected' not in st.session_state:
 if 'selected_team' not in st.session_state:
     st.session_state.selected_team = "Todos"
 
-# --- Paleta de Cores e Configurações de Design ---
+# --- Paleta de Cores ---
 THEME = {
-    "bg_dark": "#0f172a",          # Slate 900
-    "bg_card": "rgba(30, 41, 59, 0.7)", # Slate 800 (Glass)
+    "bg_dark": "#0f172a",
+    "bg_card": "rgba(30, 41, 59, 0.7)",
     "border": "rgba(148, 163, 184, 0.1)",
-    "accent": "#38bdf8",           # Sky 400
-    "accent_hover": "#0ea5e9",     # Sky 500
-    "text_main": "#f8fafc",        # Slate 50
-    "text_muted": "#94a3b8",       # Slate 400
-    "success": "#10b981",          # Emerald 500
-    "offline": "#64748b",          # Slate 500
+    "accent": "#38bdf8",
+    "accent_hover": "#0ea5e9",
+    "text_main": "#f8fafc",
+    "text_muted": "#94a3b8",
+    "success": "#10b981",
+    "offline": "#64748b",
 }
 
-# --- CSS Profissional (Método Seguro) ---
+# --- CSS Profissional (BLINDADO) ---
 def load_custom_css():
-    # Definimos o CSS como string pura para evitar conflitos de formatação do Python
-    raw_css = """
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <style>
+    # CSS escrito como string crua SEM COMENTÁRIOS para não quebrar o Markdown
+    css_raw = """
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
+
         .stApp {
-            background-color: VAR_BG_DARK;
+            background-color: _BG_DARK_;
             font-family: 'Inter', sans-serif;
         }
-        
+
         .block-container {
             padding-top: 2rem;
             padding-bottom: 5rem;
         }
 
-        /* HEADER */
         .header-container {
             text-align: center;
             margin-bottom: 4rem;
             padding: 3rem 1rem;
             background: radial-gradient(circle at center, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
         }
-        
+
         .header-title {
             font-size: 3.5rem;
             font-weight: 700;
@@ -63,101 +62,131 @@ def load_custom_css():
             margin-bottom: 0.5rem;
             letter-spacing: -0.05em;
         }
-        
+
         .header-subtitle {
-            color: VAR_TEXT_MUTED;
+            color: _TEXT_MUTED_;
             font-size: 1.1rem;
             font-weight: 400;
             max-width: 600px;
             margin: 0 auto;
         }
 
-        /* KPIS */
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 3rem;
         }
-        
+
         .kpi-card {
-            background: VAR_BG_CARD;
-            border: 1px solid VAR_BORDER;
+            background: _BG_CARD_;
+            border: 1px solid _BORDER_;
             padding: 1.5rem;
             border-radius: 12px;
             text-align: center;
             transition: transform 0.2s ease;
         }
-        .kpi-card:hover { transform: translateY(-2px); border-color: VAR_ACCENT; }
-        
-        .kpi-value { font-size: 2rem; font-weight: 700; color: VAR_TEXT_MAIN; }
-        .kpi-label { color: VAR_ACCENT; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 5px; }
-        .kpi-icon { font-size: 1.5rem; color: VAR_TEXT_MUTED; margin-bottom: 10px; opacity: 0.5; }
 
-        /* INPUTS */
-        [data-testid="stTextInput"] input, [data-testid="stSelectbox"] > div > div {
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: _ACCENT_;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: _TEXT_MAIN_;
+        }
+
+        .kpi-label {
+            color: _ACCENT_;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .kpi-icon {
+            font-size: 1.5rem;
+            color: _TEXT_MUTED_;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        [data-testid="stTextInput"] input, 
+        [data-testid="stSelectbox"] > div > div {
             background-color: #1e293b !important;
             color: white !important;
-            border: 1px solid VAR_BORDER !important;
+            border: 1px solid _BORDER_ !important;
             border-radius: 8px !important;
         }
-        [data-testid="stTextInput"] input:focus { border-color: VAR_ACCENT !important; }
 
-        /* CARDS */
+        [data-testid="stTextInput"] input:focus {
+            border-color: _ACCENT_ !important;
+        }
+
         .dash-card-header {
-            background: VAR_BG_CARD;
-            border: 1px solid VAR_BORDER;
+            background: _BG_CARD_;
+            border: 1px solid _BORDER_;
             border-bottom: none;
             border-radius: 12px 12px 0 0;
             padding: 0;
             overflow: hidden;
             position: relative;
         }
-        
+
         .dash-img-container {
             width: 100%;
             height: 160px;
             overflow: hidden;
             position: relative;
         }
-        
+
         .dash-img-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform 0.5s ease;
         }
-        
-        .dash-card-header:hover .dash-img-container img { transform: scale(1.05); }
-        
+
+        .dash-card-header:hover .dash-img-container img {
+            transform: scale(1.05);
+        }
+
         .dash-content {
             padding: 1.25rem;
         }
-        
+
         .dash-title {
             font-size: 1.1rem;
             font-weight: 600;
-            color: VAR_TEXT_MAIN;
+            color: _TEXT_MAIN_;
             margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        
+
         .dash-desc {
             font-size: 0.85rem;
-            color: VAR_TEXT_MUTED;
+            color: _TEXT_MUTED_;
             line-height: 1.5;
-            height: 40px; 
+            height: 40px;
             overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             margin-bottom: 1rem;
         }
-        
-        /* TAGS */
-        .meta-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 0.5rem; }
+
+        .meta-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+
         .badge {
             font-size: 0.7rem;
             padding: 4px 8px;
@@ -167,55 +196,73 @@ def load_custom_css():
             align-items: center;
             gap: 4px;
         }
-        .badge-tech { background: rgba(56, 189, 248, 0.1); color: VAR_ACCENT; border: 1px solid rgba(56, 189, 248, 0.2); }
-        .badge-status-on { background: rgba(16, 185, 129, 0.1); color: VAR_SUCCESS; border: 1px solid rgba(16, 185, 129, 0.2); }
-        .badge-status-off { background: rgba(100, 116, 139, 0.1); color: VAR_OFFLINE; border: 1px solid rgba(100, 116, 139, 0.2); }
 
-        /* BOTOES */
+        .badge-tech {
+            background: rgba(56, 189, 248, 0.1);
+            color: _ACCENT_;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .badge-status-on {
+            background: rgba(16, 185, 129, 0.1);
+            color: _SUCCESS_;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-status-off {
+            background: rgba(100, 116, 139, 0.1);
+            color: _OFFLINE_;
+            border: 1px solid rgba(100, 116, 139, 0.2);
+        }
+
         div[data-testid="column"] button {
             width: 100%;
             border-radius: 0 0 12px 12px !important;
-            border: 1px solid VAR_BORDER !important;
+            border: 1px solid _BORDER_ !important;
             background-color: #1e293b !important;
             color: white !important;
             font-weight: 500 !important;
             transition: all 0.3s !important;
         }
-        
+
         div[data-testid="column"] button:hover {
-            border-color: VAR_ACCENT !important;
-            color: VAR_ACCENT !important;
+            border-color: _ACCENT_ !important;
+            color: _ACCENT_ !important;
             background-color: rgba(56, 189, 248, 0.05) !important;
         }
 
         div[data-testid="column"] a {
             text-decoration: none;
         }
-        
+
         [data-testid="stLinkButton"] > a {
-            background: linear-gradient(135deg, VAR_ACCENT, #2563eb) !important;
+            background: linear-gradient(135deg, _ACCENT_, #2563eb) !important;
             border: none !important;
             color: white !important;
             font-weight: 600 !important;
         }
+
         [data-testid="stLinkButton"] > a:hover {
             box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3) !important;
             transform: translateY(-2px) !important;
         }
 
-        hr { border-color: VAR_BORDER; margin: 3rem 0; }
-        </style>
+        hr {
+            border-color: _BORDER_;
+            margin: 3rem 0;
+        }
+    </style>
     """
     
-    # Substituição Segura das Variáveis
-    final_css = raw_css.replace("VAR_BG_DARK", THEME['bg_dark']) \
-                       .replace("VAR_BG_CARD", THEME['bg_card']) \
-                       .replace("VAR_BORDER", THEME['border']) \
-                       .replace("VAR_ACCENT", THEME['accent']) \
-                       .replace("VAR_TEXT_MAIN", THEME['text_main']) \
-                       .replace("VAR_TEXT_MUTED", THEME['text_muted']) \
-                       .replace("VAR_SUCCESS", THEME['success']) \
-                       .replace("VAR_OFFLINE", THEME['offline'])
+    # Substituição Segura - Sem usar f-strings do Python no bloco CSS
+    final_css = css_raw.replace("_BG_DARK_", THEME['bg_dark']) \
+                       .replace("_BG_CARD_", THEME['bg_card']) \
+                       .replace("_BORDER_", THEME['border']) \
+                       .replace("_ACCENT_", THEME['accent']) \
+                       .replace("_TEXT_MAIN_", THEME['text_main']) \
+                       .replace("_TEXT_MUTED_", THEME['text_muted']) \
+                       .replace("_SUCCESS_", THEME['success']) \
+                       .replace("_OFFLINE_", THEME['offline'])
     
     st.markdown(final_css, unsafe_allow_html=True)
 
@@ -285,7 +332,7 @@ if not st.session_state.team_selected:
         else:
             st.markdown(f"<h3 style='text-align:center; color:{THEME['text_muted']}; margin-bottom:2rem; font-weight:400;'>Selecione sua área de atuação</h3>", unsafe_allow_html=True)
             
-            # Grid de botões estilizados
+            # Grid de botões
             col_count = 4
             cols = st.columns(col_count)
             for idx, team in enumerate(teams):
@@ -324,7 +371,6 @@ else:
     # Filtros
     if not df_active.empty:
         publico_opts = get_unique_list("Publico")
-        # Tenta preservar a seleção caso o usuário mude
         current_selection = st.session_state.selected_team
         idx_pub = publico_opts.index(current_selection) if current_selection in publico_opts else 0
         
@@ -336,9 +382,6 @@ else:
     st.sidebar.info(f"**Status:** Conectado\n\n**Atualizado:** {pd.Timestamp.now().strftime('%H:%M')}")
 
     # --- Header Principal ---
-    # Calculando estatísticas básicas
-    total_active = len(df_active)
-    
     st.markdown(f"""
         <div class="header-container" style="padding: 1rem 0; margin-bottom: 2rem; text-align: left;">
             <h1 class="header-title" style="font-size: 2.5rem;">Catálogo de Dashboards</h1>
@@ -427,7 +470,6 @@ else:
                     
                     for j, row in enumerate(batch):
                         with cols[j]:
-                            # Ícone dinâmico baseado na mídia
                             midia_lower = str(row['Midia']).lower()
                             icon_class = "fa-chart-simple"
                             if "power" in midia_lower: icon_class = "fa-chart-bar"
@@ -436,7 +478,6 @@ else:
                             
                             status_badge = "badge-status-on" if str(row['Status']).lower() == 'ativo' else "badge-status-off"
                             
-                            # --- 1. Parte Visual (HTML) ---
                             st.markdown(f"""
                             <div class="dash-card-header">
                                 <div class="dash-img-container">
@@ -454,7 +495,6 @@ else:
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # --- 2. Parte Interativa (Botões) ---
                             b_col1, b_col2 = st.columns([1, 1])
                             with b_col1:
                                 with st.popover("📋 Detalhes", use_container_width=True):
@@ -474,5 +514,4 @@ else:
                                 else:
                                     st.button("Indisponível", disabled=True, key=f"btn_dis_{i}_{j}", use_container_width=True)
                             
-                            # Espaçamento inferior
                             st.markdown("<div style='margin-bottom: 2rem;'></div>", unsafe_allow_html=True)
