@@ -322,7 +322,7 @@ if not st.session_state.team_selected:
     st.markdown("""
         <div class="header-container" style="margin-top: 5vh;">
             <div style="font-size: 4rem; margin-bottom: 1rem;">🚀</div>
-            <h1 class="header-title">Bem-vindo ao BI Hub</h1>
+            <h1 class="header-title">Bem-vindo ao Portifolio BI </h1>
             <p class="header-subtitle">Central de inteligência e análise de dados corporativos.<br>Selecione seu setor para acessar os indicadores estratégicos.</p>
         </div>
     """, unsafe_allow_html=True)
@@ -362,7 +362,7 @@ if not st.session_state.team_selected:
 # TELA 2: DASHBOARD GALLERY
 # ==============================================================================
 else:
-    st.sidebar.markdown(f"<h2 style='color:{THEME['text_main']}; font-weight:800;'>BI <span style='color:{THEME['accent']}'>Hub</span></h2>", unsafe_allow_html=True)
+    st.sidebar.markdown(f"<h2 style='color:{THEME['text_main']}; font-weight:800;'>Portifolio <span style='color:{THEME['accent']}'>BI</span></h2>", unsafe_allow_html=True)
     st.sidebar.markdown("<br>", unsafe_allow_html=True)
     
     if st.sidebar.button("↩ Voltar ao Menu", use_container_width=True):
