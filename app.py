@@ -470,6 +470,12 @@ else:
                     
                     for j, row in enumerate(batch):
                         with cols[j]:
+                            # --- CRIAÇÃO DE CHAVE ÚNICA (CORREÇÃO DO ERRO) ---
+                            # Usamos group_name + nome_dash + índices para garantir unicidade absoluta
+                            sanitized_name = str(row['Nome_Dash']).replace(" ", "_").lower()
+                            sanitized_group = str(group_name).replace(" ", "_").lower()
+                            unique_key = f"{sanitized_group}_{sanitized_name}_{i}_{j}"
+
                             midia_lower = str(row['Midia']).lower()
                             icon_class = "fa-chart-simple"
                             if "power" in midia_lower: icon_class = "fa-chart-bar"
@@ -497,7 +503,8 @@ else:
                             
                             b_col1, b_col2 = st.columns([1, 1])
                             with b_col1:
-                                with st.popover("📋 Detalhes", use_container_width=True):
+                                # Chave única aplicada ao popover
+                                with st.popover("📋 Detalhes", use_container_width=True, key=f"pop_{unique_key}"):
                                     st.markdown(f"""
                                     ### Ficha Técnica
                                     - **Responsável:** {row['Responsavel']}
@@ -510,8 +517,10 @@ else:
                             with b_col2:
                                 link = row.get('Link', '#')
                                 if link and str(link).lower() not in ['nan', 'n/a', '']:
-                                    st.link_button("Acessar 🚀", link, use_container_width=True)
+                                    # Chave única aplicada ao botão de link (se necessário, mas boa prática)
+                                    st.link_button("Acessar 🚀", link, use_container_width=True, key=f"lnk_{unique_key}")
                                 else:
-                                    st.button("Indisponível", disabled=True, key=f"btn_dis_{i}_{j}", use_container_width=True)
+                                    # Chave única aplicada ao botão desabilitado
+                                    st.button("Indisponível", disabled=True, key=f"btn_dis_{unique_key}", use_container_width=True)
                             
                             st.markdown("<div style='margin-bottom: 2rem;'></div>", unsafe_allow_html=True)
