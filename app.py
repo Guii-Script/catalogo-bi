@@ -28,9 +28,9 @@ THEME = {
     "offline": "#64748b",
 }
 
-# --- CSS Profissional (BLINDADO) ---
+# --- CSS Profissional (COMPATIBILIDADE TOTAL) ---
 def load_custom_css():
-    # CSS escrito como string crua SEM COMENTÁRIOS para garantir compatibilidade total
+    # CSS escrito como string crua para evitar erros de renderização
     css_raw = """
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -215,6 +215,7 @@ def load_custom_css():
             border: 1px solid rgba(100, 116, 139, 0.2);
         }
 
+        /* FORÇA LARGURA TOTAL NOS BOTOES */
         div[data-testid="column"] button {
             width: 100%;
             border-radius: 0 0 12px 12px !important;
@@ -235,13 +236,18 @@ def load_custom_css():
             text-decoration: none;
         }
 
+        /* Estilo específico para o Link Button ocupar 100% via CSS */
+        [data-testid="stLinkButton"] {
+            width: 100% !important;
+        }
+        
         [data-testid="stLinkButton"] > a {
             background: linear-gradient(135deg, _ACCENT_, #2563eb) !important;
             border: none !important;
             color: white !important;
             font-weight: 600 !important;
-            width: 100%;
-            display: block;
+            width: 100% !important;
+            display: block !important;
             text-align: center;
         }
 
@@ -260,6 +266,10 @@ def load_custom_css():
             border-radius: 8px !important;
             background-color: #1e293b !important;
         }
+        
+        [data-testid="stExpander"] summary {
+            color: _TEXT_MUTED_ !important;
+        }
 
         hr {
             border-color: _BORDER_;
@@ -268,7 +278,7 @@ def load_custom_css():
     </style>
     """
     
-    # Substituição Segura
+    # Substituição de Variáveis
     final_css = css_raw.replace("_BG_DARK_", THEME['bg_dark']) \
                        .replace("_BG_CARD_", THEME['bg_card']) \
                        .replace("_BORDER_", THEME['border']) \
@@ -460,7 +470,7 @@ else:
                 </div>
             """, unsafe_allow_html=True)
         else:
-            # Agrupamento Lógico
+            # Agrupamento
             if sel_publico != "Todos":
                 groups = [("Resultados Filtrados", df_show)]
             else:
@@ -484,7 +494,7 @@ else:
                     
                     for j, row in enumerate(batch):
                         with cols[j]:
-                            # CHAVES ÚNICAS
+                            # IDs Únicos
                             sanitized_name = str(row['Nome_Dash']).replace(" ", "_").lower()
                             sanitized_group = str(group_name).replace(" ", "_").lower()
                             unique_key = f"{sanitized_group}_{sanitized_name}_{i}_{j}"
@@ -516,8 +526,6 @@ else:
                             
                             b_col1, b_col2 = st.columns([1, 1])
                             
-                            # SOLUÇÃO DEFINITIVA: Trocamos 'st.popover' por 'st.expander'
-                            # 'st.expander' funciona em TODAS as versões e não crasha.
                             with b_col1:
                                 with st.expander("📋 Detalhes"):
                                     st.markdown(f"""
@@ -531,7 +539,8 @@ else:
                             with b_col2:
                                 link = row.get('Link', '#')
                                 if link and str(link).lower() not in ['nan', 'n/a', '']:
-                                    st.link_button("Acessar 🚀", link, use_container_width=True, key=f"lnk_{unique_key}")
+                                    # REMOVIDO use_container_width=True para compatibilidade
+                                    st.link_button("Acessar 🚀", link, key=f"lnk_{unique_key}")
                                 else:
                                     st.button("Indisponível", disabled=True, key=f"btn_dis_{unique_key}", use_container_width=True)
                             
