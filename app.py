@@ -28,9 +28,8 @@ THEME = {
     "offline": "#64748b",
 }
 
-# --- CSS Profissional (BLINDADO E COMPATÍVEL) ---
+# --- CSS Profissional (SEM IMAGENS & BLINDADO) ---
 def load_custom_css():
-    # CSS sem comentários e usando classes HTML manuais para garantir funcionamento
     css_raw = """
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -126,9 +125,11 @@ def load_custom_css():
             border-color: _ACCENT_ !important;
         }
 
+        /* Estilo do Card Sem Imagem */
         .dash-card-header {
             background: _BG_CARD_;
             border: 1px solid _BORDER_;
+            border-top: 4px solid _ACCENT_; /* Borda colorida no topo */
             border-bottom: none;
             border-radius: 12px 12px 0 0;
             padding: 0;
@@ -136,48 +137,30 @@ def load_custom_css():
             position: relative;
         }
 
-        .dash-img-container {
-            width: 100%;
-            height: 160px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .dash-img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-
-        .dash-card-header:hover .dash-img-container img {
-            transform: scale(1.05);
-        }
-
         .dash-content {
-            padding: 1.25rem;
+            padding: 1.5rem;
         }
 
         .dash-title {
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1.2rem;
+            font-weight: 700;
             color: _TEXT_MAIN_;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .dash-desc {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: _TEXT_MUTED_;
-            line-height: 1.5;
-            height: 40px;
+            line-height: 1.6;
+            height: 45px;
             overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
         }
 
         .meta-tags {
@@ -188,8 +171,8 @@ def load_custom_css():
         }
 
         .badge {
-            font-size: 0.7rem;
-            padding: 4px 8px;
+            font-size: 0.75rem;
+            padding: 5px 10px;
             border-radius: 4px;
             font-weight: 600;
             display: inline-flex;
@@ -215,7 +198,7 @@ def load_custom_css():
             border: 1px solid rgba(100, 116, 139, 0.2);
         }
 
-        /* Estilo do Botão HTML Personalizado */
+        /* Botão HTML Personalizado */
         .custom-button {
             display: inline-block;
             width: 100%;
@@ -237,11 +220,7 @@ def load_custom_css():
             color: white !important;
         }
         
-        .custom-button:visited {
-            color: white !important;
-        }
-        
-        /* Botão Desabilitado Visualmente */
+        /* Botão Desabilitado */
         .custom-button-disabled {
             background: #334155;
             color: #94a3b8 !important;
@@ -266,7 +245,6 @@ def load_custom_css():
             background-color: rgba(56, 189, 248, 0.05) !important;
         }
         
-        /* Ajuste do Expander para ficar transparente */
         [data-testid="stExpander"] {
             background-color: transparent !important;
             border: none !important;
@@ -289,7 +267,6 @@ def load_custom_css():
     </style>
     """
     
-    # Substituição de Variáveis
     final_css = css_raw.replace("_BG_DARK_", THEME['bg_dark']) \
                        .replace("_BG_CARD_", THEME['bg_card']) \
                        .replace("_BORDER_", THEME['border']) \
@@ -301,7 +278,6 @@ def load_custom_css():
     
     st.markdown(final_css, unsafe_allow_html=True)
 
-# Executa o CSS
 load_custom_css()
 
 # --- Carregamento de Dados ---
@@ -324,11 +300,9 @@ def carregar_dados(url):
         st.error(f"Erro ao conectar com a base de dados: {e}")
         return pd.DataFrame()
 
-# Carrega Dados
 df_full = carregar_dados(URL_PLANILHA)
 df_active = df_full[df_full['Status'].str.lower() == 'ativo'].copy() if not df_full.empty else pd.DataFrame(columns=df_full.columns)
 
-# --- Função Helper ---
 def get_unique_list(col):
     if df_active.empty: return ["Todos"]
     if col == "Publico":
@@ -342,10 +316,9 @@ def get_unique_list(col):
     return ["Todos"] + sorted(df_active[col].replace('N/A', pd.NA).dropna().unique().tolist())
 
 # ==============================================================================
-# TELA 1: SELEÇÃO DE SETOR (LANDING PAGE)
+# TELA 1: LANDING PAGE
 # ==============================================================================
 if not st.session_state.team_selected:
-    
     st.markdown("""
         <div class="header-container" style="margin-top: 5vh;">
             <div style="font-size: 4rem; margin-bottom: 1rem;">🚀</div>
@@ -359,14 +332,13 @@ if not st.session_state.team_selected:
         teams = [t for t in teams if t != "Todos"]
 
         if not teams:
-            st.warning("Nenhum setor público identificado. Carregando visão geral.")
+            st.warning("Nenhum setor público identificado.")
             if st.button("Acessar Sistema"):
                 st.session_state.team_selected = True
                 st.session_state.selected_team = "Todos"
                 st.rerun()
         else:
             st.markdown(f"<h3 style='text-align:center; color:{THEME['text_muted']}; margin-bottom:2rem; font-weight:400;'>Selecione sua área de atuação</h3>", unsafe_allow_html=True)
-            
             col_count = 4
             cols = st.columns(col_count)
             for idx, team in enumerate(teams):
@@ -387,10 +359,9 @@ if not st.session_state.team_selected:
         st.info("Inicializando sistema e carregando dados...")
 
 # ==============================================================================
-# TELA 2: DASHBOARD GALLERY (MAIN APP)
+# TELA 2: DASHBOARD GALLERY
 # ==============================================================================
 else:
-    # --- Sidebar ---
     st.sidebar.markdown(f"<h2 style='color:{THEME['text_main']}; font-weight:800;'>BI <span style='color:{THEME['accent']}'>Hub</span></h2>", unsafe_allow_html=True)
     st.sidebar.markdown("<br>", unsafe_allow_html=True)
     
@@ -402,7 +373,6 @@ else:
     st.sidebar.markdown("---")
     st.sidebar.caption("FILTROS GLOBAIS")
 
-    # Filtros
     if not df_active.empty:
         publico_opts = get_unique_list("Publico")
         current_selection = st.session_state.selected_team
@@ -415,7 +385,6 @@ else:
     st.sidebar.markdown("---")
     st.sidebar.info(f"**Status:** Conectado\n\n**Atualizado:** {pd.Timestamp.now().strftime('%H:%M')}")
 
-    # --- Header Principal ---
     st.markdown(f"""
         <div class="header-container" style="padding: 1rem 0; margin-bottom: 2rem; text-align: left;">
             <h1 class="header-title" style="font-size: 2.5rem;">Catálogo de Dashboards</h1>
@@ -426,7 +395,6 @@ else:
         </div>
     """, unsafe_allow_html=True)
 
-    # --- KPIs ---
     col1, col2, col3, col4 = st.columns(4)
     kpi_data = [
         ("Total Disponível", len(df_full), "fa-layer-group"),
@@ -445,18 +413,15 @@ else:
                 </div>
             """, unsafe_allow_html=True)
 
-    # --- Barra de Busca ---
     st.markdown("<br>", unsafe_allow_html=True)
     search_term = st.text_input("", placeholder="🔍 Busque por nome do relatório, KPI ou tecnologia...", label_visibility="collapsed")
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- Filtragem de Dados ---
     if df_active.empty:
         st.warning("Base de dados vazia ou inativa.")
     else:
         df_show = df_active.copy()
         
-        # Filtro Texto
         if search_term:
             t = search_term.lower()
             df_show = df_show[
@@ -465,12 +430,10 @@ else:
                 df_show["Midia"].str.lower().str.contains(t)
             ]
         
-        # Filtros Sidebar
         if sel_resp != "Todos": df_show = df_show[df_show["Responsavel"] == sel_resp]
         if sel_midia != "Todos": df_show = df_show[df_show["Midia"] == sel_midia]
         if sel_publico != "Todos": df_show = df_show[df_show["Publico"].str.contains(sel_publico, case=False, na=False)]
 
-        # --- Renderização dos Cards ---
         if df_show.empty:
             st.markdown(f"""
                 <div style="text-align: center; padding: 4rem; color: {THEME['offline']};">
@@ -480,7 +443,6 @@ else:
                 </div>
             """, unsafe_allow_html=True)
         else:
-            # Agrupamento
             if sel_publico != "Todos":
                 groups = [("Resultados Filtrados", df_show)]
             else:
@@ -490,7 +452,6 @@ else:
                     subset = df_show[df_show["Publico"] == g]
                     if not subset.empty: groups.append((g, subset))
 
-            # Loop de Exibição
             for group_name, subset in groups:
                 if group_name != "Resultados Filtrados":
                     st.markdown(f"<h3 style='margin-top:2rem; margin-bottom:1rem; border-left: 4px solid {THEME['accent']}; padding-left: 10px; color: white;'>{group_name}</h3>", unsafe_allow_html=True)
@@ -504,7 +465,6 @@ else:
                     
                     for j, row in enumerate(batch):
                         with cols[j]:
-                            # IDs Únicos
                             sanitized_name = str(row['Nome_Dash']).replace(" ", "_").lower()
                             sanitized_group = str(group_name).replace(" ", "_").lower()
                             unique_key = f"{sanitized_group}_{sanitized_name}_{i}_{j}"
@@ -517,11 +477,9 @@ else:
                             
                             status_badge = "badge-status-on" if str(row['Status']).lower() == 'ativo' else "badge-status-off"
                             
+                            # HTML SEM IMAGEM
                             st.markdown(f"""
                             <div class="dash-card-header">
-                                <div class="dash-img-container">
-                                    <img src="{row.get('Imagem_Path', 'https://via.placeholder.com/400x200?text=Analytics')}" onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
-                                </div>
                                 <div class="dash-content">
                                     <div class="dash-title"><i class="fa-solid {icon_class}" style="color: {THEME['accent']}"></i> {row['Nome_Dash']}</div>
                                     <div class="dash-desc" title="{row['Descricao']}">{row['Descricao']}</div>
@@ -549,14 +507,12 @@ else:
                             with b_col2:
                                 link = row.get('Link', '#')
                                 if link and str(link).lower() not in ['nan', 'n/a', '']:
-                                    # SUBSTITUIÇÃO: Botão em HTML Puro para compatibilidade total
                                     st.markdown(f"""
                                         <a href="{link}" target="_blank" class="custom-button">
                                             Acessar 🚀
                                         </a>
                                     """, unsafe_allow_html=True)
                                 else:
-                                    # Botão HTML Desabilitado Visualmente
                                     st.markdown(f"""
                                         <a class="custom-button custom-button-disabled">
                                             Indisponível
