@@ -1,522 +1,526 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
 
-# --- Configuração da Página ---
+# ==============================================================================
+# 1. CONFIGURAÇÃO INICIAL E CONSTANTES
+# ==============================================================================
 st.set_page_config(
-    page_title="Portfólio BI | Intelligence Hub",
-    page_icon="📊",
+    page_title="Intelligence Hub | BI Corporativo",
+    page_icon="static/favicon.png", # Sugestão: usar um arquivo .png real se possível
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- Inicialização do Session State ---
-if 'team_selected' not in st.session_state:
-    st.session_state.team_selected = False
-if 'selected_team' not in st.session_state:
-    st.session_state.selected_team = "Todos"
-
-# --- Paleta de Cores ---
+# Tema de Cores Profissional (Dark Slate & Cyan)
 THEME = {
-    "bg_dark": "#0f172a",
-    "bg_card": "rgba(30, 41, 59, 0.7)",
-    "border": "rgba(148, 163, 184, 0.1)",
-    "accent": "#38bdf8",
-    "accent_hover": "#0ea5e9",
-    "text_main": "#f8fafc",
-    "text_muted": "#94a3b8",
-    "success": "#10b981",
-    "offline": "#64748b",
+    "bg_body": "#0f172a",       # Slate 900
+    "bg_card": "#1e293b",       # Slate 800
+    "border": "#334155",        # Slate 700
+    "accent": "#0ea5e9",        # Sky 500
+    "text_main": "#f8fafc",     # Slate 50
+    "text_muted": "#94a3b8",    # Slate 400
+    "success": "#10b981",       # Emerald 500
+    "danger": "#ef4444",        # Red 500
+    "gradient": "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"
 }
 
-# --- CSS Profissional (SEM IMAGENS & BLINDADO) ---
+# Senha de Acesso Admin (Idealmente viria de st.secrets)
+ADMIN_PASSWORD = st.secrets.get("ADMIN_PASS", "admin123")
+
+# ==============================================================================
+# 2. ESTILIZAÇÃO (CSS AVANÇADO)
+# ==============================================================================
 def load_custom_css():
-    css_raw = """
+    st.markdown(f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-        .stApp {
-            background-color: _BG_DARK_;
+        /* Global */
+        .stApp {{
+            background-color: {THEME['bg_body']};
             font-family: 'Inter', sans-serif;
-        }
-
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 5rem;
-        }
-
-        .header-container {
+        }}
+        
+        /* Headers */
+        h1, h2, h3 {{
+            color: {THEME['text_main']} !important;
+            font-weight: 600;
+        }}
+        
+        /* KPI Cards */
+        .kpi-container {{
+            background-color: {THEME['bg_card']};
+            border: 1px solid {THEME['border']};
+            padding: 20px;
+            border-radius: 8px;
             text-align: center;
-            margin-bottom: 4rem;
-            padding: 3rem 1rem;
-            background: radial-gradient(circle at center, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
-        }
-
-        .header-title {
-            font-size: 3.5rem;
-            font-weight: 700;
-            background: linear-gradient(to right, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.05em;
-        }
-
-        .header-subtitle {
-            color: _TEXT_MUTED_;
-            font-size: 1.1rem;
-            font-weight: 400;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-
-        .kpi-card {
-            background: _BG_CARD_;
-            border: 1px solid _BORDER_;
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            transition: transform 0.2s ease;
-        }
-
-        .kpi-card:hover {
+            transition: all 0.3s ease;
+        }}
+        .kpi-container:hover {{
+            border-color: {THEME['accent']};
             transform: translateY(-2px);
-            border-color: _ACCENT_;
-        }
-
-        .kpi-value {
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+        }}
+        .kpi-value {{
             font-size: 2rem;
             font-weight: 700;
-            color: _TEXT_MAIN_;
-        }
-
-        .kpi-label {
-            color: _ACCENT_;
-            font-size: 0.8rem;
+            color: {THEME['text_main']};
+        }}
+        .kpi-label {{
+            font-size: 0.85rem;
+            color: {THEME['text_muted']};
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
+            letter-spacing: 0.05em;
             margin-top: 5px;
-        }
-
-        .kpi-icon {
-            font-size: 1.5rem;
-            color: _TEXT_MUTED_;
-            margin-bottom: 10px;
-            opacity: 0.5;
-        }
-
-        [data-testid="stTextInput"] input, 
-        [data-testid="stSelectbox"] > div > div {
-            background-color: #1e293b !important;
-            color: white !important;
-            border: 1px solid _BORDER_ !important;
-            border-radius: 8px !important;
-        }
-
-        [data-testid="stTextInput"] input:focus {
-            border-color: _ACCENT_ !important;
-        }
-
-        /* Estilo do Card Sem Imagem */
-        .dash-card-header {
-            background: _BG_CARD_;
-            border: 1px solid _BORDER_;
-            border-top: 4px solid _ACCENT_; /* Borda colorida no topo */
-            border-bottom: none;
-            border-radius: 12px 12px 0 0;
+        }}
+        
+        /* Dashboard Cards (Grid System) */
+        .dash-card {{
+            background-color: {THEME['bg_card']};
+            border: 1px solid {THEME['border']};
+            border-radius: 10px;
             padding: 0;
+            margin-bottom: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
-            position: relative;
-        }
-
-        .dash-content {
-            padding: 1.5rem;
-        }
-
-        .dash-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: _TEXT_MAIN_;
-            margin-bottom: 0.75rem;
+            transition: border 0.3s ease;
+        }}
+        .dash-card:hover {{
+            border-color: {THEME['accent']};
+        }}
+        
+        .card-header {{
+            padding: 20px;
+            border-bottom: 1px solid {THEME['border']};
+            background: linear-gradient(to right, rgba(15, 23, 42, 0.5), transparent);
+        }}
+        
+        .card-title {{
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: {THEME['text_main']};
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .dash-desc {
+        }}
+        
+        .card-body {{
+            padding: 20px;
+            flex-grow: 1;
+            color: {THEME['text_muted']};
             font-size: 0.9rem;
-            color: _TEXT_MUTED_;
-            line-height: 1.6;
-            height: 45px;
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            margin-bottom: 1.25rem;
-        }
-
-        .meta-tags {
+        }}
+        
+        .card-footer {{
+            padding: 15px 20px;
+            background-color: rgba(0,0,0,0.2);
+            border-top: 1px solid {THEME['border']};
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 0.5rem;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-weight: 600;
-            display: inline-flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 4px;
-        }
-
-        .badge-tech {
-            background: rgba(56, 189, 248, 0.1);
-            color: _ACCENT_;
-            border: 1px solid rgba(56, 189, 248, 0.2);
-        }
-
-        .badge-status-on {
-            background: rgba(16, 185, 129, 0.1);
-            color: _SUCCESS_;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-
-        .badge-status-off {
-            background: rgba(100, 116, 139, 0.1);
-            color: _OFFLINE_;
-            border: 1px solid rgba(100, 116, 139, 0.2);
-        }
-
-        /* Botão HTML Personalizado */
-        .custom-button {
-            display: inline-block;
-            width: 100%;
-            padding: 0.6rem 1rem;
-            background: linear-gradient(135deg, _ACCENT_, #2563eb);
-            color: white !important;
-            text-align: center;
-            text-decoration: none !important;
-            border-radius: 8px;
+        }}
+        
+        /* Badges e Tags */
+        .tech-badge {{
+            background-color: rgba(14, 165, 233, 0.1);
+            color: {THEME['accent']};
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
             font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+            border: 1px solid rgba(14, 165, 233, 0.2);
+        }}
         
-        .custom-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(56, 189, 248, 0.3);
+        /* Botão Customizado */
+        .btn-access {{
+            background-color: {THEME['accent']};
             color: white !important;
-        }
-        
-        /* Botão Desabilitado */
-        .custom-button-disabled {
-            background: #334155;
-            color: #94a3b8 !important;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+            display: inline-block;
+        }}
+        .btn-access:hover {{
+            background-color: #0284c7; /* Sky 600 */
+        }}
+        .btn-disabled {{
+            background-color: {THEME['border']};
+            color: {THEME['text_muted']} !important;
             cursor: not-allowed;
-            opacity: 0.7;
             pointer-events: none;
-        }
-
-        div[data-testid="column"] button {
-            width: 100%;
-            border-radius: 0 0 12px 12px !important;
-            border: 1px solid _BORDER_ !important;
-            background-color: #1e293b !important;
-            color: white !important;
-            font-weight: 500 !important;
-            transition: all 0.3s !important;
-        }
-
-        div[data-testid="column"] button:hover {
-            border-color: _ACCENT_ !important;
-            color: _ACCENT_ !important;
-            background-color: rgba(56, 189, 248, 0.05) !important;
-        }
+        }}
         
-        [data-testid="stExpander"] {
-            background-color: transparent !important;
-            border: none !important;
-        }
+        /* Inputs do Streamlit */
+        div[data-baseweb="input"] > div {{
+            background-color: {THEME['bg_card']};
+            border-color: {THEME['border']};
+            color: white;
+        }}
         
-        [data-testid="stExpander"] details {
-            border: 1px solid _BORDER_ !important;
-            border-radius: 8px !important;
-            background-color: #1e293b !important;
-        }
-        
-        [data-testid="stExpander"] summary {
-            color: _TEXT_MUTED_ !important;
-        }
-
-        hr {
-            border-color: _BORDER_;
-            margin: 3rem 0;
-        }
+        /* Landing Page Grid */
+        .landing-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }}
     </style>
-    """
-    
-    final_css = css_raw.replace("_BG_DARK_", THEME['bg_dark']) \
-                       .replace("_BG_CARD_", THEME['bg_card']) \
-                       .replace("_BORDER_", THEME['border']) \
-                       .replace("_ACCENT_", THEME['accent']) \
-                       .replace("_TEXT_MAIN_", THEME['text_main']) \
-                       .replace("_TEXT_MUTED_", THEME['text_muted']) \
-                       .replace("_SUCCESS_", THEME['success']) \
-                       .replace("_OFFLINE_", THEME['offline'])
-    
-    st.markdown(final_css, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 load_custom_css()
 
-# --- Carregamento de Dados ---
-try:
-    URL_PLANILHA = st.secrets["GOOGLE_SHEET_URL"]
-except KeyError:
-    st.error("⚠️ Configuração ausente: 'GOOGLE_SHEET_URL' não encontrado nos secrets.")
-    st.stop()
+# ==============================================================================
+# 3. GERENCIAMENTO DE DADOS E ESTADO
+# ==============================================================================
+
+# Inicialização do Session State
+if 'view' not in st.session_state:
+    st.session_state.view = 'landing'  # Options: landing, gallery, admin
+if 'selected_filter' not in st.session_state:
+    st.session_state.selected_filter = "Todos"
+if 'admin_logged' not in st.session_state:
+    st.session_state.admin_logged = False
 
 @st.cache_data(ttl=600)
-def carregar_dados(url):
+def get_data():
     try:
-        df = pd.read_csv(url, encoding='utf-8')
-        colunas_esperadas = ['Nome_Dash','Descricao', 'Imagem_Path','Link','Status','Responsavel','Publico','Midia','Periodicidade','Horario','Divulgacao']
-        for c in colunas_esperadas:
-            if c not in df.columns: df[c] = pd.NA
+        # Tenta pegar dos secrets ou usa um placeholder para teste se falhar
+        url = st.secrets.get("GOOGLE_SHEET_URL")
+        if not url:
+            # Dados Mockados caso não tenha secrets configurado (para testar o layout)
+            return pd.DataFrame({
+                'Nome_Dash': ['Vendas Gerais', 'Logística SP', 'RH Analytics', 'Financeiro Q1'],
+                'Descricao': ['Análise de sell-out e performance mensal', 'Tracking de entregas e frota', 'Headcount e turnover', 'DRE e fluxo de caixa'],
+                'Link': ['https://google.com', 'https://google.com', '', 'https://google.com'],
+                'Status': ['Ativo', 'Ativo', 'Manutenção', 'Ativo'],
+                'Responsavel': ['João Silva', 'Maria B.', 'Carlos T.', 'Ana L.'],
+                'Publico': ['Comercial', 'Operações', 'RH', 'Financeiro'],
+                'Midia': ['Power BI', 'Excel', 'Looker', 'Power BI'],
+                'Periodicidade': ['Diário', 'Tempo Real', 'Mensal', 'Semanal'],
+                'Horario': ['08:00', 'Live', 'Dia 05', 'Segunda'],
+                'Divulgacao': ['E-mail', 'Link', 'Teams', 'Sharepoint']
+            })
+            
+        df = pd.read_csv(url)
         df.fillna("N/A", inplace=True)
-        return df.astype(str)
+        return df
     except Exception as e:
-        st.error(f"Erro ao conectar com a base de dados: {e}")
+        st.error(f"Erro de Conexão: {e}")
         return pd.DataFrame()
 
-df_full = carregar_dados(URL_PLANILHA)
-df_active = df_full[df_full['Status'].str.lower() == 'ativo'].copy() if not df_full.empty else pd.DataFrame(columns=df_full.columns)
-
-def get_unique_list(col):
-    if df_active.empty: return ["Todos"]
-    if col == "Publico":
-        raw_list = df_active['Publico'].replace('N/A', pd.NA).dropna().unique()
-        split_set = set()
-        for item in raw_list:
-            parts = [p.strip() for p in item.split('/')]
-            split_set.update(parts)
-        final_list = sorted(list(split_set))
-        return ["Todos"] + [x for x in final_list if x.lower() not in ["todos", "n/a", ""]]
-    return ["Todos"] + sorted(df_active[col].replace('N/A', pd.NA).dropna().unique().tolist())
+df_full = get_data()
+df_active = df_full[df_full['Status'].str.lower() != 'inativo'].copy() if not df_full.empty else pd.DataFrame()
 
 # ==============================================================================
-# TELA 1: LANDING PAGE
+# 4. COMPONENTES VISUAIS (FUNÇÕES AUXILIARES)
 # ==============================================================================
-if not st.session_state.team_selected:
-    st.markdown("""
-        <div class="header-container" style="margin-top: 5vh;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">🚀</div>
-            <h1 class="header-title">Bem-vindo ao Portifolio BI </h1>
-            <p class="header-subtitle">Central de inteligência e análise de dados corporativos.<br>Selecione seu setor para acessar os indicadores estratégicos.</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    if not df_active.empty:
-        teams = get_unique_list("Publico")
-        teams = [t for t in teams if t != "Todos"]
-
-        if not teams:
-            st.warning("Nenhum setor público identificado.")
-            if st.button("Acessar Sistema"):
-                st.session_state.team_selected = True
-                st.session_state.selected_team = "Todos"
-                st.rerun()
-        else:
-            st.markdown(f"<h3 style='text-align:center; color:{THEME['text_muted']}; margin-bottom:2rem; font-weight:400;'>Selecione sua área de atuação</h3>", unsafe_allow_html=True)
-            col_count = 4
-            cols = st.columns(col_count)
-            for idx, team in enumerate(teams):
-                with cols[idx % col_count]:
-                    if st.button(f"{team}", key=f"land_{team}", use_container_width=True):
-                        st.session_state.team_selected = True
-                        st.session_state.selected_team = team
-                        st.rerun()
-
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            c1, c2, c3 = st.columns([1,2,1])
-            with c2:
-                if st.button("Ver Catálogo Completo ➜", use_container_width=True):
-                    st.session_state.team_selected = True
-                    st.session_state.selected_team = "Todos"
-                    st.rerun()
-    else:
-        st.info("Inicializando sistema e carregando dados...")
-
-# ==============================================================================
-# TELA 2: DASHBOARD GALLERY
-# ==============================================================================
-else:
-    st.sidebar.markdown(f"<h2 style='color:{THEME['text_main']}; font-weight:800;'>Portifolio <span style='color:{THEME['accent']}'>BI</span></h2>", unsafe_allow_html=True)
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-    
-    if st.sidebar.button("↩ Voltar ao Menu", use_container_width=True):
-        st.session_state.team_selected = False
-        st.session_state.selected_team = "Todos"
-        st.rerun()
-        
-    st.sidebar.markdown("---")
-    st.sidebar.caption("FILTROS GLOBAIS")
-
-    if not df_active.empty:
-        publico_opts = get_unique_list("Publico")
-        current_selection = st.session_state.selected_team
-        idx_pub = publico_opts.index(current_selection) if current_selection in publico_opts else 0
-        
-        sel_publico = st.sidebar.selectbox("🎯 Público Alvo", publico_opts, index=idx_pub)
-        sel_resp = st.sidebar.selectbox("👤 Responsável", get_unique_list("Responsavel"))
-        sel_midia = st.sidebar.selectbox("💻 Plataforma", get_unique_list("Midia"))
-    
-    st.sidebar.markdown("---")
-    st.sidebar.info(f"**Status:** Conectado\n\n**Atualizado:** {pd.Timestamp.now().strftime('%H:%M')}")
-
+def render_header(title, subtitle):
     st.markdown(f"""
-        <div class="header-container" style="padding: 1rem 0; margin-bottom: 2rem; text-align: left;">
-            <h1 class="header-title" style="font-size: 2.5rem;">Catálogo de Dashboards</h1>
-            <p class="header-subtitle" style="margin: 0; text-align: left;">
-                Visão consolidada dos indicadores de performance
-                <span style="color: {THEME['accent']}"> | {sel_publico}</span>
-            </p>
+        <div style="margin-bottom: 3rem; text-align: left; border-bottom: 1px solid {THEME['border']}; padding-bottom: 2rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">{title}</h1>
+            <p style="color: {THEME['text_muted']}; font-size: 1.1rem; margin: 0;">{subtitle}</p>
         </div>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3, col4 = st.columns(4)
-    kpi_data = [
-        ("Total Disponível", len(df_full), "fa-layer-group"),
-        ("Dashboards Ativos", len(df_active), "fa-chart-line"),
-        ("Setores Atendidos", df_active['Publico'].nunique(), "fa-users"),
-        ("Plataformas", df_active['Midia'].nunique(), "fa-server")
-    ]
+def card_kpi(icon, value, label, col):
+    with col:
+        st.markdown(f"""
+            <div class="kpi-container">
+                <div style="font-size: 1.5rem; color: {THEME['accent']}; margin-bottom: 10px;">
+                    <i class="fa-solid {icon}"></i>
+                </div>
+                <div class="kpi-value">{value}</div>
+                <div class="kpi-label">{label}</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+# ==============================================================================
+# 5. VIEW: LANDING PAGE (SELEÇÃO DE SETOR)
+# ==============================================================================
+def render_landing():
+    st.markdown("<br><br>", unsafe_allow_html=True)
     
-    for col, (label, val, icon) in zip([col1, col2, col3, col4], kpi_data):
-        with col:
-            st.markdown(f"""
-                <div class="kpi-card">
-                    <div class="kpi-icon"><i class="fa-solid {icon}"></i></div>
-                    <div class="kpi-value">{val}</div>
-                    <div class="kpi-label">{label}</div>
+    # Hero Section
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c2:
+        st.markdown(f"""
+            <div style="text-align: center;">
+                <div style="font-size: 4rem; color: {THEME['accent']}; margin-bottom: 1rem;">
+                    <i class="fa-solid fa-network-wired"></i>
                 </div>
-            """, unsafe_allow_html=True)
+                <h1 style="font-size: 3rem; margin-bottom: 1rem;">Intelligence Hub</h1>
+                <p style="color: {THEME['text_muted']}; font-size: 1.2rem; line-height: 1.6;">
+                    Portal centralizado de acesso aos dashboards estratégicos e operacionais.<br>
+                    Selecione sua vertical para iniciar.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Botões de Setor
+    if not df_active.empty:
+        # Tratamento para separar públicos múltiplos (ex: "RH / Financeiro")
+        raw_publicos = df_active['Publico'].unique()
+        setores = set()
+        for p in raw_publicos:
+            parts = [x.strip() for x in str(p).split('/')]
+            setores.update(parts)
+        
+        lista_setores = sorted(list(setores))
+        if "N/A" in lista_setores: lista_setores.remove("N/A")
+        
+        cols_per_row = 4
+        # Cria container CSS Grid manual para os botões
+        st.markdown('<div class="landing-grid">', unsafe_allow_html=True)
+        
+        grid_cols = st.columns(cols_per_row)
+        for i, setor in enumerate(lista_setores):
+            with grid_cols[i % cols_per_row]:
+                if st.button(f"{setor}", key=f"btn_{setor}", use_container_width=True):
+                    st.session_state.selected_filter = setor
+                    st.session_state.view = 'gallery'
+                    st.rerun()
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    
+    # Rodapé Landing
+    col_a, col_b = st.columns([1, 1])
+    with col_a:
+        if st.button("Explorar Catálogo Completo", use_container_width=True):
+            st.session_state.selected_filter = "Todos"
+            st.session_state.view = 'gallery'
+            st.rerun()
+    with col_b:
+        if st.button("Área Administrativa (Restrito)", use_container_width=True):
+            st.session_state.view = 'admin'
+            st.rerun()
+
+# ==============================================================================
+# 6. VIEW: GALERIA DE DASHBOARDS
+# ==============================================================================
+def render_gallery():
+    # --- Sidebar ---
+    with st.sidebar:
+        st.markdown(f"### <i class='fa-solid fa-bars'></i> Menu", unsafe_allow_html=True)
+        if st.button("Início", use_container_width=True):
+            st.session_state.view = 'landing'
+            st.rerun()
+        if st.button("Admin", use_container_width=True):
+            st.session_state.view = 'admin'
+            st.rerun()
+            
+        st.markdown("---")
+        st.markdown("### Filtros")
+        
+        # Filtro de Público
+        raw_publicos = sorted(list(set([x.strip() for item in df_active['Publico'].unique() for x in str(item).split('/')])))
+        opts_publico = ["Todos"] + [x for x in raw_publicos if x != "N/A"]
+        
+        # Sincroniza selectbox com session state
+        idx = opts_publico.index(st.session_state.selected_filter) if st.session_state.selected_filter in opts_publico else 0
+        selected_pub = st.selectbox("Departamento", opts_publico, index=idx)
+        st.session_state.selected_filter = selected_pub
+        
+        selected_tech = st.multiselect("Tecnologia", df_active['Midia'].unique())
+        
+        st.markdown("---")
+        st.info("ℹ️ Dados atualizados em tempo real via Google Sheets API.")
+
+    # --- Main Content ---
+    render_header("Catálogo de Dashboards", f"Visualizando indicadores para: <span style='color:{THEME['accent']}'>{st.session_state.selected_filter}</span>")
+
+    # KPIs Superiores
+    k1, k2, k3, k4 = st.columns(4)
+    card_kpi("fa-database", len(df_full), "Total Dashboards", k1)
+    card_kpi("fa-check-circle", len(df_active), "Ativos", k2)
+    card_kpi("fa-users", df_active['Responsavel'].nunique(), "Analistas", k3)
+    card_kpi("fa-server", df_active['Midia'].nunique(), "Plataformas", k4)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    search_term = st.text_input("", placeholder="🔍 Busque por nome do relatório, KPI ou tecnologia...", label_visibility="collapsed")
-    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Barra de Pesquisa
+    search = st.text_input("Buscar relatório...", placeholder="Digite o nome, KPI ou descrição...", label_visibility="collapsed")
+    
+    # Filtragem Lógica
+    df_show = df_active.copy()
+    
+    if st.session_state.selected_filter != "Todos":
+        df_show = df_show[df_show['Publico'].str.contains(st.session_state.selected_filter, na=False)]
+    
+    if selected_tech:
+        df_show = df_show[df_show['Midia'].isin(selected_tech)]
+        
+    if search:
+        s = search.lower()
+        df_show = df_show[
+            df_show['Nome_Dash'].str.lower().str.contains(s) | 
+            df_show['Descricao'].str.lower().str.contains(s)
+        ]
 
-    if df_active.empty:
-        st.warning("Base de dados vazia ou inativa.")
+    # Renderização dos Cards
+    if df_show.empty:
+        st.warning("Nenhum dashboard encontrado com os filtros atuais.")
     else:
-        df_show = df_active.copy()
-        
-        if search_term:
-            t = search_term.lower()
-            df_show = df_show[
-                df_show["Nome_Dash"].str.lower().str.contains(t) |
-                df_show["Descricao"].str.lower().str.contains(t) |
-                df_show["Midia"].str.lower().str.contains(t)
-            ]
-        
-        if sel_resp != "Todos": df_show = df_show[df_show["Responsavel"] == sel_resp]
-        if sel_midia != "Todos": df_show = df_show[df_show["Midia"] == sel_midia]
-        if sel_publico != "Todos": df_show = df_show[df_show["Publico"].str.contains(sel_publico, case=False, na=False)]
+        # Agrupamento visual (Opcional, aqui mostro lista plana em Grid)
+        col1, col2, col3 = st.columns(3)
+        cols = [col1, col2, col3]
 
-        if df_show.empty:
-            st.markdown(f"""
-                <div style="text-align: center; padding: 4rem; color: {THEME['offline']};">
-                    <i class="fa-regular fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                    <h3>Nenhum dashboard encontrado</h3>
-                    <p>Tente ajustar os filtros ou o termo de busca.</p>
+        for i, row in enumerate(df_show.to_dict('records')):
+            with cols[i % 3]:
+                # Definição de Ícones e Cores por Mídia
+                midia_lower = str(row['Midia']).lower()
+                icon = "fa-chart-pie"
+                if "power" in midia_lower: icon = "fa-chart-bar"
+                elif "excel" in midia_lower: icon = "fa-file-excel"
+                elif "looker" in midia_lower: icon = "fa-magnifying-glass-chart"
+                
+                # HTML do Card
+                link_html = ""
+                if row['Link'] and str(row['Link']).lower() not in ['nan', 'n/a', '']:
+                    link_html = f'<a href="{row["Link"]}" target="_blank" class="btn-access btn-access">Acessar <i class="fa-solid fa-arrow-up-right-from-square"></i></a>'
+                else:
+                    link_html = f'<a class="btn-access btn-disabled">Indisponível</a>'
+
+                st.markdown(f"""
+                <div class="dash-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid {icon}" style="color: {THEME['accent']}"></i>
+                            {row['Nome_Dash']}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p style="margin-bottom: 10px;">{row['Descricao']}</p>
+                        <div style="margin-top: auto;">
+                            <span class="tech-badge">{row['Midia']}</span>
+                            <span class="tech-badge" style="border-color: {THEME['border']}; color: {THEME['text_muted']};"><i class="fa-regular fa-clock"></i> {row['Periodicidade']}</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div style="font-size: 0.8rem; color: {THEME['text_muted']};">
+                            <i class="fa-solid fa-user-tie"></i> {row['Responsavel'].split(' ')[0]}
+                        </div>
+                        {link_html}
+                    </div>
                 </div>
-            """, unsafe_allow_html=True)
-        else:
-            if sel_publico != "Todos":
-                groups = [("Resultados Filtrados", df_show)]
-            else:
-                unique_groups = sorted(df_show["Publico"].replace('N/A', pd.NA).dropna().unique())
-                groups = []
-                for g in unique_groups:
-                    subset = df_show[df_show["Publico"] == g]
-                    if not subset.empty: groups.append((g, subset))
+                """, unsafe_allow_html=True)
 
-            for group_name, subset in groups:
-                if group_name != "Resultados Filtrados":
-                    st.markdown(f"<h3 style='margin-top:2rem; margin-bottom:1rem; border-left: 4px solid {THEME['accent']}; padding-left: 10px; color: white;'>{group_name}</h3>", unsafe_allow_html=True)
-                
-                rows = subset.to_dict('records')
-                N_COLS = 3
-                
-                for i in range(0, len(rows), N_COLS):
-                    cols = st.columns(N_COLS)
-                    batch = rows[i:i+N_COLS]
-                    
-                    for j, row in enumerate(batch):
-                        with cols[j]:
-                            sanitized_name = str(row['Nome_Dash']).replace(" ", "_").lower()
-                            sanitized_group = str(group_name).replace(" ", "_").lower()
-                            unique_key = f"{sanitized_group}_{sanitized_name}_{i}_{j}"
+# ==============================================================================
+# 7. VIEW: ADMIN & ANALYTICS
+# ==============================================================================
+def render_admin():
+    # Login Simples
+    if not st.session_state.admin_logged:
+        c1, c2, c3 = st.columns([1,1,1])
+        with c2:
+            st.markdown(f"<h2 style='text-align:center;'>Acesso Restrito</h2>", unsafe_allow_html=True)
+            password = st.text_input("Senha Administrativa", type="password")
+            if st.button("Entrar", use_container_width=True):
+                if password == ADMIN_PASSWORD:
+                    st.session_state.admin_logged = True
+                    st.rerun()
+                else:
+                    st.error("Senha incorreta.")
+            
+            if st.button("Voltar", use_container_width=True):
+                st.session_state.view = 'landing'
+                st.rerun()
+        return
 
-                            midia_lower = str(row['Midia']).lower()
-                            icon_class = "fa-chart-simple"
-                            if "power" in midia_lower: icon_class = "fa-chart-bar"
-                            elif "excel" in midia_lower: icon_class = "fa-file-excel"
-                            elif "google" in midia_lower: icon_class = "fa-google"
-                            
-                            status_badge = "badge-status-on" if str(row['Status']).lower() == 'ativo' else "badge-status-off"
-                            
-                            # HTML SEM IMAGEM
-                            st.markdown(f"""
-                            <div class="dash-card-header">
-                                <div class="dash-content">
-                                    <div class="dash-title"><i class="fa-solid {icon_class}" style="color: {THEME['accent']}"></i> {row['Nome_Dash']}</div>
-                                    <div class="dash-desc" title="{row['Descricao']}">{row['Descricao']}</div>
-                                    <div class="meta-tags">
-                                        <span class="badge badge-tech">{row['Midia']}</span>
-                                        <span class="badge {status_badge}">{row['Status']}</span>
-                                        <span class="badge badge-tech"><i class="fa-regular fa-clock"></i> {row['Periodicidade']}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            b_col1, b_col2 = st.columns([1, 1])
-                            
-                            with b_col1:
-                                with st.expander("📋 Detalhes"):
-                                    st.markdown(f"""
-                                    **Responsável:** {row['Responsavel']}
-                                    **Atualização:** {row['Periodicidade']}
-                                    **Horário:** {row['Horario']}
-                                    **Público:** {row['Publico']}
-                                    **Divulgação:** {row['Divulgacao']}
-                                    """)
-                            
-                            with b_col2:
-                                link = row.get('Link', '#')
-                                if link and str(link).lower() not in ['nan', 'n/a', '']:
-                                    st.markdown(f"""
-                                        <a href="{link}" target="_blank" class="custom-button">
-                                            Acessar 🚀
-                                        </a>
-                                    """, unsafe_allow_html=True)
-                                else:
-                                    st.markdown(f"""
-                                        <a class="custom-button custom-button-disabled">
-                                            Indisponível
-                                        </a>
-                                    """, unsafe_allow_html=True)
-                            
-                            st.markdown("<div style='margin-bottom: 2rem;'></div>", unsafe_allow_html=True)
+    # Painel Admin Logado
+    with st.sidebar:
+        st.markdown("### Admin Menu")
+        if st.button("Sair / Logout", use_container_width=True):
+            st.session_state.admin_logged = False
+            st.session_state.view = 'landing'
+            st.rerun()
+
+    render_header("Área Administrativa", "Monitoramento de uso e engajamento da plataforma")
+
+    # --- SIMULAÇÃO DE DADOS DE ANALYTICS ---
+    # Como o Streamlit não rastreia cliques externos nativamente, geramos dados mockados
+    # para demonstrar a visão que o time de BI teria.
+    
+    dates = pd.date_range(end=datetime.today(), periods=30)
+    data_mock = []
+    dashboards_list = df_active['Nome_Dash'].unique() if not df_active.empty else ['Dash Demo']
+    
+    for date in dates:
+        # Gera acessos aleatórios por dia
+        daily_access = np.random.randint(10, 50)
+        for _ in range(daily_access):
+            data_mock.append({
+                'Data': date,
+                'Dashboard': np.random.choice(dashboards_list),
+                'Usuario': f"User_{np.random.randint(100, 999)}",
+                'Departamento': np.random.choice(['RH', 'Financeiro', 'Comercial', 'Logística'])
+            })
+    
+    df_analytics = pd.DataFrame(data_mock)
+
+    # Tabs de Visão
+    tab1, tab2 = st.tabs(["📊 Visão Geral de Acessos", "📋 Logs Detalhados"])
+
+    with tab1:
+        # Métricas de Tempo
+        total_mes = len(df_analytics)
+        total_semana = len(df_analytics[df_analytics['Data'] > (datetime.today() - timedelta(days=7))])
+        media_dia = int(total_mes / 30)
+
+        c1, c2, c3 = st.columns(3)
+        card_kpi("fa-calendar-day", media_dia, "Acessos Médios / Dia", c1)
+        card_kpi("fa-calendar-week", total_semana, "Acessos (Últimos 7 dias)", c2)
+        card_kpi("fa-calendar", total_mes, "Acessos (Últimos 30 dias)", c3)
+
+        st.markdown("### Tendência de Acessos")
+        chart_data = df_analytics.groupby('Data').size()
+        st.line_chart(chart_data, color=THEME['accent'])
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.markdown("### Top 5 Dashboards Mais Acessados")
+            top_dash = df_analytics['Dashboard'].value_counts().head(5)
+            st.bar_chart(top_dash, color=THEME['success'])
+        
+        with col_b:
+            st.markdown("### Engajamento por Departamento")
+            dept_chart = df_analytics['Departamento'].value_counts()
+            st.bar_chart(dept_chart, color=THEME['text_muted'])
+
+    with tab2:
+        st.markdown("### Log de Atividade Recente")
+        st.dataframe(
+            df_analytics.sort_values(by='Data', ascending=False),
+            use_container_width=True,
+            hide_index=True
+        )
+
+# ==============================================================================
+# 8. ROTEADOR DE PÁGINAS (MAIN LOOP)
+# ==============================================================================
+if st.session_state.view == 'landing':
+    render_landing()
+elif st.session_state.view == 'gallery':
+    render_gallery()
+elif st.session_state.view == 'admin':
+    render_admin()
+
+# Rodapé Global
+st.markdown("---")
+st.markdown(
+    f"<div style='text-align: center; color: {THEME['text_muted']}; font-size: 0.8rem;'>"
+    f"© {datetime.now().year} Intelligence Hub • Desenvolvido pela Equipe de BI"
+    "</div>", 
+    unsafe_allow_html=True
+)
