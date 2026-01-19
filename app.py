@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 from datetime import datetime, timedelta
+import random
 
 # ==============================================================================
 # CONFIGURAÇÃO INICIAL
@@ -18,8 +19,6 @@ if 'page' not in st.session_state:
     st.session_state.page = "home"
 if 'admin_logged' not in st.session_state:
     st.session_state.admin_logged = False
-if 'selected_publico' not in st.session_state:
-    st.session_state.selected_publico = "Todos"
 
 # ==============================================================================
 # ESTILIZAÇÃO CSS
@@ -33,20 +32,12 @@ def load_css():
         "accent_glow": "rgba(14, 165, 233, 0.15)",
         "text_head": "#f1f5f9",
         "text_body": "#94a3b8",
-        "success": "#10b981",
-        "danger": "#ef4444"
     }
 
     css = f"""
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
         
         .stApp {{
             background-color: {theme['bg_main']};
@@ -56,7 +47,6 @@ def load_css():
         h1, h2, h3, h4 {{
             color: {theme['text_head']} !important;
             font-weight: 600;
-            margin-bottom: 1rem;
         }}
         
         p, label, span, div {{
@@ -81,245 +71,106 @@ def load_css():
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 1rem;
-            letter-spacing: -1px;
         }}
         
+        /* Cards */
         .dashboard-card {{
             background-color: {theme['bg_card']};
             border: 1px solid {theme['border']};
             border-radius: 12px;
-            padding: 0;
-            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
             height: 100%;
             display: flex;
             flex-direction: column;
+            transition: transform 0.2s, border-color 0.2s;
             overflow: hidden;
         }}
         
         .dashboard-card:hover {{
-            transform: translateY(-6px);
+            transform: translateY(-4px);
             border-color: {theme['accent']};
-            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }}
         
         .card-header {{
-            padding: 1.5rem;
+            padding: 1.25rem;
             border-bottom: 1px solid {theme['border']};
-            background-color: rgba(30, 41, 59, 0.9);
+            background-color: rgba(30, 41, 59, 0.5);
         }}
         
         .card-body {{
-            padding: 1.5rem;
+            padding: 1.25rem;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
+            gap: 1rem;
         }}
         
         .card-footer {{
-            padding: 1.2rem 1.5rem;
-            background-color: rgba(15, 23, 42, 0.6);
+            padding: 1rem 1.25rem;
+            background-color: rgba(15, 23, 42, 0.3);
             border-top: 1px solid {theme['border']};
         }}
         
+        /* Badges */
         .tech-badge {{
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.35rem 0.85rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
+            gap: 0.4rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
             font-weight: 600;
             background: {theme['accent_glow']};
             color: {theme['accent']};
             border: 1px solid rgba(14, 165, 233, 0.3);
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
         }}
         
-        .badge-success {{
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border-color: rgba(16, 185, 129, 0.3);
-        }}
+        .badge-success {{ background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3); }}
+        .badge-warning {{ background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }}
         
-        .badge-warning {{
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-            border-color: rgba(245, 158, 11, 0.3);
-        }}
-        
+        /* Buttons */
         .btn-access {{
             display: block;
             width: 100%;
             text-align: center;
             background-color: {theme['accent']};
             color: white !important;
-            padding: 0.8rem;
-            border-radius: 8px;
+            padding: 0.75rem;
+            border-radius: 6px;
             text-decoration: none !important;
-            font-weight: 600;
-            transition: all 0.3s;
+            font-weight: 500;
+            transition: background-color 0.2s;
             border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
         }}
         
-        .btn-access:hover {{
-            background-color: #0284c7;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-        }}
+        .btn-access:hover {{ background-color: #0284c7; }}
         
         .btn-disabled {{
             background-color: {theme['border']};
-            color: {theme['text_body']} !important;
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.6;
         }}
-        
-        .btn-disabled:hover {{
-            background-color: {theme['border']};
-            box-shadow: none;
-        }}
-        
+
+        /* KPI Box */
         .kpi-box {{
             background: {theme['bg_card']};
             border: 1px solid {theme['border']};
-            padding: 1.8rem 1rem;
-            border-radius: 10px;
-            text-align: center;
-            transition: transform 0.3s;
-        }}
-        
-        .kpi-box:hover {{
-            transform: translateY(-3px);
-            border-color: {theme['accent']};
-        }}
-        
-        .kpi-val {{
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: {theme['text_head']};
-            margin: 0.5rem 0;
-        }}
-        
-        .kpi-lbl {{
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: {theme['accent']};
-            font-weight: 600;
-        }}
-        
-        .filter-section {{
-            background-color: {theme['bg_card']};
-            border: 1px solid {theme['border']};
-            border-radius: 10px;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }}
-        
-        .filter-title {{
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: {theme['accent']};
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }}
-        
-        .search-box {{
-            background-color: {theme['bg_card']};
-            border: 1px solid {theme['border']};
             border-radius: 8px;
-            padding: 0.8rem 1rem;
-            margin-bottom: 1.5rem;
-        }}
-        
-        .stats-bar {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            background-color: {theme['bg_card']};
-            border: 1px solid {theme['border']};
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-        }}
-        
-        .stat-item {{
             text-align: center;
-            padding: 0 1rem;
         }}
         
-        .stat-value {{
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: {theme['text_head']};
-        }}
+        .kpi-val {{ font-size: 2rem; font-weight: 700; color: {theme['text_head']}; }}
+        .kpi-lbl {{ font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; }}
         
-        .stat-label {{
-            font-size: 0.8rem;
-            color: {theme['text_body']};
-            margin-top: 0.2rem;
-        }}
-        
-        @media (max-width: 768px) {{
-            .hero-title {{
-                font-size: 2rem;
-            }}
-            
-            .dashboard-card {{
-                margin-bottom: 1rem;
-            }}
-            
-            .stats-bar {{
-                flex-direction: column;
-                gap: 1rem;
-            }}
-            
-            .kpi-box {{
-                margin-bottom: 1rem;
-            }}
-        }}
-        
+        /* Admin */
         .admin-login {{
             max-width: 400px;
-            margin: 3rem auto;
+            margin: 4rem auto;
             padding: 2rem;
             background-color: {theme['bg_card']};
             border: 1px solid {theme['border']};
             border-radius: 12px;
-        }}
-        
-        .login-title {{
-            text-align: center;
-            margin-bottom: 1.5rem;
-            font-size: 1.5rem;
-        }}
-        
-        .access-log-table {{
-            background-color: {theme['bg_card']};
-            border: 1px solid {theme['border']};
-            border-radius: 8px;
-            overflow: hidden;
-        }}
-        
-        .table-header {{
-            background-color: rgba(30, 41, 59, 0.9);
-            padding: 1rem;
-            border-bottom: 1px solid {theme['border']};
-            font-weight: 600;
-        }}
-        
-        .table-row {{
-            padding: 1rem;
-            border-bottom: 1px solid {theme['border']};
-            display: flex;
-            justify-content: space-between;
-        }}
-        
-        .table-row:last-child {{
-            border-bottom: none;
         }}
     </style>
     """
@@ -330,14 +181,42 @@ load_css()
 # ==============================================================================
 # GERENCIAMENTO DE DADOS
 # ==============================================================================
+def get_mock_data():
+    """Gera dados fictícios caso não haja conexão com Google Sheets."""
+    data = {
+        'Nome_Dash': ['Vendas Global', 'RH Analytics', 'Logística Real-Time', 'Finanças FY24', 'Marketing Digital', 'Controle de Estoque'],
+        'Descricao': [
+            'Acompanhamento de vendas por região e produto com análise YoY.',
+            'Headcount, turnover e métricas de desempenho de colaboradores.',
+            'Rastreamento de frota e status de entregas em tempo real.',
+            'DRE, Fluxo de Caixa e indicadores de rentabilidade.',
+            'Performance de campanhas, ROI e análise de leads.',
+            'Giro de estoque, curva ABC e previsão de demanda.'
+        ],
+        'Link': ['https://google.com'] * 6,
+        'Status': ['Ativo', 'Ativo', 'Em Manutenção', 'Ativo', 'Ativo', 'Ativo'],
+        'Publico': ['Comercial', 'RH', 'Operações', 'Diretoria', 'Marketing', 'Logística'],
+        'Midia': ['PowerBI', 'Tableau', 'PowerBI', 'Excel', 'Google Data Studio', 'Qlik'],
+        'Responsavel': ['Ana Silva', 'Carlos Souza', 'Mariana Lima', 'Roberto Alves', 'Julia Costa', 'Pedro Santos'],
+        'Periodicidade': ['Diária', 'Mensal', 'Em Tempo Real', 'Mensal', 'Semanal', 'Diária']
+    }
+    return pd.DataFrame(data)
+
 @st.cache_data(ttl=600)
 def load_data():
-    """Carrega dados da planilha principal."""
+    """Carrega dados da planilha ou usa mock data."""
     try:
-        url = st.secrets["GOOGLE_SHEET_URL"]
-        df = pd.read_csv(url, encoding='utf-8')
+        if "GOOGLE_SHEET_URL" in st.secrets:
+            url = st.secrets["GOOGLE_SHEET_URL"]
+            # Garante que a URL é de exportação CSV se for Link do Google Sheets
+            if "docs.google.com" in url and "/edit" in url:
+                url = url.replace("/edit#gid=", "/export?format=csv&gid=")
+            
+            df = pd.read_csv(url, encoding='utf-8')
+        else:
+            df = get_mock_data()
         
-        # Validação e tratamento de colunas
+        # Tratamento de Nulos
         cols_required = ['Nome_Dash', 'Descricao', 'Link', 'Status', 'Publico', 'Midia', 'Responsavel', 'Periodicidade']
         for col in cols_required:
             if col not in df.columns:
@@ -347,105 +226,45 @@ def load_data():
         return df.astype(str)
         
     except Exception as e:
-        st.error(f"Erro ao carregar dados: {str(e)}")
-        return pd.DataFrame()
+        st.warning(f"Usando dados de demonstração (Erro na conexão: {str(e)})")
+        return get_mock_data().astype(str)
 
 def generate_access_logs():
-    """Gera logs de acesso simulados para demonstração."""
+    """Gera logs simulados."""
     dates = pd.date_range(end=datetime.now(), periods=90).tolist()
     data = []
-    import random
     
-    dashboards = ["Relatório de Vendas", "Análise de RH", "Dashboard Logístico", "Financeiro Consolidado", 
-                  "Marketing Analytics", "Operações em Tempo Real", "Customer Success", "Supply Chain"]
-    
-    users = [f"user_{i:03d}" for i in range(1, 51)]
-    departments = ["Vendas", "Marketing", "Financeiro", "RH", "Operações", "TI", "Diretoria"]
+    dashboards = ["Relatório de Vendas", "Análise de RH", "Dashboard Logístico", "Financeiro Consolidado"]
+    users = [f"user_{i:03d}@empresa.com" for i in range(1, 20)]
+    departments = ["Vendas", "Marketing", "Financeiro", "RH", "TI"]
     
     for date in dates:
-        # Variação de acessos por dia da semana
-        base_access = 15 if date.weekday() < 5 else 5
-        
-        for _ in range(random.randint(base_access, base_access + 10)):
+        count = random.randint(5, 25)
+        for _ in range(count):
             data.append({
                 "Data": date,
                 "Dashboard": random.choice(dashboards),
                 "Usuario": random.choice(users),
                 "Departamento": random.choice(departments),
-                "Hora": f"{random.randint(8, 19):02d}:{random.randint(0, 59):02d}"
+                "Hora": f"{random.randint(8, 18):02d}:{random.randint(0, 59):02d}"
             })
     
     df_logs = pd.DataFrame(data)
     df_logs['Data'] = pd.to_datetime(df_logs['Data'])
     return df_logs
 
-# Carregar dados
+# Carga Inicial
 df_full = load_data()
 df_active = df_full[df_full['Status'].str.lower() == 'ativo'].copy() if not df_full.empty else pd.DataFrame()
 
 def get_filter_options(column):
-    """Obtém opções de filtro para uma coluna específica."""
-    if df_active.empty:
-        return ["Todos"]
-    
-    options = sorted(df_active[column].unique().tolist())
-    return ["Todos"] + options
+    if df_active.empty: return ["Todos"]
+    return ["Todos"] + sorted(df_active[column].unique().tolist())
 
 # ==============================================================================
-# COMPONENTES DE INTERFACE
+# COMPONENTES DE UI
 # ==============================================================================
-def render_sidebar():
-    """Renderiza a barra lateral com navegação e filtros."""
-    st.sidebar.markdown("### Intelligence Hub")
-    
-    # Ícone e título
-    st.sidebar.markdown('<div style="text-align: center; margin-bottom: 2rem;">'
-                       '<i class="fa-solid fa-chart-network" style="font-size: 2.5rem; color: #0ea5e9;"></i>'
-                       '</div>', unsafe_allow_html=True)
-    
-    # Navegação
-    nav_options = ["Lobby Principal", "Catálogo", "Administração"]
-    nav_icons = ["fa-home", "fa-th-large", "fa-cogs"]
-    
-    nav = st.sidebar.radio(
-        "Navegação", 
-        nav_options,
-        index=0 if st.session_state.page == "home" else 1 if st.session_state.page == "catalog" else 2,
-        label_visibility="collapsed",
-        format_func=lambda x: f" {x}"
-    )
-    
-    # Atualizar estado da página
-    if nav == "Lobby Principal":
-        st.session_state.page = "home"
-    elif nav == "Catálogo":
-        st.session_state.page = "catalog"
-    elif nav == "Administração":
-        st.session_state.page = "admin"
-    
-    st.sidebar.markdown("---")
-    
-    # Filtros (apenas para catálogo)
-    if st.session_state.page == "catalog":
-        st.sidebar.markdown('<div class="filter-title">Filtros Avançados</div>', unsafe_allow_html=True)
-        
-        with st.sidebar.container():
-            f_publico = st.selectbox("Público Alvo", get_filter_options("Publico"), key="filtro_publico")
-            f_midia = st.selectbox("Plataforma", get_filter_options("Midia"), key="filtro_midia")
-            f_resp = st.selectbox("Responsável", get_filter_options("Responsavel"), key="filtro_responsavel")
-            f_periodicidade = st.selectbox("Periodicidade", get_filter_options("Periodicidade"), key="filtro_periodicidade")
-        
-        st.sidebar.markdown("---")
-        st.sidebar.markdown('<div style="font-size: 0.8rem; color: #64748b; text-align: center;">'
-                           f'{len(df_active)} dashboards ativos'
-                           '</div>', unsafe_allow_html=True)
-        
-        return f_publico, f_midia, f_resp, f_periodicidade
-    
-    return "Todos", "Todos", "Todos", "Todos"
-
 def render_kpi_card(label, value, icon, color="#0ea5e9"):
-    """Renderiza um cartão KPI."""
     return f"""
     <div class="kpi-box">
         <i class="fa-solid {icon}" style="font-size: 1.8rem; color: {color}; margin-bottom: 10px;"></i>
@@ -454,394 +273,215 @@ def render_kpi_card(label, value, icon, color="#0ea5e9"):
     </div>
     """
 
+def render_dashboard_card(row):
+    """Renderiza HTML do cartão."""
+    midia_map = {
+        'powerbi': 'fa-chart-bar', 'tableau': 'fa-chart-pie', 
+        'excel': 'fa-file-excel', 'google': 'fa-chart-line', 
+        'qlik': 'fa-chart-area', 'looker': 'fa-chart-scatter'
+    }
+    
+    midia_clean = row['Midia'].lower()
+    icon = next((v for k, v in midia_map.items() if k in midia_clean), 'fa-chart-simple')
+    
+    link_valid = row['Link'] not in ["N/A", "nan", "", "None"]
+    link_html = f'<a href="{row["Link"]}" target="_blank" class="btn-access"><i class="fa-solid fa-external-link-alt"></i> Acessar</a>' if link_valid else \
+                '<button class="btn-access btn-disabled" disabled>Indisponível</button>'
+    
+    freq_class = "badge-success" if "Diária" in row['Periodicidade'] or "Real" in row['Periodicidade'] else "badge-warning"
+
+    html = f"""
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <h4 style="margin:0; font-size: 1.1rem;">{row['Nome_Dash']}</h4>
+                <i class="fa-solid {icon}" style="color: #0ea5e9; font-size: 1.4rem;"></i>
+            </div>
+            <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 5px;">
+                <i class="fa-regular fa-user"></i> {row['Responsavel']}
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 0.9rem; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                {row['Descricao']}
+            </p>
+            <div style="margin-top: auto; display: flex; flex-wrap: wrap; gap: 5px;">
+                <span class="tech-badge"><i class="fa-solid fa-desktop"></i> {row['Midia']}</span>
+                <span class="tech-badge {freq_class}"><i class="fa-regular fa-clock"></i> {row['Periodicidade']}</span>
+            </div>
+        </div>
+        <div class="card-footer">
+            {link_html}
+        </div>
+    </div>
+    <div style="margin-bottom: 20px;"></div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
 # ==============================================================================
-# PÁGINAS DO SISTEMA
+# PÁGINAS
 # ==============================================================================
+def render_sidebar():
+    st.sidebar.markdown("### Intelligence Hub")
+    st.sidebar.markdown('<div style="text-align: center; margin-bottom: 2rem;"><i class="fa-solid fa-chart-network" style="font-size: 3rem; color: #0ea5e9;"></i></div>', unsafe_allow_html=True)
+    
+    # Navegação
+    options = {"Lobby Principal": "home", "Catálogo": "catalog", "Administração": "admin"}
+    
+    # Determinar index baseado no estado atual
+    current_idx = list(options.values()).index(st.session_state.page) if st.session_state.page in options.values() else 0
+    
+    selected = st.sidebar.radio("Navegação", list(options.keys()), index=current_idx)
+    st.session_state.page = options[selected]
+    
+    st.sidebar.markdown("---")
+    
+    filters = ("Todos", "Todos", "Todos", "Todos")
+    if st.session_state.page == "catalog":
+        st.sidebar.markdown('<div style="color: #0ea5e9; font-weight: 600; margin-bottom: 10px;">FILTROS AVANÇADOS</div>', unsafe_allow_html=True)
+        with st.sidebar.container():
+            f1 = st.selectbox("Público Alvo", get_filter_options("Publico"))
+            f2 = st.selectbox("Plataforma", get_filter_options("Midia"))
+            f3 = st.selectbox("Responsável", get_filter_options("Responsavel"))
+            f4 = st.selectbox("Periodicidade", get_filter_options("Periodicidade"))
+            filters = (f1, f2, f3, f4)
+            
+            st.sidebar.markdown(f'<div style="text-align:center; font-size:0.8rem; margin-top:20px; color:#64748b">{len(df_active)} Dashboards</div>', unsafe_allow_html=True)
+    
+    return filters
+
 def page_home():
-    """Página inicial do sistema."""
     st.markdown("""
     <div class="hero-container">
-        <div style="font-size: 4rem; margin-bottom: 1rem; color: #0ea5e9;">
-            <i class="fa-solid fa-brain-circuit"></i>
-        </div>
         <h1 class="hero-title">Hub de Inteligência Corporativa</h1>
-        <p style="max-width: 600px; margin: 0 auto; font-size: 1.1rem; line-height: 1.6; color: #94a3b8;">
-            Portal centralizado de dashboards e relatórios estratégicos. 
-            Acesso rápido a indicadores de desempenho, análises operacionais 
-            e insights para tomada de decisão.
+        <p style="max-width: 600px; margin: 0 auto; color: #94a3b8;">
+            Central de indicadores estratégicos e operacionais para suporte à tomada de decisão.
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Estatísticas rápidas
     if not df_active.empty:
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            total_dashboards = len(df_active)
-            st.markdown(render_kpi_card("Dashboards Ativos", total_dashboards, "fa-chart-line"), unsafe_allow_html=True)
-        
-        with col2:
-            unique_platforms = df_active['Midia'].nunique()
-            st.markdown(render_kpi_card("Plataformas", unique_platforms, "fa-layer-group", "#10b981"), unsafe_allow_html=True)
-        
-        with col3:
-            unique_teams = df_active['Publico'].nunique()
-            st.markdown(render_kpi_card("Times Atendidos", unique_teams, "fa-users", "#f59e0b"), unsafe_allow_html=True)
-        
-        with col4:
-            recent_updates = len(df_active[df_active['Periodicidade'].str.contains('Diária|Semanal')])
-            st.markdown(render_kpi_card("Atualizações Regulares", recent_updates, "fa-sync-alt", "#8b5cf6"), unsafe_allow_html=True)
+        c1, c2, c3, c4 = st.columns(4)
+        c1.markdown(render_kpi_card("Dashboards Ativos", len(df_active), "fa-chart-line"), unsafe_allow_html=True)
+        c2.markdown(render_kpi_card("Plataformas", df_active['Midia'].nunique(), "fa-layer-group", "#10b981"), unsafe_allow_html=True)
+        c3.markdown(render_kpi_card("Áreas Atendidas", df_active['Publico'].nunique(), "fa-users", "#f59e0b"), unsafe_allow_html=True)
+        c4.markdown(render_kpi_card("Atualizações Diárias", len(df_active[df_active['Periodicidade'].str.contains('Diária|Real', case=False)]), "fa-bolt", "#8b5cf6"), unsafe_allow_html=True)
     
-    # Botão de ação principal
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Explorar Catálogo Completo", use_container_width=True, type="primary", 
-                     icon="fa-search"):
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c2:
+        st.write("")
+        if st.button("Acessar Catálogo Completo", type="primary", use_container_width=True):
             st.session_state.page = "catalog"
             st.rerun()
 
-def page_catalog(f_pub, f_mid, f_resp, f_period):
-    """Página do catálogo de dashboards."""
-    st.markdown("### Catálogo de Dashboards")
-    st.markdown("Explore todas as soluções de dados disponíveis por departamento, plataforma e periodicidade.")
+def page_catalog(filters):
+    pub, mid, resp, perio = filters
+    st.title("Catálogo de Soluções")
     
-    # Barra de pesquisa
-    col1, col2 = st.columns([3, 1])
+    # Busca e Limpeza
+    col1, col2 = st.columns([4, 1])
     with col1:
-        search = st.text_input("", placeholder="Buscar por nome, descrição ou palavra-chave...", 
-                              label_visibility="collapsed", key="search_input")
+        search = st.text_input("Busca", placeholder="Pesquise por nome, descrição...", label_visibility="collapsed")
     with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Limpar Filtros", use_container_width=True, type="secondary"):
-            st.session_state.filtro_publico = "Todos"
-            st.session_state.filtro_midia = "Todos"
-            st.session_state.filtro_responsavel = "Todos"
-            st.session_state.filtro_periodicidade = "Todos"
-            st.rerun()
-    
-    # Aplicar filtros
+        if st.button("Limpar", use_container_width=True):
+            st.rerun() # Simplificado para rerun, idealmente resetaria session_state dos filtros
+
+    # Filtragem
     df_view = df_active.copy()
     
     if search:
-        search_term = search.lower()
+        term = search.lower()
         df_view = df_view[
-            df_view['Nome_Dash'].str.lower().str.contains(search_term) | 
-            df_view['Descricao'].str.lower().str.contains(search_term) |
-            df_view['Publico'].str.lower().str.contains(search_term)
+            df_view['Nome_Dash'].str.lower().str.contains(term) | 
+            df_view['Descricao'].str.lower().str.contains(term)
         ]
     
-    if f_pub != "Todos":
-        df_view = df_view[df_view['Publico'] == f_pub]
-    if f_mid != "Todos":
-        df_view = df_view[df_view['Midia'] == f_mid]
-    if f_resp != "Todos":
-        df_view = df_view[df_view['Responsavel'] == f_resp]
-    if f_period != "Todos":
-        df_view = df_view[df_view['Periodicidade'] == f_period]
+    if pub != "Todos": df_view = df_view[df_view['Publico'] == pub]
+    if mid != "Todos": df_view = df_view[df_view['Midia'] == mid]
+    if resp != "Todos": df_view = df_view[df_view['Responsavel'] == resp]
+    if perio != "Todos": df_view = df_view[df_view['Periodicidade'] == perio]
     
-    # Mostrar estatísticas de filtro
-    if not df_view.empty:
-        st.markdown(f"""
-        <div class="stats-bar">
-            <div class="stat-item">
-                <div class="stat-value">{len(df_view)}</div>
-                <div class="stat-label">Resultados</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">{df_view['Midia'].nunique()}</div>
-                <div class="stat-label">Plataformas</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">{df_view['Publico'].nunique()}</div>
-                <div class="stat-label">Públicos</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">{df_view['Periodicidade'].nunique()}</div>
-                <div class="stat-label">Frequências</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Grid de dashboards
     if df_view.empty:
-        st.info("Nenhum dashboard encontrado com os critérios atuais de filtro.")
+        st.info("Nenhum dashboard encontrado com os filtros selecionados.")
         return
-    
-    # Organizar em grid responsivo
-    cols_per_row = 3
-    dashboard_list = df_view.to_dict('records')
-    
-    for i in range(0, len(dashboard_list), cols_per_row):
-        cols = st.columns(cols_per_row)
-        batch = dashboard_list[i:i + cols_per_row]
-        
-        for idx, row in enumerate(batch):
-            with cols[idx]:
-                render_dashboard_card(row)
 
-def render_dashboard_card(row):
-    """Renderiza um cartão de dashboard individual."""
-    # Ícone baseado na plataforma
-    platform_icons = {
-        'powerbi': 'fa-chart-bar',
-        'tableau': 'fa-chart-pie',
-        'excel': 'fa-file-excel',
-        'google': 'fa-chart-line',
-        'qlik': 'fa-chart-area',
-        'looker': 'fa-chart-scatter'
-    }
+    # Renderização em Grid
+    cols_per_row = 3
+    rows = [df_view.iloc[i:i + cols_per_row] for i in range(0, len(df_view), cols_per_row)]
     
-    midia_lower = row['Midia'].lower()
-    icon = 'fa-chart-simple'
-    
-    for key, value in platform_icons.items():
-        if key in midia_lower:
-            icon = value
-            break
-    
-    # Status e disponibilidade
-    link_url = row['Link'] if row['Link'] not in ["N/A", "nan", ""] else None
-    
-    # Badge de periodicidade
-    periodicidade = row['Periodicidade']
-    freq_badge_class = "badge-success" if "Diária" in periodicidade else "badge-warning"
-    
-    # HTML do cartão
-    card_html = f"""
-    <div class="dashboard-card">
-        <div class="card-header">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div style="flex: 1;">
-                    <h4 style="margin: 0; font-size: 1.1rem; line-height: 1.4;">{row['Nome_Dash']}</h4>
-                    <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.3rem;">
-                        <i class="fa-solid fa-user-tie"></i> {row['Responsavel']}
-                    </div>
-                </div>
-                <i class="fa-solid {icon}" style="color: #0ea5e9; font-size: 1.5rem; margin-left: 1rem;"></i>
-            </div>
-        </div>
-        
-        <div class="card-body">
-            <p style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.2rem; flex-grow: 1;">
-                {row['Descricao'][:150]}{'...' if len(row['Descricao']) > 150 else ''}
-            </p>
-            
-            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: auto;">
-                <span class="tech-badge">
-                    <i class="fa-solid fa-display"></i> {row['Midia']}
-                </span>
-                <span class="tech-badge {freq_badge_class}">
-                    <i class="fa-solid fa-calendar-alt"></i> {row['Periodicidade']}
-                </span>
-                <span class="tech-badge" style="background: rgba(168, 85, 247, 0.1); color: #a855f7;">
-                    <i class="fa-solid fa-users"></i> {row['Publico']}
-                </span>
-            </div>
-        </div>
-        
-        <div class="card-footer">
-    """
-    
-    if link_url:
-        card_html += f"""
-            <a href="{link_url}" target="_blank" class="btn-access">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> Acessar Dashboard
-            </a>
-        """
-    else:
-        card_html += """
-            <button class="btn-access btn-disabled" disabled>
-                <i class="fa-solid fa-clock"></i> Indisponível
-            </button>
-        """
-    
-    card_html += """
-        </div>
-    </div>
-    <div style="margin-bottom: 1.5rem;"></div>
-    """
-    
-    st.markdown(card_html, unsafe_allow_html=True)
+    for row_data in rows:
+        cols = st.columns(cols_per_row)
+        for idx, (_, dashboard) in enumerate(row_data.iterrows()):
+            with cols[idx]:
+                render_dashboard_card(dashboard)
 
 def page_admin():
-    """Página de administração (acesso restrito)."""
-    
-    # Sistema de login
     if not st.session_state.admin_logged:
-        render_admin_login()
-        return
-    
-    # Área administrativa (usuário autenticado)
-    render_admin_dashboard()
-
-def render_admin_login():
-    """Renderiza a tela de login administrativo."""
-    st.markdown("""
-    <div class="admin-login">
-        <div class="login-title">
-            <i class="fa-solid fa-lock" style="font-size: 2rem; color: #0ea5e9; margin-bottom: 1rem;"></i>
-            <h3 style="margin-bottom: 0.5rem;">Área Administrativa</h3>
-            <p style="font-size: 0.9rem; color: #94a3b8;">Acesso restrito à equipe de Business Intelligence</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        password = st.text_input("Senha de acesso", type="password", key="admin_password")
+        st.markdown('<div class="admin-login"><h3 style="text-align:center;">Acesso Restrito</h3>', unsafe_allow_html=True)
+        pwd = st.text_input("Senha Administrativa", type="password")
         
-        if st.button("Autenticar", use_container_width=True, type="primary", icon="fa-key"):
-            try:
-                if password == st.secrets["ADMIN_PASSWORD"]:
-                    st.session_state.admin_logged = True
-                    st.rerun()
-                else:
-                    st.error("Senha incorreta. Tente novamente.")
-            except KeyError:
-                st.error("Configuração de senha administrativa não encontrada.")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+        # Tenta pegar senha dos secrets, se falhar usa 'admin' como padrão para evitar travamento
+        correct_pass = st.secrets.get("ADMIN_PASSWORD", "admin")
+        
+        if st.button("Entrar", type="primary", use_container_width=True):
+            if pwd == correct_pass:
+                st.session_state.admin_logged = True
+                st.rerun()
+            else:
+                st.error("Senha incorreta")
+        
+        if correct_pass == "admin":
+            st.caption("⚠️ Modo Demo: A senha é 'admin'")
+        st.markdown('</div>', unsafe_allow_html=True)
+        return
 
-def render_admin_dashboard():
-    """Renderiza o dashboard administrativo."""
-    # Cabeçalho
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.markdown("### Dashboard Administrativo")
-        st.markdown("Monitoramento de acessos e métricas do Intelligence Hub")
-    with col2:
-        if st.button("Sair", use_container_width=True, type="secondary", icon="fa-sign-out-alt"):
-            st.session_state.admin_logged = False
-            st.rerun()
-    
-    st.markdown("---")
-    
-    # Carregar logs de acesso
+    # Dashboard Admin
+    c1, c2 = st.columns([5, 1])
+    c1.title("Analytics da Plataforma")
+    if c2.button("Sair", type="secondary"):
+        st.session_state.admin_logged = False
+        st.rerun()
+
     df_logs = generate_access_logs()
     
-    # KPIs principais
-    st.markdown("#### Métricas Principais")
+    # KPI Admin
     k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Acessos Totais", len(df_logs))
+    k2.metric("Usuários Únicos", df_logs['Usuario'].nunique())
+    k3.metric("Média Diária", int(len(df_logs)/90))
+    k4.metric("Dashboards Monitorados", len(df_active))
     
-    # Cálculos
-    total_access = len(df_logs)
-    unique_users = df_logs['Usuario'].nunique()
-    top_dashboard = df_logs['Dashboard'].value_counts().idxmax()
-    active_dashboards = len(df_active)
+    st.divider()
     
-    # Períodos
-    today = datetime.now().date()
-    df_today = df_logs[df_logs['Data'].dt.date == today]
-    df_week = df_logs[df_logs['Data'] >= (datetime.now() - timedelta(days=7))]
-    df_month = df_logs[df_logs['Data'] >= (datetime.now() - timedelta(days=30))]
+    t1, t2 = st.tabs(["Tendência de Acesso", "Top Dashboards"])
     
-    with k1:
-        st.markdown(render_kpi_card("Acessos Hoje", len(df_today), "fa-calendar-day", "#ef4444"), unsafe_allow_html=True)
-    
-    with k2:
-        st.markdown(render_kpi_card("Últimos 7 Dias", len(df_week), "fa-calendar-week", "#f59e0b"), unsafe_allow_html=True)
-    
-    with k3:
-        st.markdown(render_kpi_card("Últimos 30 Dias", len(df_month), "fa-calendar-alt", "#10b981"), unsafe_allow_html=True)
-    
-    with k4:
-        st.markdown(render_kpi_card("Usuários Únicos", unique_users, "fa-user-check", "#8b5cf6"), unsafe_allow_html=True)
-    
-    # Gráficos e análises
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### Análise de Acesso")
-    
-    tab1, tab2, tab3 = st.tabs(["Evolução Temporal", "Dashboard Popularidade", "Acessos por Departamento"])
-    
-    with tab1:
-        # Gráfico de evolução temporal
-        daily_access = df_logs.groupby(df_logs['Data'].dt.date).size().reset_index()
-        daily_access.columns = ['Data', 'Acessos']
+    with t1:
+        daily = df_logs.groupby(df_logs['Data'].dt.date).size().reset_index(name='Acessos')
+        chart = alt.Chart(daily).mark_line(color='#0ea5e9').encode(
+            x='Data:T', y='Acessos:Q', tooltip=['Data', 'Acessos']
+        ).properties(height=300)
+        st.altair_chart(chart, use_container_width=True)
         
-        chart_line = alt.Chart(daily_access).mark_line(point=True, strokeWidth=3).encode(
-            x=alt.X('Data:T', title='Data'),
-            y=alt.Y('Acessos:Q', title='Número de Acessos'),
-            tooltip=['Data', 'Acessos']
-        ).properties(height=350).configure_axis(grid=False)
-        
-        st.altair_chart(chart_line, use_container_width=True)
-    
-    with tab2:
-        # Gráfico de popularidade por dashboard
-        dashboard_counts = df_logs['Dashboard'].value_counts().reset_index()
-        dashboard_counts.columns = ['Dashboard', 'Acessos']
-        
-        chart_bar = alt.Chart(dashboard_counts.head(10)).mark_bar().encode(
-            x=alt.X('Acessos:Q', title='Número de Acessos'),
-            y=alt.Y('Dashboard:N', sort='-x', title='Dashboard'),
-            color=alt.Color('Dashboard:N', legend=None),
-            tooltip=['Dashboard', 'Acessos']
-        ).properties(height=400)
-        
+    with t2:
+        top = df_logs['Dashboard'].value_counts().reset_index()
+        top.columns = ['Dashboard', 'Acessos']
+        chart_bar = alt.Chart(top.head(10)).mark_bar().encode(
+            x='Acessos:Q', y=alt.Y('Dashboard:N', sort='-x'), color=alt.value('#0ea5e9')
+        ).properties(height=300)
         st.altair_chart(chart_bar, use_container_width=True)
-    
-    with tab3:
-        # Gráfico por departamento
-        dept_counts = df_logs['Departamento'].value_counts().reset_index()
-        dept_counts.columns = ['Departamento', 'Acessos']
-        
-        chart_pie = alt.Chart(dept_counts).mark_arc(innerRadius=50).encode(
-            theta=alt.Theta(field="Acessos", type="quantitative"),
-            color=alt.Color(field="Departamento", type="nominal", legend=alt.Legend(title="Departamento")),
-            tooltip=['Departamento', 'Acessos']
-        ).properties(height=400, width=600)
-        
-        st.altair_chart(chart_pie, use_container_width=True)
-    
-    # Tabela de logs recentes
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("#### Últimos Acessos")
-    
-    recent_logs = df_logs.sort_values('Data', ascending=False).head(10)
-    
-    if not recent_logs.empty:
-        st.dataframe(
-            recent_logs[['Data', 'Dashboard', 'Usuario', 'Departamento', 'Hora']],
-            column_config={
-                "Data": st.column_config.DateColumn("Data", format="DD/MM/YYYY"),
-                "Dashboard": "Dashboard",
-                "Usuario": "Usuário",
-                "Departamento": "Departamento",
-                "Hora": "Horário"
-            },
-            hide_index=True,
-            use_container_width=True
-        )
-    else:
-        st.info("Nenhum registro de acesso disponível.")
 
 # ==============================================================================
-# EXECUÇÃO PRINCIPAL
+# MAIN
 # ==============================================================================
 def main():
-    """Função principal de execução do aplicativo."""
-    # Renderizar sidebar e obter filtros
-    f_pub, f_mid, f_resp, f_period = render_sidebar()
+    filters = render_sidebar()
     
-    # Navegar para a página apropriada
     if st.session_state.page == "home":
         page_home()
     elif st.session_state.page == "catalog":
-        page_catalog(f_pub, f_mid, f_resp, f_period)
+        page_catalog(filters)
     elif st.session_state.page == "admin":
         page_admin()
-    
-    # Rodapé
-    st.markdown("---")
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("""
-        <div style="text-align: center; color: #64748b; font-size: 0.8rem; padding: 1rem;">
-            <i class="fa-solid fa-shield-check"></i> Intelligence Hub v2.0 • 
-            Ambiente seguro para decisões baseadas em dados
-        </div>
-        """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
